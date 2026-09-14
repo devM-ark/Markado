@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Online Grades Viewer</title>
+<style>
+  :root {
+    --black: #0B0B0B; --white: #FFFFFF;
+    --gray-1: #F4F4F4; --gray-2: #E2E2E2; --gray-3: #9A9A9A; --gray-4: #4A4A4A;
+    --danger: #A3402F; --success: #2E5B3E;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: var(--black); background: var(--white); }
+  h1, h3, .display { font-family: Arial, Helvetica, sans-serif; font-weight: 500; }
+  h2 { font-family: Arial, Helvetica, sans-serif; font-weight: 600; }
+  .mono { font-family: Arial, Helvetica, sans-serif; }
+  button { font-family: inherit; cursor: pointer; }
+  input, select { font-family: inherit; }
+
+  header { 
+	background: var(--black);
+	color: var(--white);
+	height:76px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+    .header-logo {
+	height: 40px;
+	width: auto;
+	display: block;
+	transform: scale(1.3);
+	transform-origin: left center;
+	margin-left: 0px;
+	}
+	
+  header .display { font-size: 1.15rem; }
+  header nav button { background: none; border: none; color: var(--white); opacity: 0.8; font-size: 0.85rem; }
+  header nav button:hover { opacity: 1; text-decoration: underline; }
+
+  main { max-width: 1040px; margin: 0 auto; padding: 32px; }
+  .screen { display: none; } .screen.active { display: block; }
+
+  .panel { border: 1px solid var(--gray-2); border-radius: 2px; padding: 24px; margin-bottom: 20px; }
+
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 0.8rem; color: var(--gray-4); margin-bottom: 5px; }
+  .field input { width: 100%; padding: 9px 11px; border: 1px solid var(--gray-2); border-radius: 2px; font-size: 0.95rem; }
+
+  .btn { background: var(--black); color: var(--white); border: none; border-radius: 2px; padding: 10px 18px; font-size: 0.88rem; font-weight: 500; }
+  .btn:hover { background: var(--gray-4); }
+  .btn.secondary { background: var(--white); color: var(--black); border: 1px solid var(--black); }
+  .btn.secondary:hover { background: var(--gray-1); }
+  .btn.danger { background: var(--danger); }
+  .btn.small { padding: 5px 12px; font-size: 0.8rem; }
+
+  .msg { padding: 9px 13px; border-radius: 2px; font-size: 0.88rem; margin-bottom: 14px; }
+  .msg.error { background: #F7E4E0; color: var(--danger); }
+  .msg.success { background: #E4EFE7; color: var(--success); }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+  .stat-card { border: 1px solid var(--gray-2); padding: 18px; border-radius: 2px; }
+  .stat-card .num { font-family: Arial, Helvetica, sans-serif; font-size: 2rem; font-weight: 600; }
+  .stat-card .label { font-size: 0.78rem; color: var(--gray-4); text-transform: uppercase; letter-spacing: 0.03em; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--gray-2); }
+  th { color: var(--gray-4); font-weight: 500; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.02em; }
+  tr.clickable { cursor: pointer; } tr.clickable:hover { background: var(--gray-1); }
+
+  .status-pill { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 0.74rem; font-weight: 500; }
+  .status-pill.TRIAL { background: var(--gray-2); color: var(--black); }
+  .status-pill.ACTIVE { background: var(--success); color: var(--white); }
+  .status-pill.EXPIRED, .status-pill.SUSPENDED { background: var(--danger); color: var(--white); }
+  .status-pill.NONE { background: var(--gray-1); color: var(--gray-4); }
+
+  .breadcrumb { font-size: 0.85rem; color: var(--gray-4); margin-bottom: 18px; }
+  .breadcrumb button { background: none; border: none; color: var(--black); text-decoration: underline; padding: 0; font-size: 0.85rem; }
+
+  .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--gray-1); font-size: 0.9rem; }
+  .detail-row .label { color: var(--gray-4); }
+
+  .action-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(11,11,11,0.5); display: flex; align-items: center; justify-content: center; z-index: 10; }
+  .modal { background: var(--white); border-radius: 2px; padding: 26px; max-width: 380px; width: 90%; }
+  .modal .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+</style>
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<script src="config.js"></script>
+<script src="api.js"></script>
+</head>
+<body>
+
+<header>
+  <img src="assets/logo-banner.svg" alt="Markado" class="header-logo">
+  <nav id="headerNav"></nav>
+</header>
+
+<main>
+
+  <!-- LOGIN -->
+  <section id="screen-login" class="screen active">
+    <div class="panel" style="max-width:380px; margin: 60px auto;">
+      <h2 style="margin-top:0">Admin Login</h2>
+      <div id="loginMsg"></div>
+      <div class="field"><label>Email</label><input id="adminEmail" type="email"></div>
+      <div class="field"><label>Password</label><input id="adminPassword" type="password"></div>
+      <button class="btn" id="loginBtn" style="width:100%">Log in</button>
+    </div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="screen-dashboard" class="screen">
+    <h2>Dashboard</h2>
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="panel" style="margin-top:24px">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px">
+        <h3 style="margin:0">Teachers</h3>
+        <input id="teacherSearch" placeholder="Search by name or email" style="padding:8px 10px; border:1px solid var(--gray-2); border-radius:2px; width:240px">
+      </div>
+      <div class="action-row" id="bulkActionBar" style="display:none; margin-top:0; margin-bottom:12px">
+        <span id="bulkSelectedCount" class="mono" style="align-self:center"></span>
+        <button class="btn secondary small" id="bulkExtendTrialBtn">Extend trial</button>
+        <button class="btn secondary small" id="bulkActivateLicenseBtn">Activate license</button>
+        <button class="btn danger small" id="bulkSuspendBtn">Suspend</button>
+      </div>
+      <table id="teacherTable">
+        <thead><tr><th><input type="checkbox" id="selectAllCheckbox"></th><th>Name</th><th>Email</th><th>Account</th><th>License</th><th>Workspaces</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- TEACHER DETAIL -->
+  <section id="screen-detail" class="screen">
+    <div class="breadcrumb"><button id="backToDashboard">← Dashboard</button></div>
+    <h2 id="detailName"></h2>
+    <div class="panel">
+      <div class="detail-row"><span class="label">Email</span><span id="detailEmail" class="mono"></span></div>
+      <div class="detail-row"><span class="label">Account Status</span><span id="detailAccountStatus"></span></div>
+      <div class="detail-row"><span class="label">Email Verified</span><span id="detailVerified"></span></div>
+      <div class="detail-row"><span class="label">Registered</span><span id="detailCreated"></span></div>
+      <div class="detail-row"><span class="label">Trial Window</span><span id="detailTrial"></span></div>
+      <div class="detail-row"><span class="label">Current License Status</span><span id="detailLicenseStatus"></span></div>
+      <div class="detail-row"><span class="label">Workspaces</span><span id="detailWorkspaceCount"></span></div>
+      <div class="detail-row"><span class="label">Students</span><span id="detailStudentCount"></span></div>
+
+      <div class="action-row">
+        <button class="btn secondary small" id="extendTrialBtn">Extend Trial</button>
+        <button class="btn secondary small" id="activateLicenseBtn">Activate License</button>
+        <button class="btn secondary small" id="extendLicenseBtn">Extend License</button>
+        <button class="btn danger small" id="suspendBtn">Suspend Account</button>
+        <button class="btn small" id="reactivateBtn" style="display:none">Reactivate Account</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACTIVITY LOG -->
+  <section id="screen-activity" class="screen">
+    <div class="breadcrumb"><button id="backFromActivity">← Dashboard</button></div>
+    <h2>Activity log</h2>
+    <div class="panel">
+      <div class="action-row" style="margin-top:0; margin-bottom:16px">
+        <select id="activityActorFilter">
+          <option value="">All actors</option>
+          <option value="teacher">Teacher</option>
+          <option value="student">Student</option>
+          <option value="admin">Admin</option>
+          <option value="system">System</option>
+        </select>
+        <button class="btn secondary small" id="activityRefreshBtn">Refresh</button>
+      </div>
+      <table id="activityTable">
+        <thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Target</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="screen-settings" class="screen">
+    <div class="breadcrumb"><button id="backFromSettings">← Dashboard</button></div>
+    <h2>System settings</h2>
+    <div class="panel" style="max-width:420px">
+      <h3 style="margin-top:0">Trial Duration</h3>
+      <div id="settingsMsg"></div>
+      <div class="field"><label>Days for a new teacher's free trial</label><input id="trialDurationInput" type="number" min="1" max="365"></div>
+      <button class="btn secondary small" id="saveSettingsBtn">Save</button>
+    </div>
+
+    <div class="panel" style="max-width:420px; border-color: var(--danger)">
+      <h3 style="margin-top:0; color:var(--danger)">Danger zone - testing phase only</h3>
+      <p style="font-size:0.86rem; color:var(--gray-4)">Permanently trashes every teacher's spreadsheet and clears all teacher, trial, license, session, and activity data. Admin accounts and curriculum reference data (subjects, grading templates) are preserved. This cannot be undone from here — trashed files go to Drive's trash, not permanent deletion, but treat this as irreversible.</p>
+      <button class="btn danger small" id="openWipeModalBtn">Delete all data</button>
+    </div>
+  </section>
+
+</main>
+
+<div id="modalRoot"></div>
+
+<script>
+var sessionToken = localStorage.getItem('ogv_admin_session') || null;
+var currentTeacherId = null;
+
+function show(id) { document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('active'); }); document.getElementById(id).classList.add('active'); }
+
+/* call() is provided by api.js */
+
+function renderHeaderNav(loggedIn) {
+  document.getElementById('headerNav').innerHTML = loggedIn ? '<button id="activityNavBtn">Activity log</button><button id="settingsNavBtn">Settings</button><button id="logoutBtn">Log out</button>' : '';
+  if (loggedIn) {
+    document.getElementById('logoutBtn').onclick = function () {
+      localStorage.removeItem('ogv_admin_session'); sessionToken = null; show('screen-login'); renderHeaderNav(false);
+    };
+    document.getElementById('activityNavBtn').onclick = function () { loadActivityLog(); show('screen-activity'); };
+    document.getElementById('settingsNavBtn').onclick = function () { loadSettings(); show('screen-settings'); };
+  }
+}
+
+document.getElementById('backFromSettings').onclick = function () { loadDashboard(); show('screen-dashboard'); };
+
+function loadSettings() {
+  call('clientGetSystemSettings_', [sessionToken], function (settings) {
+    document.getElementById('trialDurationInput').value = settings.trialDurationDays;
+  });
+}
+
+document.getElementById('saveSettingsBtn').onclick = function () {
+  var days = document.getElementById('trialDurationInput').value;
+  var msgEl = document.getElementById('settingsMsg');
+  call('clientUpdateSystemSettings_', [sessionToken, Number(days)], function () {
+    msgEl.innerHTML = '<div class="msg success">Saved.</div>';
+  }, function (err) { msgEl.innerHTML = '<div class="msg error">' + err + '</div>'; });
+};
+
+document.getElementById('openWipeModalBtn').onclick = function () {
+  var root = document.getElementById('modalRoot');
+  root.innerHTML = '<div class="modal-overlay"><div class="modal">' +
+    '<h3 style="margin-top:0; color:var(--danger)">Delete ALL data?</h3>' +
+    '<p>This trashes every teacher\'s spreadsheet and clears all teacher, trial, license, and activity data. Type <strong class="mono">DELETE ALL DATA</strong> to confirm.</p>' +
+    '<input id="wipeConfirmInput" style="width:100%; padding:9px 11px; border:1px solid var(--gray-2); border-radius:2px; margin-bottom:12px">' +
+    '<div id="wipeModalMsg"></div>' +
+    '<div class="actions"><button class="btn secondary" id="wipeCancelBtn">Cancel</button><button class="btn danger" id="wipeConfirmBtn">Delete everything</button></div>' +
+    '</div></div>';
+  document.getElementById('wipeCancelBtn').onclick = function () { root.innerHTML = ''; };
+  document.getElementById('wipeConfirmBtn').onclick = function () {
+    var phrase = document.getElementById('wipeConfirmInput').value;
+    call('clientWipeAllDataForTesting_', [sessionToken, phrase], function (result) {
+      root.innerHTML = '';
+      alert('Done. ' + result.teacherSpreadsheetsTrashed + ' teacher spreadsheet(s) trashed.');
+      loadDashboard();
+      show('screen-dashboard');
+    }, function (err) {
+      document.getElementById('wipeModalMsg').innerHTML = '<div class="msg error">' + err + '</div>';
+    });
+  };
+};
+
+/* ---------- Bulk actions ---------- */
+function getSelectedTeacherIds() {
+  return Array.prototype.slice.call(document.querySelectorAll('.teacher-row-checkbox:checked')).map(function (cb) { return cb.value; });
+}
+
+function updateBulkActionBar() {
+  var selected = getSelectedTeacherIds();
+  document.getElementById('bulkActionBar').style.display = selected.length > 0 ? 'flex' : 'none';
+  document.getElementById('bulkSelectedCount').textContent = selected.length + ' selected';
+}
+
+document.getElementById('selectAllCheckbox').onchange = function (e) {
+  document.querySelectorAll('.teacher-row-checkbox').forEach(function (cb) { cb.checked = e.target.checked; });
+  updateBulkActionBar();
+};
+
+document.getElementById('bulkExtendTrialBtn').onclick = function () {
+  promptModal('Extend trial for ' + getSelectedTeacherIds().length + ' teacher(s)', [{ key: 'date', label: 'New trial end date (YYYY-MM-DD)' }], function (values) {
+    call('clientBulkApplyAdminAction_', [sessionToken, getSelectedTeacherIds(), 'extendTrial', { newTrialEndIso: new Date(values.date).toISOString() }], function (result) {
+      alert(result.succeeded.length + ' succeeded, ' + result.failed.length + ' failed.');
+      loadTeacherList(document.getElementById('teacherSearch').value);
+    }, function (err) { alert(err); });
+  });
+};
+
+document.getElementById('bulkActivateLicenseBtn').onclick = function () {
+  promptModal('Activate license for ' + getSelectedTeacherIds().length + ' teacher(s)', [{ key: 'date', label: 'Expiration date (YYYY-MM-DD)' }], function (values) {
+    call('clientBulkApplyAdminAction_', [sessionToken, getSelectedTeacherIds(), 'activateLicense', { expirationIso: new Date(values.date).toISOString() }], function (result) {
+      alert(result.succeeded.length + ' succeeded, ' + result.failed.length + ' failed.');
+      loadTeacherList(document.getElementById('teacherSearch').value);
+    }, function (err) { alert(err); });
+  });
+};
+
+document.getElementById('bulkSuspendBtn').onclick = function () {
+  var ids = getSelectedTeacherIds();
+  if (!confirm('Suspend ' + ids.length + ' account(s)? They will be logged out immediately.')) return;
+  call('clientBulkApplyAdminAction_', [sessionToken, ids, 'suspend', {}], function (result) {
+    alert(result.succeeded.length + ' succeeded, ' + result.failed.length + ' failed.');
+    loadTeacherList(document.getElementById('teacherSearch').value);
+  }, function (err) { alert(err); });
+};
+
+document.getElementById('backFromActivity').onclick = function () { loadDashboard(); show('screen-dashboard'); };
+document.getElementById('activityRefreshBtn').onclick = function () { loadActivityLog(); };
+document.getElementById('activityActorFilter').onchange = function () { loadActivityLog(); };
+
+function loadActivityLog() {
+  var actorType = document.getElementById('activityActorFilter').value;
+  call('clientListAuditLogs_', [sessionToken, { actorType: actorType || undefined, limit: 100 }], function (logs) {
+    var tbody = document.querySelector('#activityTable tbody');
+    if (logs.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--gray-3); padding:24px">No activity recorded yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = logs.map(function (l) {
+      var when = l.createdAt ? String(l.createdAt).slice(0, 19).replace('T', ' ') : '';
+      return '<tr><td class="mono">' + when + '</td><td>' + l.actorType + '</td><td>' + l.action + '</td><td class="mono">' + (l.targetType || '') + (l.targetId ? ' · ' + String(l.targetId).slice(0, 8) : '') + '</td></tr>';
+    }).join('');
+  });
+}
+
+function promptModal(title, fields, onSubmit) {
+  var root = document.getElementById('modalRoot');
+  var fieldsHtml = fields.map(function (f) {
+    return '<div class="field"><label>' + f.label + '</label><input id="modalField_' + f.key + '" type="' + (f.type || 'text') + '" value="' + (f.value || '') + '"></div>';
+  }).join('');
+  root.innerHTML = '<div class="modal-overlay"><div class="modal"><h3 style="margin-top:0">' + title + '</h3>' + fieldsHtml +
+    '<div class="actions"><button class="btn secondary" id="modalCancel">Cancel</button><button class="btn" id="modalSubmit">Confirm</button></div></div></div>';
+  document.getElementById('modalCancel').onclick = function () { root.innerHTML = ''; };
+  document.getElementById('modalSubmit').onclick = function () {
+    var values = {};
+    fields.forEach(function (f) { values[f.key] = document.getElementById('modalField_' + f.key).value; });
+    root.innerHTML = '';
+    onSubmit(values);
+  };
+}
+
+document.getElementById('loginBtn').onclick = function () {
+  var email = document.getElementById('adminEmail').value.trim();
+  var password = document.getElementById('adminPassword').value;
+  var msgEl = document.getElementById('loginMsg');
+  if (!email || !password) return;
+  call('clientAdminLogin_', [email, password], function (data) {
+    sessionToken = data.sessionToken;
+    localStorage.setItem('ogv_admin_session', sessionToken);
+    afterLogin();
+  }, function (err) { msgEl.innerHTML = '<div class="msg error">' + err + '</div>'; });
+};
+
+function afterLogin() {
+  renderHeaderNav(true);
+  loadDashboard();
+  show('screen-dashboard');
+}
+if (sessionToken) { afterLogin(); }
+
+function loadDashboard() {
+  call('clientGetDashboardStats_', [sessionToken], function (stats) {
+    var grid = document.getElementById('statGrid');
+    var cards = [
+      ['Total teachers', stats.totalTeachers], ['Active teachers', stats.activeTeachers],
+      ['Active trials', stats.activeTrials], ['Expired trials', stats.expiredTrials],
+      ['Active licenses', stats.activeLicenses], ['Expired licenses', stats.expiredLicenses],
+      ['Total workspaces', stats.totalWorkspaces], ['Total students', stats.totalStudents],
+    ];
+    grid.innerHTML = cards.map(function (c) { return '<div class="stat-card"><div class="num">' + c[1] + '</div><div class="label">' + c[0] + '</div></div>'; }).join('');
+  }, function (err) {
+    if (String(err).indexOf('expired') !== -1) { localStorage.removeItem('ogv_admin_session'); sessionToken = null; show('screen-login'); }
+  });
+  loadTeacherList('');
+}
+
+function loadTeacherList(query) {
+  call('clientListTeachersForAdmin_', [sessionToken, query], function (teachers) {
+    var tbody = document.querySelector('#teacherTable tbody');
+    tbody.innerHTML = teachers.map(function (t) {
+      return '<tr>' +
+        '<td><input type="checkbox" class="teacher-row-checkbox" value="' + t.teacherId + '"></td>' +
+        '<td class="clickable" data-teacher-id="' + t.teacherId + '">' + t.fullName + '</td>' +
+        '<td class="mono">' + t.email + '</td>' +
+        '<td>' + t.accountStatus + '</td>' +
+        '<td><span class="status-pill ' + t.licenseStatus + '">' + t.licenseStatus + '</span></td>' +
+        '<td>' + t.workspaceCount + '</td></tr>';
+    }).join('');
+    tbody.querySelectorAll('td.clickable').forEach(function (td) {
+      td.onclick = function () { openTeacherDetail(td.getAttribute('data-teacher-id')); };
+    });
+    tbody.querySelectorAll('.teacher-row-checkbox').forEach(function (cb) {
+      cb.onchange = updateBulkActionBar;
+    });
+    document.getElementById('selectAllCheckbox').checked = false;
+    updateBulkActionBar();
+  });
+}
+
+var searchTimeout;
+document.getElementById('teacherSearch').oninput = function (e) {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(function () { loadTeacherList(e.target.value); }, 250);
+};
+
+document.getElementById('backToDashboard').onclick = function () { loadDashboard(); show('screen-dashboard'); };
+
+function openTeacherDetail(teacherId) {
+  currentTeacherId = teacherId;
+  call('clientGetTeacherDetailForAdmin_', [sessionToken, teacherId], function (d) {
+    document.getElementById('detailName').textContent = d.fullName;
+    document.getElementById('detailEmail').textContent = d.email;
+    document.getElementById('detailAccountStatus').textContent = d.accountStatus;
+    document.getElementById('detailVerified').textContent = d.emailVerified ? 'Yes' : 'No';
+    document.getElementById('detailCreated').textContent = d.createdAt ? String(d.createdAt).slice(0, 10) : '—';
+    document.getElementById('detailTrial').textContent = d.trial ? (String(d.trial.start).slice(0, 10) + ' → ' + String(d.trial.end).slice(0, 10)) : 'No trial record';
+    document.getElementById('detailLicenseStatus').innerHTML = '<span class="status-pill ' + d.currentLicenseStatus.status + '">' + d.currentLicenseStatus.status + '</span>' +
+      (d.currentLicenseStatus.daysRemaining !== null ? ' (' + d.currentLicenseStatus.daysRemaining + ' days remaining)' : '');
+    document.getElementById('detailWorkspaceCount').textContent = d.workspaceCount;
+    document.getElementById('detailStudentCount').textContent = d.studentCount;
+    document.getElementById('suspendBtn').style.display = d.accountStatus === 'suspended' ? 'none' : 'inline-block';
+    document.getElementById('reactivateBtn').style.display = d.accountStatus === 'suspended' ? 'inline-block' : 'none';
+  });
+  show('screen-detail');
+}
+
+document.getElementById('extendTrialBtn').onclick = function () {
+  promptModal('Extend trial', [{ key: 'date', label: 'New trial end date (YYYY-MM-DD)' }], function (values) {
+    call('clientExtendTrial_', [sessionToken, currentTeacherId, new Date(values.date).toISOString()], function () { openTeacherDetail(currentTeacherId); });
+  });
+};
+
+document.getElementById('activateLicenseBtn').onclick = function () {
+  promptModal('Activate license', [{ key: 'date', label: 'Expiration date (YYYY-MM-DD)' }], function (values) {
+    call('clientActivateLicense_', [sessionToken, currentTeacherId, new Date(values.date).toISOString()], function () { openTeacherDetail(currentTeacherId); });
+  });
+};
+
+document.getElementById('extendLicenseBtn').onclick = function () {
+  promptModal('Extend license', [{ key: 'date', label: 'New expiration date (YYYY-MM-DD)' }], function (values) {
+    call('clientExtendLicense_', [sessionToken, currentTeacherId, new Date(values.date).toISOString()], function () { openTeacherDetail(currentTeacherId); }, function (err) { alert(err); });
+  });
+};
+
+document.getElementById('suspendBtn').onclick = function () {
+  if (!confirm('Suspend this account? The teacher will be logged out immediately and management actions will be blocked. Previously published student grades remain visible.')) return;
+  call('clientSuspendAccount_', [sessionToken, currentTeacherId], function () { openTeacherDetail(currentTeacherId); });
+};
+
+document.getElementById('reactivateBtn').onclick = function () {
+  call('clientReactivateAccount_', [sessionToken, currentTeacherId, 'ACTIVE'], function () { openTeacherDetail(currentTeacherId); });
+};
+</script>
+</body>
+</html>

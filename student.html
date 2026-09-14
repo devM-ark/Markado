@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student - Online Grades Viewer</title>
+<style>
+  :root {
+    --black: #0B0B0B;
+    --white: #FFFFFF;
+    --darkest: #0F2A1D;
+    --primary: #375534;
+    --accent: #6B9071;
+    --light: #AEC3B0;
+    --lightest: #E3EED4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--black);
+    background: var(--lightest);
+    min-height: 100vh;
+  }
+  h1, h3, .display { font-family: Arial, Helvetica, sans-serif; font-weight: 500; }
+  h2 { font-family: Arial, Helvetica, sans-serif; font-weight: 600; }
+  button { font-family: inherit; cursor: pointer; }
+
+  header {
+    background: var(--darkest);
+    color: var(--white);
+	height:76px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+    .header-logo {
+	height: 40px;
+	width: auto;
+	display: block;
+	transform: scale(1.3);
+	transform-origin: left center;
+	margin-left: 0px;
+	}
+	
+  header .display { font-size: 1.15rem; }
+  header button { background: none; border: none; color: var(--white); opacity: 0.85; font-size: 0.85rem; }
+
+  main { max-width: 480px; margin: 0 auto; padding: 24px 18px 60px; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .card {
+    background: var(--white);
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(15,42,29,0.08);
+  }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 0.85rem; color: #555; margin-bottom: 6px; }
+  .field input {
+    width: 100%; padding: 12px 14px; border: 1px solid var(--light); border-radius: 6px; font-size: 1rem;
+  }
+  .field input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .btn {
+    background: var(--primary); color: var(--white); border: none; border-radius: 6px;
+    padding: 13px 20px; font-size: 1rem; font-weight: 500; width: 100%;
+  }
+  .btn:hover { background: var(--darkest); }
+
+  .msg { padding: 10px 14px; border-radius: 6px; font-size: 0.9rem; margin-bottom: 16px; }
+  .msg.error { background: #F7E4E0; color: #A3402F; }
+
+  .enrollment-header { color: var(--primary); font-size: 0.95rem; margin: 28px 0 12px; }
+  .enrollment-header:first-child { margin-top: 0; }
+
+  .subject-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 0; border-bottom: 1px solid var(--lightest);
+  }
+  .subject-row:last-child { border-bottom: none; }
+  .subject-name { font-weight: 500; }
+  .subject-terms { display: flex; gap: 6px; }
+  .grade-chip {
+    display: flex; flex-direction: column; align-items: center; min-width: 44px;
+    padding: 6px 8px; border-radius: 6px; background: var(--lightest);
+  }
+  .grade-chip .num { font-family: Arial, Helvetica, sans-serif; font-weight: 600; font-size: 1.1rem; color: var(--darkest); }
+  .grade-chip .label { font-size: 0.65rem; color: var(--primary); }
+
+  .empty-state { text-align: center; padding: 48px 20px; color: #667; }
+  .empty-state .display { font-size: 1.2rem; color: var(--black); margin-bottom: 8px; }
+</style>
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<script src="config.js"></script>
+<script src="api.js"></script>
+</head>
+<body>
+
+<header>
+  <a href="index.html">
+  <img src="assets/logo-banner.svg" alt="Markado" class="header-logo">
+  </a>
+  <button id="logoutBtn" style="display:none">Log Out</button>
+</header>
+
+<main>
+
+  <!-- LOGIN -->
+  <section id="screen-login" class="screen active">
+    <div class="card" style="margin-top:20px">
+      <h2 style="margin-top:0">Check Your Grades</h2>
+      <p style="color:#555; font-size:0.9rem; margin-top:-8px">Enter your LRN and Surname.</p>
+      <div id="loginMsg"></div>
+      <div class="field"><label>LRN</label><input id="lrnInput" inputmode="numeric" placeholder=""></div>
+      <div class="field"><label>Surname</label><input id="surnameInput" placeholder=""></div>
+      <button class="btn" id="loginBtn">View my Grades</button>
+    </div>
+  </section>
+
+  <!-- GRADES -->
+  <section id="screen-grades" class="screen">
+    <div id="gradesContainer"></div>
+  </section>
+
+</main>
+
+<script>
+var sessionToken = sessionStorage.getItem('ogv_student_session') || null;
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+
+/* call() is provided by api.js */
+
+document.getElementById('loginBtn').onclick = function () {
+  var lrn = document.getElementById('lrnInput').value.trim();
+  var surname = document.getElementById('surnameInput').value.trim();
+  var msgEl = document.getElementById('loginMsg');
+  msgEl.innerHTML = '';
+  if (!lrn || !surname) return;
+
+  call('clientStudentLogin_', [lrn, surname], function (data) {
+    sessionToken = data.sessionToken;
+    sessionStorage.setItem('ogv_student_session', sessionToken);
+    afterLogin();
+  }, function (err) {
+    msgEl.innerHTML = '<div class="msg error">' + err + '</div>';
+  });
+};
+
+document.getElementById('logoutBtn').onclick = function () {
+  sessionStorage.removeItem('ogv_student_session');
+  sessionToken = null;
+  document.getElementById('logoutBtn').style.display = 'none';
+  show('screen-login');
+};
+
+function afterLogin() {
+  document.getElementById('logoutBtn').style.display = 'inline';
+  loadGrades();
+  show('screen-grades');
+}
+
+function loadGrades() {
+  call('clientGetMyGrades_', [sessionToken], function (enrollments) {
+    var container = document.getElementById('gradesContainer');
+    container.innerHTML = '';
+
+    var anySubjects = enrollments.some(function (e) { return e.subjects.length > 0; });
+    if (!anySubjects) {
+      container.innerHTML =
+        '<div class="empty-state"><div class="display">Nothing published yet</div>' +
+        '<p>Your teacher hasn\'t published any grades yet. Check back later.</p></div>';
+      return;
+    }
+
+    enrollments.forEach(function (e) {
+      if (e.subjects.length === 0) return;
+      var header = document.createElement('div');
+      header.className = 'enrollment-header';
+      header.textContent = 'Grade ' + e.gradeLevel + ' - ' + e.section + ' · ' + e.schoolYearLabel;
+      container.appendChild(header);
+
+      var card = document.createElement('div');
+      card.className = 'card';
+      e.subjects.forEach(function (s) {
+        var row = document.createElement('div');
+        row.className = 'subject-row';
+        var chips = s.terms.map(function (t) {
+          return '<div class="grade-chip"><span class="num">' + t.termGrade + '</span><span class="label">T' + t.term + '</span></div>';
+        }).join('');
+        row.innerHTML = '<span class="subject-name">' + s.subjectName + '</span><div class="subject-terms">' + chips + '</div>';
+        card.appendChild(row);
+      });
+      container.appendChild(card);
+    });
+  }, function (err) {
+    if (err && err.indexOf('expired') !== -1) {
+      sessionStorage.removeItem('ogv_student_session');
+      sessionToken = null;
+      show('screen-login');
+    } else {
+      alert(err);
+    }
+  });
+}
+
+if (sessionToken) { afterLogin(); }
+</script>
+</body>
+</html>
