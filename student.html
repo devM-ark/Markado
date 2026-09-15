@@ -208,7 +208,7 @@ function loadGrades() {
       sessionToken = null;
       show('screen-login');
     } else {
-      alert(err);
+      showToast(err, 'error');
     }
   });
 }

@@ -139,7 +139,7 @@
 </style>
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <script src="config.js"></script>
-<script src="api.js"></script
+<script src="api.js"></script>
 </head>
 <body>
 
@@ -328,7 +328,7 @@ function show(screenId) {
 /* call() is provided by api.js */
 
 function defaultError(msg) {
-  alert(msg); // simple fallback; msg areas are used for the main flows below
+  showToast(msg, 'error'); // simple fallback; msg areas are used for the main flows below
 }
 
 function renderHeaderNav(loggedIn) {
@@ -531,7 +531,7 @@ document.getElementById('addSubjectBtn').onclick = function () {
   var code = document.getElementById('newSubjectCode').value;
   call('clientCreateClassSubject_', [state.sessionToken, state.currentWorkspaceId, code], function () {
     loadClassSubjects();
-  }, function (err) { alert(err); });
+  }, function (err) { showToast(err, 'error'); });
 };
 
 function loadRoster() {
@@ -558,7 +558,7 @@ document.getElementById('addStudentBtn').onclick = function () {
     document.getElementById('newStudentLrn').value = '';
     document.getElementById('newStudentName').value = '';
     loadRoster();
-  }, function (err) { alert(err); });
+  }, function (err) { showToast(err, 'error'); });
 };
 
 document.getElementById('backToWorkspace').onclick = function () {
@@ -625,7 +625,7 @@ document.getElementById('publishBtn').onclick = function () {
     'These grades will become visible to students and parents immediately.',
     'Publish',
     function () {
-      call('clientPublish_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function () { loadReview(); }, function (err) { alert(err); });
+      call('clientPublish_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function () { loadReview(); }, function (err) { showToast(err, 'error'); });
     }
   );
 };
@@ -636,7 +636,7 @@ document.getElementById('unpublishBtn').onclick = function () {
     'Students will no longer be able to see these grades until you publish again. Nothing is deleted.',
     'Unpublish',
     function () {
-      call('clientUnpublish_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function () { loadReview(); }, function (err) { alert(err); });
+      call('clientUnpublish_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function () { loadReview(); }, function (err) { showToast(err, 'error'); });
     }
   );
 };
@@ -711,7 +711,7 @@ function renderImportPreview(preview) {
   var ackBtn = document.getElementById('ackIncompleteBtn');
   if (ackBtn) {
     ackBtn.onclick = function () {
-      call('clientAcknowledgeIncompleteEcrLearners_', [state.sessionToken, importState.previewId], renderImportPreview, function (err) { alert(err); });
+      call('clientAcknowledgeIncompleteEcrLearners_', [state.sessionToken, importState.previewId], renderImportPreview, function (err) { showToast(err, 'error'); });
     };
   }
 
@@ -726,7 +726,7 @@ function renderImportPreview(preview) {
       call('clientAddAndResolveEcrRow_', [state.sessionToken, state.currentWorkspaceId, importState.previewId, name, sex.toUpperCase()], function (data) {
         loadRoster(); // keep the roster dropdown/table in sync with the new student
         renderImportPreview(data);
-      }, function (err) { alert(err); });
+      }, function (err) { showToast(err, 'error'); });
     };
   });
 
@@ -738,7 +738,7 @@ function renderImportPreview(preview) {
       // Resolving a match doesn't touch the roster or re-read the file --
       // it just moves this row from unmatched to matched in the SAME cached
       // preview (EcrImportService.gs's resolveEcrMatchToExisting_).
-      call('clientResolveEcrMatchToExisting_', [state.sessionToken, importState.previewId, name, enrollmentId], renderImportPreview, function (err) { alert(err); });
+      call('clientResolveEcrMatchToExisting_', [state.sessionToken, importState.previewId, name, enrollmentId], renderImportPreview, function (err) { showToast(err, 'error'); });
     };
   });
 
@@ -754,7 +754,7 @@ function renderImportPreview(preview) {
             document.getElementById('ecrImportArea').innerHTML = '<div class="msg success">Import complete.</div>';
             document.getElementById('ecrFileInput').value = '';
             loadReview();
-          }, function (err) { alert(err); });
+          }, function (err) { showToast(err, 'error'); });
         }
       );
     };

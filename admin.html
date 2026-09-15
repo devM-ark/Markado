@@ -252,7 +252,7 @@ document.getElementById('openWipeModalBtn').onclick = function () {
     var phrase = document.getElementById('wipeConfirmInput').value;
     call('clientWipeAllDataForTesting_', [sessionToken, phrase], function (result) {
       root.innerHTML = '';
-      alert('Done. ' + result.teacherSpreadsheetsTrashed + ' teacher spreadsheet(s) trashed.');
+      showToast('Done. ' + result.teacherSpreadsheetsTrashed + ' teacher spreadsheet(s) trashed.', 'success');
       loadDashboard();
       show('screen-dashboard');
     }, function (err) {
@@ -280,18 +280,18 @@ document.getElementById('selectAllCheckbox').onchange = function (e) {
 document.getElementById('bulkExtendTrialBtn').onclick = function () {
   promptModal('Extend trial for ' + getSelectedTeacherIds().length + ' teacher(s)', [{ key: 'date', label: 'New trial end date (YYYY-MM-DD)' }], function (values) {
     call('clientBulkApplyAdminAction_', [sessionToken, getSelectedTeacherIds(), 'extendTrial', { newTrialEndIso: new Date(values.date).toISOString() }], function (result) {
-      alert(result.succeeded.length + ' succeeded, ' + result.failed.length + ' failed.');
+      showToast(result.succeeded.length + ' succeeded, ' + result.failed.length + ' failed.', result.failed.length > 0 ? 'error' : 'success');
       loadTeacherList(document.getElementById('teacherSearch').value);
-    }, function (err) { alert(err); });
+    }, function (err) { showToast(err, 'error'); });
   });
 };
 
 document.getElementById('bulkActivateLicenseBtn').onclick = function () {
   promptModal('Activate license for ' + getSelectedTeacherIds().length + ' teacher(s)', [{ key: 'date', label: 'Expiration date (YYYY-MM-DD)' }], function (values) {
     call('clientBulkApplyAdminAction_', [sessionToken, getSelectedTeacherIds(), 'activateLicense', { expirationIso: new Date(values.date).toISOString() }], function (result) {
-      alert(result.succeeded.length + ' succeeded, ' + result.failed.length + ' failed.');
+      showToast(result.succeeded.length + ' succeeded, ' + result.failed.length + ' failed.', result.failed.length > 0 ? 'error' : 'success');
       loadTeacherList(document.getElementById('teacherSearch').value);
-    }, function (err) { alert(err); });
+    }, function (err) { showToast(err, 'error'); });
   });
 };
 
@@ -299,9 +299,9 @@ document.getElementById('bulkSuspendBtn').onclick = function () {
   var ids = getSelectedTeacherIds();
   if (!confirm('Suspend ' + ids.length + ' account(s)? They will be logged out immediately.')) return;
   call('clientBulkApplyAdminAction_', [sessionToken, ids, 'suspend', {}], function (result) {
-    alert(result.succeeded.length + ' succeeded, ' + result.failed.length + ' failed.');
+    showToast(result.succeeded.length + ' succeeded, ' + result.failed.length + ' failed.', result.failed.length > 0 ? 'error' : 'success');
     loadTeacherList(document.getElementById('teacherSearch').value);
-  }, function (err) { alert(err); });
+  }, function (err) { showToast(err, 'error'); });
 };
 
 document.getElementById('backFromActivity').onclick = function () { loadDashboard(); show('screen-dashboard'); };
@@ -438,7 +438,7 @@ document.getElementById('activateLicenseBtn').onclick = function () {
 
 document.getElementById('extendLicenseBtn').onclick = function () {
   promptModal('Extend license', [{ key: 'date', label: 'New expiration date (YYYY-MM-DD)' }], function (values) {
-    call('clientExtendLicense_', [sessionToken, currentTeacherId, new Date(values.date).toISOString()], function () { openTeacherDetail(currentTeacherId); }, function (err) { alert(err); });
+    call('clientExtendLicense_', [sessionToken, currentTeacherId, new Date(values.date).toISOString()], function () { openTeacherDetail(currentTeacherId); }, function (err) { showToast(err, 'error'); });
   });
 };
 
