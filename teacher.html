@@ -3,32 +3,47 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Teacher - Online Grades Viewer</title>
+<title>MARKADO: Online Grades Viewer - Teacher</title>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
 <style>
   :root {
     --black: #0B0B0B;
-    --white: #FFFFFF;
-    --primary: #4D6A92;   /* steel blue */
-    --accent: #5A8FA0;    /* light steel blue */
-    --complement: #A2C6E9;/* light sky blue */
+	--white: #FFFFFF;
+    --primary: #4D6A92;
+	--accent: #5A8FA0;
+	--complement: #A2C6E9;
     --surface: #F5F8FB;
-    --border: #D7E1EA;
-    --text-muted: #5C6773;
-    --danger: #A3402F;
+	--border: #D7E1EA;
+	--text-muted: #5C6773;
+	--danger: #A3402F;
+    --sidebar-bg: #16233A;
+	--sidebar-text: #C9D6E6;
+	--sidebar-active: #4D6A92;
   }
+  
+  [data-theme="dark"] {
+    --white: #14181D;
+	--surface: #1B2027;
+	--border: #2A313A;
+	--text-muted: #9AA5B1;
+	--black: #F2F4F6;
+    --complement: #2A3F55;
+	--sidebar-bg: #0D141F;
+  }
+  
   * { box-sizing: border-box; }
+  
   body {
-    margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
-    color: var(--black);
-    background: var(--white);
+	font-family: Arial, Helvetica, sans-serif;
+	color: var(--black);
+	background: var(--surface);
+	transition: background 0.2s,
+	color 0.2s;
   }
-  h1, h3, .display { font-family: Arial, Helvetica, sans-serif; font-weight: 500; letter-spacing: -0.01em; }
-  h2 { font-family: Arial, Helvetica, sans-serif; font-weight: 600; letter-spacing: -0.01em; }
-  button { font-family: inherit; cursor: pointer; }
-  input, select { font-family: inherit; }
-
-  header {
+ 
+   header {
     background: var(--primary);
     color: var(--white);
 	height:76px;
@@ -37,6 +52,16 @@
     align-items: center;
     justify-content: space-between;
   }
+ 
+  h2, .display {
+	font-weight: 600;
+	letter-spacing: -0.01em;
+  }
+  
+  h3, .display {
+	font-weight: 500;
+	letter-spacing: -0.01em;
+  }
   
   .header-logo {
 	height: 40px;
@@ -44,347 +69,706 @@
 	display: block;
 	transform: scale(1.3);
 	transform-origin: left center;
-	margin-left: 0px;
-	}
-  
-  header .display { font-size: 1.3rem; }
-  header nav { display: flex; gap: 20px; align-items: center; font-size: 0.9rem; }
-  header nav a, header nav button {
-    color: var(--white); background: none; border: none; text-decoration: none; opacity: 0.9; font-size: 0.9rem;
   }
-  header nav a:hover, header nav button:hover { opacity: 1; text-decoration: underline; }
+  
+  button {
+	font-family: inherit;
+	cursor: pointer;
+  }
 
-  main { max-width: 980px; margin: 0 auto; padding: 40px 32px 100px; }
-  .screen { display: none; }
-  .screen.active { display: block; }
+  .app-shell {
+	display: flex;
+	min-height: 100vh;
+  }
+  
+  .sidebar {
+	width: 220px;
+	background: var(--sidebar-bg);
+	color: var(--sidebar-text);
+	display: flex;
+	flex-direction: column;
+	padding: 20px 0;
+	flex-shrink: 0;
+  }
+  
+  .sidebar-brand {
+	padding: 0 20px 20px;
+  }
+  
+  .sidebar-brand img {
+	max-width: 140px;
+	height: auto;
+  }
+  
+  .nav-item {
+    display: flex;
+	align-items: center;
+	gap: 12px;
+	width: 100%;
+	text-align: left;
+	padding: 12px 20px;
+    background: none;
+	border: none;
+	color: var(--sidebar-text);
+	font-size: 0.92rem;
+  }
+  
+  .nav-item:hover {
+	background: rgba(255,255,255,0.06);
+  }
+  
+  .nav-item.active {
+	background: var(--sidebar-active);
+	color: #fff;
+  }
+  
+  .nav-icon {
+	width: 20px;
+	height: 20px;
+	flex-shrink: 0;
+	filter: brightness(0) invert(1);
+	opacity: 0.85;
+  }
+  
+  .nav-item.active .nav-icon {
+	opacity: 1;
+  }
+  
+  .sidebar-footer {
+	margin-top: auto;
+  }
+
+  main {
+	flex: 1;
+	padding: 32px 36px 100px;
+	max-width: 1040px;
+  }
+  
+  .screen {
+	display: none;
+  }
+  
+  .screen.active {
+	display: block;
+  }
 
   .panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 28px;
-    margin-bottom: 24px;
+	background: var(--white);
+	border: 1px solid var(--border);
+	border-radius: 4px;
+	padding: 28px;
+	margin-bottom: 24px;
   }
 
-  .field { margin-bottom: 16px; }
-  .field label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
-  .field input, .field select {
-    width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 3px; font-size: 1rem;
+  .field {
+	margin-bottom: 16px;
   }
-  .field input:focus, .field select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .row { display: flex; gap: 16px; flex-wrap: wrap; }
-  .row .field { flex: 1 1 180px; }
+  
+  .field label {
+	display: block;
+	font-size: 0.85rem;
+	color: var(--text-muted);
+	margin-bottom: 6px;
+  }
+  
+  .field input,
+  .field select {
+	width: 100%;
+	padding: 10px 12px;
+	border: 1px solid var(--border);
+	border-radius: 3px;
+	font-size: 1rem;
+	background: var(--white);
+	color: var(--black);
+  }
+  
+  .field input:focus,
+  .field select:focus {
+	outline: 2px solid var(--accent);
+	outline-offset: 1px;
+  }
+  
+  .row {
+	display: flex;
+	gap: 16px;
+	flex-wrap: wrap;
+  }
+  
+  .row .field {
+	flex: 1 1 180px;
+  }
 
   .btn {
-    background: var(--primary); color: var(--white); border: none; border-radius: 3px;
-    padding: 11px 22px; font-size: 0.95rem; font-weight: 500;
+	background: var(--primary);
+	color: #fff;
+	border: none;
+	border-radius: 3px;
+	padding: 11px 22px;
+	font-size: 0.95rem;
+	font-weight: 500;
   }
-  .btn:hover { background: #3d5678; }
-  .btn.secondary { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
-  .btn.secondary:hover { background: var(--complement); }
-  .btn.danger { background: var(--danger); }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  
+  .btn:hover {
+	background: #3d5678;
+  }
+  
+  .btn.secondary {
+	background: transparent;
+	color: var(--primary);
+	border: 1px solid var(--primary);
+  }
+  
+  .btn.secondary:hover {
+	background: var(--complement);
+  }
+  
+  .btn.danger {
+	background: var(--danger);
+  }
+  
+  .btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+  }
 
-  .toggle-auth { text-align: center; margin-top: 16px; font-size: 0.9rem; color: var(--text-muted); }
-  .toggle-auth button { background: none; border: none; color: var(--primary); text-decoration: underline; font-size: 0.9rem; padding: 0; }
+  .msg {
+	padding: 10px 14px;
+	border-radius: 3px;
+	font-size: 0.9rem;
+	margin-bottom: 16px;
+  }
+  
+  .msg.error {
+	background: #F7E4E0;
+	color: var(--danger);
+  }
+  
+  .msg.success {
+	background: #E3EED4;
+	color: #375534;
+  }
 
-  .msg { padding: 10px 14px; border-radius: 3px; font-size: 0.9rem; margin-bottom: 16px; }
-  .msg.error { background: #F7E4E0; color: var(--danger); }
-  .msg.success { background: #E3EED4; color: #375534; }
+  table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.92rem;
+  }
+  
+  th, td {
+	text-align: left;
+	padding: 10px 12px;
+	border-bottom: 1px solid var(--border);
+  }
+  
+  th {
+	color: var(--text-muted);
+	font-weight: 500;
+	font-size: 0.8rem;
+  }
+  
+  tr.clickable {
+	cursor: pointer;
+  }
+  
+  tr.clickable:hover {
+	background: var(--complement);
+  }
 
-  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
-  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); }
-  th { color: var(--text-muted); font-weight: 500; font-size: 0.8rem; }
-  tr.clickable { cursor: pointer; }
-  tr.clickable:hover { background: var(--complement); }
+  .status-pill {
+	display: inline-block;
+	padding: 3px 10px;
+	border-radius: 20px;
+	font-size: 0.78rem;
+	font-weight: 500;
+  }
+  
+  .status-pill.PUBLISHED {
+	background: #375534;
+	color: #fff;
+  }
+  
+  .status-pill.DRAFT {
+	background: var(--complement);
+	color: var(--primary);
+  }
+  
+  .status-pill.EMPTY {
+	background: var(--border);
+	color: var(--text-muted);
+  }
 
-  .status-pill { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 500; }
-  .status-pill.PUBLISHED { background: #375534; color: var(--white); }
-  .status-pill.DRAFT { background: var(--complement); color: var(--primary); }
-  .status-pill.EMPTY { background: var(--border); color: var(--text-muted); }
+  .breadcrumb {
+	font-size: 0.85rem;
+	color: var(--text-muted);
+	margin-bottom: 20px;
+  }
+  
+  .breadcrumb button {
+	background: none;
+	border: none;
+	color: var(--primary);
+	text-decoration: underline;
+	padding: 0;
+	font-size: 0.85rem;
+  }
 
-  .breadcrumb { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; }
-  .breadcrumb button { background: none; border: none; color: var(--primary); text-decoration: underline; padding: 0; font-size: 0.85rem; }
-
-  .term-tabs { display: flex; gap: 4px; margin-bottom: 20px; }
+  .term-tabs {
+	display: flex;
+	gap: 4px;
+	margin-bottom: 20px;
+  }
+  
   .term-tabs button {
-    background: var(--white); border: 1px solid var(--border); padding: 8px 18px; border-radius: 3px 3px 0 0; font-size: 0.9rem;
+	background: var(--white);
+	border: 1px solid var(--border);
+	padding: 8px 18px;
+	border-radius: 3px 3px 0 0;
+	font-size: 0.9rem;
+	color: var(--black);
   }
-  .term-tabs button.active { background: var(--primary); color: var(--white); border-color: var(--primary); }
+  
+  .term-tabs button.active {
+	background: var(--primary);
+	color: #fff;
+	border-color: var(--primary);
+  }
 
-  .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
-  .empty-state .display { font-size: 1.2rem; color: var(--black); margin-bottom: 8px; }
+  .empty-state {
+	text-align: center;
+	padding: 48px 20px;
+	color: var(--text-muted);
+  }
+  
+  .empty-state .display {
+	font-size: 1.2rem;
+	color: var(--black);
+	margin-bottom: 8px;
+  }
 
   .modal-overlay {
-    position: fixed; inset: 0; background: rgba(11,11,11,0.4); display: flex; align-items: center; justify-content: center; z-index: 10;
+	position: fixed;
+	inset: 0;
+	background: rgba(11,11,11,0.4);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 10;
   }
-  .modal { background: var(--white); border-radius: 4px; padding: 28px; max-width: 420px; width: 90%; }
-  .modal p { margin: 12px 0 20px; line-height: 1.5; }
-  .modal .actions { display: flex; gap: 10px; justify-content: flex-end; }
+  
+  .modal {
+	background: var(--white);
+	border-radius: 4px;
+	padding: 28px;
+	max-width: 420px;
+	width: 90%;
+  }
+  
+  .modal p {
+	margin: 12px 0 20px;
+	line-height: 1.5;
+  }
+  
+  .modal .actions {
+	display: flex;
+	gap: 10px;
+	justify-content: flex-end;
+  }
 
-  .issue-block { border-radius: 4px; padding: 14px 16px; margin-bottom: 12px; }
-  .issue-block.blocking { background: #F7E4E0; border: 1px solid #E3B5A8; }
-  .issue-block.info { background: var(--complement); }
-  .issue-block h4 { margin: 0 0 10px; font-size: 0.85rem; }
-  .issue-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 0.9rem; }
-  .issue-row .actions-inline { display: flex; gap: 6px; }
-  .issue-row select { font-size: 0.85rem; padding: 4px 6px; }
-  .btn.small { padding: 5px 12px; font-size: 0.82rem; }
-  .summary-line { font-size: 0.95rem; margin-bottom: 14px; }
+  .issue-block {
+	border-radius: 4px;
+	padding: 14px 16px;
+	margin-bottom: 12px;
+  }
+  
+  .issue-block.blocking {
+	background: #F7E4E0;
+	border: 1px solid #E3B5A8;
+  }
+  
+  .issue-block.info {
+	background: var(--complement);
+  }
+  
+  .issue-block h4 {
+	margin: 0 0 10px;
+	font-size: 0.85rem;
+  }
+  
+  .issue-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 6px 0;
+	font-size: 0.9rem;
+  }
+  
+  .issue-row .actions-inline {
+	display: flex;
+	gap: 6px;
+  }
+  
+  .issue-row select {
+	font-size: 0.85rem;
+	padding: 4px 6px;
+  }
+  
+  .btn.small {
+	padding: 5px 12px;
+	font-size: 0.82rem;
+  }
+  
+  .summary-line{
+	font-size: 0.95rem;
+	margin-bottom: 14px;
+  }
+  
+  .license-banner {
+	padding: 12px 18px;
+	border-radius: 4px;
+	margin-bottom: 20px;
+	font-size: 0.9rem;
+  }
+  
+  .license-banner.trial {
+	background: var(--complement);
+	color: var(--primary);
+  }
+  
+  .license-banner.expired {
+	background: #F7E4E0;
+	color: var(--danger);
+  }
 
-  .license-banner { padding: 12px 18px; border-radius: 4px; margin-bottom: 20px; font-size: 0.9rem; }
-  .license-banner.trial { background: var(--complement); color: var(--primary); }
-  .license-banner.expired { background: #F7E4E0; color: var(--danger); }
-  .license-banner.active { display: none; } /* no banner needed when everything's fine */
+  .subject-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	gap: 14px;
+  }
+  
+  .subject-card {
+    border: 1px solid var(--border);
+	border-radius: 6px;
+	padding: 18px 16px;
+	background: var(--white);
+    display: flex;
+	flex-direction: column;
+	gap: 10px;
+	min-height: 92px;
+  }
+  
+  .subject-card .name {
+	font-weight: 500;
+	font-size: 0.98rem;
+  }
+  
+  .subject-card.added {
+	border-color: var(--primary);
+	cursor: pointer;
+  }
+  
+  .subject-card.added:hover {
+	background: var(--complement);
+  }
+  
+  .subject-card .card-action {
+	margin-top: auto;
+  }
+  
+  .subject-card .added-badge {
+	color: var(--primary);
+	font-size: 0.8rem;
+	font-weight: 500;
+  }
+  
+  .subject-card.special {
+	border-style: dashed;
+  }
+
+  .class-selector {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 20px;
+	font-size: 0.9rem;
+  }
+  
+  .class-selector select {
+	padding: 8px 10px;
+	border: 1px solid var(--border);
+	border-radius: 3px;
+	background: var(--white);
+	color: var(--black);
+  }
+
+  .toggle-switch {
+	position: relative;
+	display: inline-block;
+	width: 44px;
+	height: 24px;
+  }
+  
+  .toggle-switch input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+  }
+  
+  .toggle-slider {
+	position: absolute;
+	cursor: pointer;
+	inset: 0;
+	background-color: var(--border);
+	border-radius: 24px;
+	transition: 0.2s;
+  }
+  
+  .toggle-slider:before {
+	position: absolute;
+	content: "";
+	height: 18px;
+	width: 18px;
+	left: 3px;
+	bottom: 3px;
+	background-color: #fff;
+	border-radius: 50%;
+	transition: 0.2s;
+  }
+  
+  .toggle-switch input:checked + .toggle-slider {
+	background-color: var(--primary);
+  }
+  
+  .toggle-switch input:checked + .toggle-slider:before {
+	transform: translateX(20px);
+  }
+  
+  .settings-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 12px 0;
+	border-bottom: 1px solid var(--border);
+  }
+  
+  .settings-row:last-child {
+	border-bottom: none;
+  }
+  
 </style>
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-<script src="config.js"></script>
-<script src="api.js"></script>
 </head>
-<body>
 
+<body>
 <header>
-  <a href="index.html">
   <img src="assets/logo-banner.svg" alt="Markado" class="header-logo">
-  </a>
   <nav id="headerNav"></nav>
 </header>
 
-<main>
+<script>
+  if (!localStorage.getItem('ogv_teacher_session')) {
+    window.location.href = 'teacher-login.html';
+  }
+  if (localStorage.getItem('markado_theme') === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+</script>
 
-  <!-- AUTH -->
-  <section id="screen-auth" class="screen active">
-    <div class="panel" style="max-width:420px; margin: 40px auto;">
-      <h2 id="authTitle">Sign In</h2>
-      <div id="authMsg"></div>
-      <div id="registerFields" style="display:none">
-        <div class="field"><label>Full Name</label><input id="regFullName" type="text"></div>
-      </div>
-      <div class="field"><label>Email</label><input id="authEmail" type="email"></div>
-      <div class="field"><label>Password</label><input id="authPassword" type="password"></div>
-      <button class="btn" id="authSubmit" style="width:100%">Log in</button>
-      <div class="toggle-auth">
-        <span id="toggleAuthText">New here?</span>
-        <button id="toggleAuthBtn">Create an Account</button>
-      </div>
-      <div class="toggle-auth"><button id="forgotPasswordBtn">Forgot Password?</button></div>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><img src="assets/logo-header.png" alt="Markado" onerror="this.style.display='none'"></div>
+    <nav>
+      <button class="nav-item active" data-screen="dashboard"><img class="nav-icon" src="assets/icons/dashboard.svg" alt=""><span>Dashboard</span></button>
+      <button class="nav-item" data-screen="classes"><img class="nav-icon" src="assets/icons/classes.svg" alt=""><span>Classes</span></button>
+      <button class="nav-item" data-screen="subjects"><img class="nav-icon" src="assets/icons/subjects.svg" alt=""><span>Subjects</span></button>
+      <button class="nav-item" data-screen="students"><img class="nav-icon" src="assets/icons/students.svg" alt=""><span>Students</span></button>
+      <button class="nav-item" data-screen="settings"><img class="nav-icon" src="assets/icons/settings.svg" alt=""><span>Settings</span></button>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="nav-item" id="logoutBtn"><img class="nav-icon" src="assets/icons/logout.svg" alt=""><span>Log Out</span></button>
     </div>
-  </section>
+  </aside>
 
-  <!-- DASHBOARD: workspace list -->
-  <section id="screen-dashboard" class="screen">
+  <main>
     <div id="licenseBanner"></div>
-    <h2>Your Classes</h2>
-    <div id="workspaceMsg"></div>
-    <div class="panel">
-      <h3 style="margin-top:0">Add a Class</h3>
-      <div class="row">
-        <div class="field"><label>School Year</label><input id="newSchoolYear" placeholder="2026-2027"></div>
-        <div class="field"><label>Grade Level</label><input id="newGradeLevel" placeholder=""></div>
-        <div class="field"><label>Section</label><input id="newSection" placeholder=""></div>
-      </div>
-      <button class="btn" id="createWorkspaceBtn">Add Class</button>
-    </div>
-    <table id="workspaceTable">
-      <thead><tr><th>School Year</th><th>Grade</th><th>Section</th><th></th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </section>
 
-  <!-- WORKSPACE: class subjects + roster -->
-  <section id="screen-workspace" class="screen">
-    <div class="breadcrumb"><button id="backToDashboard">← Your Classes</button></div>
-    <h2 id="workspaceTitle"></h2>
-
-    <div class="panel">
-      <h3 style="margin-top:0">Subjects</h3>
-      <div class="row" style="align-items:flex-end">
-        <div class="field"><label>Add Subject</label>
-          <select id="newSubjectCode">
-            <option value="MATH">Mathematics</option>
-            <option value="FIL">Filipino</option>
-            <option value="ENG">English</option>
-            <option value="SCI">Science</option>
-            <option value="AP">Araling Panlipunan</option>
-            <option value="GMRC">GMRC / Values Education</option>
-            <option value="MAPEH">MAPEH</option>
-          </select>
-        </div>
-        <button class="btn" id="addSubjectBtn" style="margin-bottom:16px">Add</button>
+    <section id="screen-dashboard" class="screen active">
+      <h2>Dashboard</h2>
+      <div class="panel" id="dashboardTrialCard"></div>
+      <div class="panel">
+        <h3 style="margin-top:0">Your Classes</h3>
+        <table id="dashboardClassTable">
+          <thead><tr><th>School Year</th><th>Grade</th><th>Section</th></tr></thead>
+          <tbody></tbody>
+        </table>
       </div>
-    </div>
-    <table id="subjectTable">
-      <thead><tr><th>Subject</th><th>Term 1</th><th>Term 2</th><th>Term 3</th></tr></thead>
-      <tbody></tbody>
-    </table>
+    </section>
 
-    <div class="panel" style="margin-top:24px">
-      <h3 style="margin-top:0">List of Students</h3>
-      <div class="row">
-        <div class="field"><label>LRN</label><input id="newStudentLrn"></div>
-        <div class="field"><label>Full Name (Surname, Given Name)</label><input id="newStudentName"></div>
-        <div class="field" style="max-width:120px"><label>Sex</label>
-          <select id="newStudentSex"><option value="M">M</option><option value="F">F</option></select>
-        </div>
+    <section id="screen-classes" class="screen">
+      <h2>Classes</h2>
+      <div id="workspaceMsg"></div>
+      <div class="panel">
+        <h3 style="margin-top:0">Add a Class</h3>
+        <form id="createWorkspaceForm">
+          <div class="row">
+            <div class="field"><label>School Year</label><input id="newSchoolYear" placeholder="2026-2027"></div>
+            <div class="field"><label>Grade Level</label><input id="newGradeLevel" placeholder="6"></div>
+            <div class="field"><label>Section</label><input id="newSection" placeholder="Rizal"></div>
+          </div>
+          <button class="btn" type="submit" id="createWorkspaceBtn">Add Class</button>
+        </form>
       </div>
-      <button class="btn secondary" id="addStudentBtn">Add to List</button>
-      <table id="rosterTable" style="margin-top:16px">
-        <thead><tr><th>Name</th><th>LRN</th></tr></thead>
+      <table id="workspaceTable">
+        <thead><tr><th>School Year</th><th>Grade</th><th>Section</th><th></th></tr></thead>
         <tbody></tbody>
       </table>
-    </div>
-  </section>
+    </section>
 
-  <!-- CLASS SUBJECT: manual entry + review + publish -->
-  <section id="screen-subject" class="screen">
-    <div class="breadcrumb"><button id="backToWorkspace">← Back</button></div>
-    <h2 id="subjectTitle"></h2>
-
-    <div class="term-tabs" id="termTabs">
-      <button data-term="1" class="active">Term 1</button>
-      <button data-term="2">Term 2</button>
-      <button data-term="3">Term 3</button>
-    </div>
-
-    <div class="panel">
-      <h3 style="margin-top:0">Enter Scores</h3>
-      <div class="row">
-        <div class="field"><label>Learner</label><select id="scoreEnrollment"></select></div>
-      </div>
-      <div class="row">
-        <div class="field"><label>Written Work (raw / highest)</label>
-          <div style="display:flex;gap:8px"><input id="wwRaw" type="number" placeholder="raw"><input id="wwHigh" type="number" placeholder="highest" value="100"></div>
-        </div>
-        <div class="field"><label>Performance Task (raw / highest)</label>
-          <div style="display:flex;gap:8px"><input id="ptRaw" type="number" placeholder="raw"><input id="ptHigh" type="number" placeholder="highest" value="100"></div>
-        </div>
-        <div class="field"><label>Exam (raw / highest)</label>
-          <div style="display:flex;gap:8px"><input id="exRaw" type="number" placeholder="raw"><input id="exHigh" type="number" placeholder="highest" value="100"></div>
+    <section id="screen-subjects" class="screen">
+      <h2>Subjects</h2>
+      <div class="class-selector"><label for="subjectsClassSelect">Class:</label><select id="subjectsClassSelect"></select></div>
+      <div id="subjectsNoClassMsg" class="empty-state" style="display:none"><div class="display">No Class Selected</div><p>Add or Select a class first, under "Classes."</p></div>
+      <div id="subjectsContent">
+        <div class="subject-grid" id="subjectGrid"></div>
+        <div class="panel" style="margin-top:20px; max-width:360px">
+          <h3 style="margin-top:0">Add a Subject</h3>
+          <div class="field"><label>Subject Name</label><input id="specialSubjectName" placeholder="Religion"></div>
+          <button class="btn secondary" id="addSpecialSubjectBtn">Add Subject</button>
         </div>
       </div>
-      <button class="btn" id="saveScoresBtn">Save &amp; Compute Grade</button>
-      <div id="scoreResult" style="margin-top:12px"></div>
-    </div>
+    </section>
 
-    <div class="panel">
-      <h3 style="margin-top:0">Or import an ECR file</h3>
-      <p style="color:var(--text-muted); font-size:0.85rem; margin-top:-8px">Supports the DepEd Class Record templates.</p>
-      <input type="file" id="ecrFileInput" accept=".xlsx">
-      <button class="btn secondary" id="ecrUploadBtn" style="margin-top:12px">Check File</button>
-      <div id="ecrImportArea" style="margin-top:16px"></div>
-    </div>
+    <section id="screen-subject-detail" class="screen">
+      <div class="breadcrumb"><button id="backToSubjects">← Subjects</button></div>
+      <h2 id="subjectTitle"></h2>
 
-    <div class="panel">
-      <div style="display:flex; justify-content:space-between; align-items:center">
-        <h3 style="margin:0">Review - Term <span id="reviewTermLabel">1</span></h3>
-        <div>
-          <button class="btn secondary" id="unpublishBtn">Unpublish</button>
-          <button class="btn" id="publishBtn">Publish</button>
+      <div class="term-tabs" id="termTabs">
+        <button data-term="1" class="active">Term 1</button>
+        <button data-term="2">Term 2</button>
+        <button data-term="3">Term 3</button>
+      </div>
+
+      <div class="panel">
+        <h3 style="margin-top:0">Enter Scores</h3>
+        <div class="row">
+          <div class="field"><label>Learner</label><select id="scoreEnrollment"></select></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Written Work (raw / highest)</label>
+            <div style="display:flex;gap:8px"><input id="wwRaw" type="number" placeholder="raw"><input id="wwHigh" type="number" placeholder="highest" value="100"></div>
+          </div>
+          <div class="field"><label>Performance Task (raw / highest)</label>
+            <div style="display:flex;gap:8px"><input id="ptRaw" type="number" placeholder="raw"><input id="ptHigh" type="number" placeholder="highest" value="100"></div>
+          </div>
+          <div class="field"><label>Exam (raw / highest)</label>
+            <div style="display:flex;gap:8px"><input id="exRaw" type="number" placeholder="raw"><input id="exHigh" type="number" placeholder="highest" value="100"></div>
+          </div>
+        </div>
+        <button class="btn" id="saveScoresBtn">Save &amp; Compute Grade</button>
+        <div id="scoreResult" style="margin-top:12px"></div>
+      </div>
+
+      <div class="panel">
+        <h3 style="margin-top:0">Or Import an E-CR file</h3>
+        <p style="color:var(--text-muted); font-size:0.85rem; margin-top:-8px">Supports the standard DepEd E-CR.</p>
+        <input type="file" id="ecrFileInput" accept=".xlsx">
+        <button class="btn secondary" id="ecrUploadBtn" style="margin-top:12px">Check File</button>
+        <div id="ecrImportArea" style="margin-top:16px"></div>
+      </div>
+
+      <div class="panel">
+        <div style="display:flex; justify-content:space-between; align-items:center">
+          <h3 style="margin:0">Review - Term <span id="reviewTermLabel">1</span></h3>
+          <div>
+            <button class="btn secondary" id="unpublishBtn">Unpublish</button>
+            <button class="btn" id="publishBtn">Publish</button>
+          </div>
+        </div>
+        <table style="margin-top:16px">
+          <thead><tr><th>Learner</th><th>Grade</th><th>Descriptor</th><th>Status</th><th>Source</th></tr></thead>
+          <tbody id="reviewTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="screen-students" class="screen">
+      <h2>Students</h2>
+      <div class="class-selector"><label for="studentsClassSelect">Class:</label><select id="studentsClassSelect"></select></div>
+      <div id="studentsNoClassMsg" class="empty-state" style="display:none"><div class="display">No Class Selected</div><p>Add or Select a class first, under "Classes."</p></div>
+      <div id="studentsContent">
+        <div class="panel">
+          <h3 style="margin-top:0">Add a Student</h3>
+          <form id="addStudentForm">
+            <div class="row">
+              <div class="field"><label>Full name (Surname, Given Name)</label><input id="newStudentName" placeholder="Dela Cruz, Juan"></div>
+              <div class="field" style="max-width:120px"><label>Sex</label>
+                <select id="newStudentSex"><option value="M">M</option><option value="F">F</option></select>
+              </div>
+            </div>
+            <button class="btn secondary" type="submit" id="addStudentBtn">Add to List</button>
+          </form>
+        </div>
+        <table id="rosterTable">
+          <thead><tr><th>Student Code</th><th>Name</th><th>Sex</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="screen-settings" class="screen">
+      <h2>Settings</h2>
+      <div class="panel" style="max-width:420px">
+        <div class="settings-row">
+          <span>Dark Mode</span>
+          <label class="toggle-switch"><input type="checkbox" id="darkModeToggle"><span class="toggle-slider"></span></label>
         </div>
       </div>
-      <table style="margin-top:16px">
-        <thead><tr><th>Learner</th><th>Grade</th><th>Descriptor</th><th>Status</th><th>Source</th></tr></thead>
-        <tbody id="reviewTableBody"></tbody>
-      </table>
-    </div>
-  </section>
+      <div class="panel" style="max-width:420px">
+        <h3 style="margin-top:0">Change Password</h3>
+        <div id="changePasswordMsg"></div>
+        <div class="field"><label>Current Password</label><input id="currentPassword" type="password"></div>
+        <div class="field"><label>New Password</label><input id="newPasswordField" type="password"></div>
+        <button class="btn secondary" id="changePasswordBtn">Update Password</button>
+      </div>
+      <div class="panel" style="max-width:420px">
+        <h3 style="margin-top:0">License</h3>
+        <div id="accountLicenseInfo"></div>
+      </div>
+    </section>
 
-  <!-- ACCOUNT -->
-  <section id="screen-account" class="screen">
-    <div class="breadcrumb"><button id="backFromAccount">← Your Classes</button></div>
-    <h2>Account</h2>
-    <div class="panel" style="max-width:420px">
-      <h3 style="margin-top:0">Change Password</h3>
-      <div id="changePasswordMsg"></div>
-      <div class="field"><label>Current Password</label><input id="currentPassword" type="password"></div>
-      <div class="field"><label>New Password</label><input id="newPasswordField" type="password"></div>
-      <button class="btn secondary" id="changePasswordBtn">Update Password</button>
-    </div>
-    <div class="panel" style="max-width:420px">
-      <h3 style="margin-top:0">License</h3>
-      <div id="accountLicenseInfo"></div>
-    </div>
-  </section>
-
-</main>
+  </main>
+</div>
 
 <div id="modalRoot"></div>
 
 <script>
-/* ---------- tiny state + helpers ---------- */
 var state = {
-  sessionToken: localStorage.getItem('ogv_teacher_session') || null,
+  sessionToken: localStorage.getItem('ogv_teacher_session'),
+  workspaces: [],
   currentWorkspaceId: null,
   currentClassSubjectId: null,
   currentTerm: 1,
   roster: [],
 };
 
+var DEFAULT_SUBJECTS = [
+  { code: 'FIL', name: 'Filipino' },
+  { code: 'ENG', name: 'English' },
+  { code: 'MATH', name: 'Mathematics' },
+  { code: 'SCI', name: 'Science' },
+  { code: 'AP', name: 'Araling Panlipunan' },
+  { code: 'GMRC', name: 'GMRC / Values Education' },
+  { code: 'MAPEH', name: 'MAPEH' },
+  { code: 'TLE', name: 'EPP / TLE' },
+];
+
 function show(screenId) {
   document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('active'); });
   document.getElementById(screenId).classList.add('active');
 }
 
-/* call() is provided by api.js */
-
-function defaultError(msg) {
-  showToast(msg, 'error'); // simple fallback; msg areas are used for the main flows below
-}
-
-function renderHeaderNav(loggedIn) {
-  var nav = document.getElementById('headerNav');
-  nav.innerHTML = loggedIn ? '<button id="accountNavBtn">Account</button><button id="logoutBtn">Log out</button>' : '';
-  if (loggedIn) {
-    document.getElementById('logoutBtn').onclick = function () {
-      localStorage.removeItem('ogv_teacher_session');
-      state.sessionToken = null;
-      show('screen-auth');
-      renderHeaderNav(false);
-    };
-    document.getElementById('accountNavBtn').onclick = function () { openAccountScreen(); };
-  }
-}
-
-function openAccountScreen() {
-  call('clientGetLicenseStatus_', [state.sessionToken], function (status) {
-    var el = document.getElementById('accountLicenseInfo');
-    if (status.status === 'TRIAL') {
-      el.innerHTML = '<p>Trial — ' + status.daysRemaining + ' day(s) remaining.</p>';
-    } else if (status.status === 'ACTIVE') {
-      el.innerHTML = '<p>Active license' + (status.expirationDate ? (' until ' + status.expirationDate.slice(0, 10)) : '') + '.</p>';
-    } else {
-      el.innerHTML = '<p>Status: ' + status.status + '. Contact your administrator to activate a license.</p>';
-    }
-  });
-  show('screen-account');
-}
-
-document.getElementById('backFromAccount').onclick = function () { show('screen-dashboard'); };
-
-document.getElementById('changePasswordBtn').onclick = function () {
-  var current = document.getElementById('currentPassword').value;
-  var next = document.getElementById('newPasswordField').value;
-  var msgEl = document.getElementById('changePasswordMsg');
-  if (!current || !next) return;
-  call('clientChangePassword_', [state.sessionToken, current, next], function () {
-    msgEl.innerHTML = '<div class="msg success">Password updated.</div>';
-    document.getElementById('currentPassword').value = '';
-    document.getElementById('newPasswordField').value = '';
-  }, function (err) { msgEl.innerHTML = '<div class="msg error">' + err + '</div>'; });
-};
-
-function loadLicenseBanner() {
-  call('clientGetLicenseStatus_', [state.sessionToken], function (status) {
-    var el = document.getElementById('licenseBanner');
-    if (status.status === 'TRIAL' && status.daysRemaining !== null && status.daysRemaining <= 3 && status.daysRemaining > 0) {
-      el.innerHTML = '<div class="license-banner trial">Trial ends in ' + status.daysRemaining + ' day(s). <a href="#" id="goToAccountFromBanner">Manage account →</a></div>';
-      document.getElementById('goToAccountFromBanner').onclick = function (e) { e.preventDefault(); openAccountScreen(); };
-    } else if (status.status === 'EXPIRED' || status.status === 'SUSPENDED') {
-      el.innerHTML = '<div class="license-banner expired">Your trial has expired. Importing, entering, and publishing grades is paused — your students can still see anything already published. <a href="#" id="goToAccountFromBanner">See details →</a></div>';
-      document.getElementById('goToAccountFromBanner').onclick = function (e) { e.preventDefault(); openAccountScreen(); };
-    } else {
-      el.innerHTML = '';
-    }
+function setActiveNav(screenName) {
+  document.querySelectorAll('.nav-item[data-screen]').forEach(function (btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-screen') === screenName);
   });
 }
 
@@ -401,180 +785,201 @@ function confirmModal(title, bodyHtml, confirmLabel, onConfirm) {
   document.getElementById('modalConfirm').onclick = function () { root.innerHTML = ''; onConfirm(); };
 }
 
-/* ---------- AUTH ---------- */
-var isRegisterMode = false;
-document.getElementById('toggleAuthBtn').onclick = function () {
-  isRegisterMode = !isRegisterMode;
-  document.getElementById('registerFields').style.display = isRegisterMode ? 'block' : 'none';
-  document.getElementById('authTitle').textContent = isRegisterMode ? 'Create your account' : 'Log in';
-  document.getElementById('authSubmit').textContent = isRegisterMode ? 'Create account' : 'Log in';
-  document.getElementById('toggleAuthText').textContent = isRegisterMode ? 'Already have an account?' : 'New here?';
-  document.getElementById('toggleAuthBtn').textContent = isRegisterMode ? 'Log in' : 'Create an account';
+document.querySelectorAll('.nav-item[data-screen]').forEach(function (btn) {
+  btn.onclick = function () {
+    var screenName = btn.getAttribute('data-screen');
+    setActiveNav(screenName);
+    show('screen-' + screenName);
+    if (screenName === 'dashboard') loadDashboard();
+    if (screenName === 'classes') loadClassesScreen();
+    if (screenName === 'subjects') loadSubjectsScreen();
+    if (screenName === 'students') loadStudentsScreen();
+    if (screenName === 'settings') loadSettingsScreen();
+  };
+});
+
+document.getElementById('logoutBtn').onclick = function () {
+  localStorage.removeItem('ogv_teacher_session');
+  window.location.href = 'teacher-login.html';
 };
 
-document.getElementById('authSubmit').onclick = function () {
-  var email = document.getElementById('authEmail').value.trim();
-  var password = document.getElementById('authPassword').value;
-  var msgEl = document.getElementById('authMsg');
-  msgEl.innerHTML = '';
-
-  if (isRegisterMode) {
-    var fullName = document.getElementById('regFullName').value.trim();
-    if (!fullName || !email || !password) return;
-    call('clientRegister_', [fullName, email, password], function (data) {
-      msgEl.innerHTML = '<div class="msg success">Check your email for a verification link, then log in.</div>';
-      isRegisterMode = false;
-      document.getElementById('toggleAuthBtn').click();
-    }, function (err) { msgEl.innerHTML = '<div class="msg error">' + err + '</div>'; });
+call('clientOnboard_', [state.sessionToken], function () {
+  loadWorkspacesIntoState(function () { loadDashboard(); });
+}, function (err) {
+  if (String(err).indexOf('expired') !== -1) {
+    localStorage.removeItem('ogv_teacher_session');
+    window.location.href = 'teacher-login.html';
   } else {
-    if (!email || !password) return;
-    call('clientLogin_', [email, password], function (data) {
-      state.sessionToken = data.sessionToken;
-      localStorage.setItem('ogv_teacher_session', data.sessionToken);
-      afterLogin();
-    }, function (err) { msgEl.innerHTML = '<div class="msg error">' + err + '</div>'; });
+    loadWorkspacesIntoState(function () { loadDashboard(); });
   }
-};
+});
 
-function afterLogin() {
-  renderHeaderNav(true);
-  call('clientOnboard_', [state.sessionToken], function () {
-    loadWorkspaces();
-    loadLicenseBanner();
-    show('screen-dashboard');
-  }, function () {
-    loadWorkspaces();
-    loadLicenseBanner();
-    show('screen-dashboard');
+function loadWorkspacesIntoState(then) {
+  call('clientListWorkspaces_', [state.sessionToken], function (workspaces) {
+    state.workspaces = workspaces;
+    if (!state.currentWorkspaceId && workspaces.length > 0) state.currentWorkspaceId = workspaces[0].workspaceId;
+    if (then) then();
   });
 }
 
-if (state.sessionToken) { afterLogin(); }
-
-document.getElementById('forgotPasswordBtn').onclick = function () {
-  var email = prompt('Enter the email address on your account:');
-  if (!email) return;
-  call('clientRequestPasswordReset_', [email], function (data) {
-    document.getElementById('authMsg').innerHTML = '<div class="msg success">' + data.message + '</div>';
-  }, function (err) {
-    // Deliberately the SAME success-shaped message even on an error path,
-    // matching rule §17 -- a "forgot password" flow should never confirm
-    // or deny whether an email is registered.
-    document.getElementById('authMsg').innerHTML = '<div class="msg success">If that email is registered, a reset link has been sent.</div>';
+function loadLicenseBanner() {
+  call('clientGetLicenseStatus_', [state.sessionToken], function (status) {
+    var el = document.getElementById('licenseBanner');
+    if (status.status === 'TRIAL' && status.daysRemaining !== null && status.daysRemaining <= 3 && status.daysRemaining > 0) {
+      el.innerHTML = '<div class="license-banner trial">Trial ends in ' + status.daysRemaining + ' day(s).</div>';
+    } else if (status.status === 'EXPIRED' || status.status === 'SUSPENDED') {
+      el.innerHTML = '<div class="license-banner expired">Your trial has expired. Importing, entering, and publishing grades is paused — your students can still see anything already published.</div>';
+    } else {
+      el.innerHTML = '';
+    }
   });
-};
+}
 
-/* ---------- DASHBOARD ---------- */
-function loadWorkspaces() {
+function loadDashboard() {
+  loadLicenseBanner();
+  call('clientGetLicenseStatus_', [state.sessionToken], function (status) {
+    var card = document.getElementById('dashboardTrialCard');
+    if (status.status === 'TRIAL') {
+      card.innerHTML = '<h3 style="margin-top:0">Trial</h3><p style="font-size:1.1rem; margin:0">' + status.daysRemaining + ' day(s) remaining</p>';
+    } else if (status.status === 'ACTIVE') {
+      card.innerHTML = '<h3 style="margin-top:0">License</h3><p style="margin:0">Active' + (status.expirationDate ? (' until ' + status.expirationDate.slice(0, 10)) : '') + '</p>';
+    } else {
+      card.innerHTML = '<h3 style="margin-top:0">License</h3><p style="margin:0">Status: ' + status.status + '</p>';
+    }
+  });
   call('clientListWorkspaces_', [state.sessionToken], function (workspaces) {
+    state.workspaces = workspaces;
+    var tbody = document.querySelector('#dashboardClassTable tbody');
+    tbody.innerHTML = workspaces.length === 0
+      ? '<tr><td colspan="3" class="empty-state">No classes yet — add one under "Classes."</td></tr>'
+      : workspaces.map(function (ws) { return '<tr><td>' + ws.schoolYearLabel + '</td><td>' + ws.gradeLevel + '</td><td>' + ws.section + '</td></tr>'; }).join('');
+  });
+}
+
+function loadClassesScreen() {
+  call('clientListWorkspaces_', [state.sessionToken], function (workspaces) {
+    state.workspaces = workspaces;
     var tbody = document.querySelector('#workspaceTable tbody');
-    tbody.innerHTML = '';
-    workspaces.forEach(function (ws) {
-      var tr = document.createElement('tr');
-      tr.className = 'clickable';
-      tr.innerHTML = '<td>' + ws.schoolYearLabel + '</td><td>' + ws.gradeLevel + '</td><td>' + ws.section + '</td><td>Open →</td>';
-      tr.onclick = function () { openWorkspace(ws.workspaceId, ws.gradeLevel, ws.section, ws.schoolYearLabel); };
-      tbody.appendChild(tr);
+    tbody.innerHTML = workspaces.map(function (ws) {
+      return '<tr><td>' + ws.schoolYearLabel + '</td><td>' + ws.gradeLevel + '</td><td>' + ws.section + '</td>' +
+        '<td><button class="btn secondary small" data-select-workspace="' + ws.workspaceId + '">Select as active</button></td></tr>';
+    }).join('');
+    tbody.querySelectorAll('[data-select-workspace]').forEach(function (btn) {
+      btn.onclick = function () {
+        state.currentWorkspaceId = btn.getAttribute('data-select-workspace');
+        showToast('Active class updated.', 'success');
+      };
     });
   });
 }
 
-document.getElementById('createWorkspaceBtn').onclick = function () {
+document.getElementById('createWorkspaceForm').onsubmit = function (e) {
+  e.preventDefault();
   var sy = document.getElementById('newSchoolYear').value.trim();
   var gl = document.getElementById('newGradeLevel').value.trim();
   var sec = document.getElementById('newSection').value.trim();
   var msgEl = document.getElementById('workspaceMsg');
   if (!sy || !gl || !sec) return;
-  call('clientCreateWorkspace_', [state.sessionToken, sy, gl, sec], function () {
+  call('clientCreateWorkspace_', [state.sessionToken, sy, gl, sec], function (data) {
     document.getElementById('newSchoolYear').value = '';
     document.getElementById('newGradeLevel').value = '';
     document.getElementById('newSection').value = '';
-    loadWorkspaces();
+    state.currentWorkspaceId = data.workspaceId;
+    loadClassesScreen();
+    showToast('Class added.', 'success');
   }, function (err) { msgEl.innerHTML = '<div class="msg error">' + err + '</div>'; });
 };
 
-document.getElementById('backToDashboard').onclick = function () { show('screen-dashboard'); };
-
-/* ---------- WORKSPACE ---------- */
-function openWorkspace(workspaceId, gradeLevel, section, schoolYearLabel) {
-  state.currentWorkspaceId = workspaceId;
-  document.getElementById('workspaceTitle').textContent = 'Grade ' + gradeLevel + ' - ' + section + ' · ' + schoolYearLabel;
-  loadClassSubjects();
-  loadRoster();
-  show('screen-workspace');
+function populateClassSelector(selectEl, onChange) {
+  selectEl.innerHTML = state.workspaces.map(function (ws) {
+    return '<option value="' + ws.workspaceId + '">' + ws.schoolYearLabel + ' · Grade ' + ws.gradeLevel + ' - ' + ws.section + '</option>';
+  }).join('');
+  if (state.currentWorkspaceId) selectEl.value = state.currentWorkspaceId;
+  selectEl.onchange = function () {
+    state.currentWorkspaceId = selectEl.value;
+    onChange();
+  };
 }
 
-function loadClassSubjects() {
-  call('clientListClassSubjects_', [state.sessionToken, state.currentWorkspaceId], function (subjects) {
-    var tbody = document.querySelector('#subjectTable tbody');
-    tbody.innerHTML = '';
-    if (subjects.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No subjects yet — add one above.</td></tr>';
-      return;
-    }
-    subjects.forEach(function (cs) {
-      var termCell = function (n) {
-        var t = cs.terms.filter(function (x) { return x.term === n; })[0];
-        var status = t ? t.status : 'EMPTY';
-        return '<span class="status-pill ' + status + '">' + status + '</span>';
+function loadSubjectsScreen() {
+  loadWorkspacesIntoState(function () {
+    var hasClass = !!state.currentWorkspaceId;
+    document.getElementById('subjectsNoClassMsg').style.display = hasClass ? 'none' : 'block';
+    document.getElementById('subjectsContent').style.display = hasClass ? 'block' : 'none';
+    if (!hasClass) return;
+    populateClassSelector(document.getElementById('subjectsClassSelect'), loadSubjectsScreen);
+    renderSubjectGrid();
+  });
+}
+
+function renderSubjectGrid() {
+  call('clientListClassSubjects_', [state.sessionToken, state.currentWorkspaceId], function (classSubjects) {
+    var grid = document.getElementById('subjectGrid');
+    var addedByName = {};
+    classSubjects.forEach(function (cs) { addedByName[cs.subjectName] = cs; });
+
+    var cardsHtml = DEFAULT_SUBJECTS.map(function (subj) {
+      var added = addedByName[subj.name];
+      if (added) {
+        return '<div class="subject-card added" data-open-subject="' + added.classSubjectId + '" data-subject-name="' + subj.name + '">' +
+          '<span class="name">' + subj.name + '</span><span class="added-badge">Added — open →</span></div>';
+      }
+      return '<div class="subject-card">' +
+        '<span class="name">' + subj.name + '</span>' +
+        '<button class="btn secondary small card-action" data-add-subject="' + subj.code + '">+ Add</button></div>';
+    }).join('');
+
+    var customCardsHtml = classSubjects
+      .filter(function (cs) { return !DEFAULT_SUBJECTS.some(function (s) { return s.name === cs.subjectName; }); })
+      .map(function (cs) {
+        return '<div class="subject-card added special" data-open-subject="' + cs.classSubjectId + '">' +
+          '<span class="name">' + cs.subjectName + '</span><span class="added-badge">Special · Added — open →</span></div>';
+      }).join('');
+
+    grid.innerHTML = cardsHtml + customCardsHtml;
+
+    grid.querySelectorAll('[data-add-subject]').forEach(function (btn) {
+      btn.onclick = function () {
+        var code = btn.getAttribute('data-add-subject');
+        call('clientCreateClassSubject_', [state.sessionToken, state.currentWorkspaceId, code, null], function () {
+          renderSubjectGrid();
+          showToast('Subject added.', 'success');
+        }, function (err) { showToast(err, 'error'); });
       };
-      var tr = document.createElement('tr');
-      tr.className = 'clickable';
-      tr.innerHTML = '<td>' + cs.subjectName + '</td><td>' + termCell(1) + '</td><td>' + termCell(2) + '</td><td>' + termCell(3) + '</td>';
-      tr.onclick = function () { openClassSubject(cs.classSubjectId, cs.subjectName); };
-      tbody.appendChild(tr);
+    });
+    grid.querySelectorAll('[data-open-subject]').forEach(function (card) {
+      card.onclick = function () {
+        var name = card.getAttribute('data-subject-name') || card.querySelector('.name').textContent;
+        openSubjectDetail(card.getAttribute('data-open-subject'), name);
+      };
     });
   });
 }
 
-document.getElementById('addSubjectBtn').onclick = function () {
-  var code = document.getElementById('newSubjectCode').value;
-  call('clientCreateClassSubject_', [state.sessionToken, state.currentWorkspaceId, code], function () {
-    loadClassSubjects();
-  }, function (err) { showToast(err, 'error'); });
-};
-
-function loadRoster() {
-  call('clientListRoster_', [state.sessionToken, state.currentWorkspaceId], function (roster) {
-    state.roster = roster;
-    var tbody = document.querySelector('#rosterTable tbody');
-    tbody.innerHTML = '';
-    roster.forEach(function (r) {
-      var tr = document.createElement('tr');
-      tr.innerHTML = '<td>' + r.fullName + '</td><td>' + (r.lrn || '—') + '</td>';
-      tbody.appendChild(tr);
-    });
-    var select = document.getElementById('scoreEnrollment');
-    select.innerHTML = roster.map(function (r) { return '<option value="' + r.enrollmentId + '">' + r.fullName + '</option>'; }).join('');
-  });
-}
-
-document.getElementById('addStudentBtn').onclick = function () {
-  var lrn = document.getElementById('newStudentLrn').value.trim();
-  var name = document.getElementById('newStudentName').value.trim();
-  var sex = document.getElementById('newStudentSex').value;
+document.getElementById('addSpecialSubjectBtn').onclick = function () {
+  var name = document.getElementById('specialSubjectName').value.trim();
   if (!name) return;
-  call('clientAddStudent_', [state.sessionToken, state.currentWorkspaceId, lrn, name, sex], function () {
-    document.getElementById('newStudentLrn').value = '';
-    document.getElementById('newStudentName').value = '';
-    loadRoster();
+  call('clientCreateClassSubject_', [state.sessionToken, state.currentWorkspaceId, null, name], function () {
+    document.getElementById('specialSubjectName').value = '';
+    renderSubjectGrid();
+    showToast('Special subject added.', 'success');
   }, function (err) { showToast(err, 'error'); });
 };
 
-document.getElementById('backToWorkspace').onclick = function () {
-  loadClassSubjects();
-  show('screen-workspace');
-};
-
-/* ---------- CLASS SUBJECT: manual entry + review + publish ---------- */
-function openClassSubject(classSubjectId, subjectName) {
+function openSubjectDetail(classSubjectId, subjectName) {
   state.currentClassSubjectId = classSubjectId;
   state.currentTerm = 1;
   document.getElementById('subjectTitle').textContent = subjectName;
   document.querySelectorAll('#termTabs button').forEach(function (b) { b.classList.toggle('active', b.dataset.term === '1'); });
-  loadReview();
-  show('screen-subject');
+  loadRosterForCurrentClass(function () { loadReview(); });
+  show('screen-subject-detail');
 }
+
+document.getElementById('backToSubjects').onclick = function () {
+  setActiveNav('subjects');
+  loadSubjectsScreen();
+  show('screen-subjects');
+};
 
 document.querySelectorAll('#termTabs button').forEach(function (btn) {
   btn.onclick = function () {
@@ -584,6 +989,15 @@ document.querySelectorAll('#termTabs button').forEach(function (btn) {
     loadReview();
   };
 });
+
+function loadRosterForCurrentClass(then) {
+  call('clientListRoster_', [state.sessionToken, state.currentWorkspaceId], function (roster) {
+    state.roster = roster;
+    var select = document.getElementById('scoreEnrollment');
+    select.innerHTML = roster.map(function (r) { return '<option value="' + r.enrollmentId + '">' + r.fullName + ' (' + r.studentCode + ')</option>'; }).join('');
+    if (then) then();
+  });
+}
 
 document.getElementById('saveScoresBtn').onclick = function () {
   var enrollmentId = document.getElementById('scoreEnrollment').value;
@@ -605,43 +1019,27 @@ function loadReview() {
   document.getElementById('reviewTermLabel').textContent = state.currentTerm;
   call('clientGetClassRecordGrades_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function (grades) {
     var tbody = document.getElementById('reviewTableBody');
-    tbody.innerHTML = '';
-    if (grades.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No scores entered for this term yet.</td></tr>';
-      return;
-    }
-    grades.forEach(function (g) {
-      var tr = document.createElement('tr');
-      tr.innerHTML = '<td>' + g.fullName + '</td><td>' + g.termGrade + '</td><td>' + g.descriptor + '</td>' +
-        '<td><span class="status-pill ' + g.publicationState + '">' + g.publicationState + '</span></td><td>' + g.source + '</td>';
-      tbody.appendChild(tr);
-    });
+    tbody.innerHTML = grades.length === 0
+      ? '<tr><td colspan="5" class="empty-state">No scores entered for this term yet.</td></tr>'
+      : grades.map(function (g) {
+          return '<tr><td>' + g.fullName + '</td><td>' + g.termGrade + '</td><td>' + g.descriptor + '</td>' +
+            '<td><span class="status-pill ' + g.publicationState + '">' + g.publicationState + '</span></td><td>' + g.source + '</td></tr>';
+        }).join('');
   });
 }
 
 document.getElementById('publishBtn').onclick = function () {
-  confirmModal(
-    'Publish Term ' + state.currentTerm + ' grades?',
-    'These grades will become visible to students and parents immediately.',
-    'Publish',
-    function () {
-      call('clientPublish_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function () { loadReview(); }, function (err) { showToast(err, 'error'); });
-    }
-  );
+  confirmModal('Publish Term ' + state.currentTerm + ' grades?', 'These grades will become visible to students and parents immediately.', 'Publish', function () {
+    call('clientPublish_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function () { loadReview(); showToast('Published.', 'success'); }, function (err) { showToast(err, 'error'); });
+  });
 };
 
 document.getElementById('unpublishBtn').onclick = function () {
-  confirmModal(
-    'Unpublish Term ' + state.currentTerm + ' grades?',
-    'Students will no longer be able to see these grades until you publish again. Nothing is deleted.',
-    'Unpublish',
-    function () {
-      call('clientUnpublish_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function () { loadReview(); }, function (err) { showToast(err, 'error'); });
-    }
-  );
+  confirmModal('Unpublish Term ' + state.currentTerm + ' grades?', 'Students will no longer be able to see these grades until you publish again. Nothing is deleted.', 'Unpublish', function () {
+    call('clientUnpublish_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function () { loadReview(); showToast('Unpublished.', 'success'); }, function (err) { showToast(err, 'error'); });
+  });
 };
 
-/* ---------- ECR IMPORT ---------- */
 var importState = { previewId: null, convertedSpreadsheetId: null };
 
 document.getElementById('ecrUploadBtn').onclick = function () {
@@ -653,7 +1051,7 @@ document.getElementById('ecrUploadBtn').onclick = function () {
   area.innerHTML = '<div class="summary-line">Checking your file…</div>';
   var reader = new FileReader();
   reader.onload = function () {
-    var base64 = reader.result.split(',')[1]; // strip the data: URL prefix
+    var base64 = reader.result.split(',')[1];
     call('clientImportEcr_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm, base64, file.name, file.type], function (preview) {
       renderImportPreview(preview);
     }, function (err) { area.innerHTML = '<div class="msg error">' + err + '</div>'; });
@@ -667,7 +1065,6 @@ function renderImportPreview(preview) {
   var area = document.getElementById('ecrImportArea');
 
   if (!preview.previewId) {
-    // Structural mismatch -- stopped before touching any data (Import Pipeline §2 step 3).
     area.innerHTML = '<div class="issue-block blocking"><h4>This file doesn\'t match this class</h4>' +
       preview.blockingIssues.map(function (r) { return '<div>' + r + '</div>'; }).join('') + '</div>';
     return;
@@ -720,11 +1117,8 @@ function renderImportPreview(preview) {
       var name = btn.getAttribute('data-add-name');
       var sex = prompt('Sex for ' + name + '? (M/F)', 'M');
       if (!sex) return;
-      // Adds the roster entry AND resolves this row in one atomic step --
-      // does not re-read the file, so it can't undo any match-to-existing
-      // resolution already made elsewhere in this same preview.
       call('clientAddAndResolveEcrRow_', [state.sessionToken, state.currentWorkspaceId, importState.previewId, name, sex.toUpperCase()], function (data) {
-        loadRoster(); // keep the roster dropdown/table in sync with the new student
+        loadRosterForCurrentClass();
         renderImportPreview(data);
       }, function (err) { showToast(err, 'error'); });
     };
@@ -735,9 +1129,6 @@ function renderImportPreview(preview) {
       var enrollmentId = select.value;
       if (!enrollmentId) return;
       var name = select.getAttribute('data-match-name');
-      // Resolving a match doesn't touch the roster or re-read the file --
-      // it just moves this row from unmatched to matched in the SAME cached
-      // preview (EcrImportService.gs's resolveEcrMatchToExisting_).
       call('clientResolveEcrMatchToExisting_', [state.sessionToken, importState.previewId, name, enrollmentId], renderImportPreview, function (err) { showToast(err, 'error'); });
     };
   });
@@ -745,24 +1136,91 @@ function renderImportPreview(preview) {
   var confirmBtn = document.getElementById('ecrConfirmBtn');
   if (confirmBtn && !confirmBtn.disabled) {
     confirmBtn.onclick = function () {
-      confirmModal(
-        'Import ' + preview.matchedCount + ' learners\' Term ' + state.currentTerm + ' grades?',
-        'This will save the grades exactly as calculated in the uploaded file. They stay unpublished until you publish them.',
-        'Import',
+      confirmModal('Import ' + preview.matchedCount + ' learners\' Term ' + state.currentTerm + ' grades?',
+        'This will save the grades exactly as calculated in the uploaded file. They stay unpublished until you publish them.', 'Import',
         function () {
           call('clientConfirmEcrImport_', [state.sessionToken, importState.previewId, importState.convertedSpreadsheetId], function () {
             document.getElementById('ecrImportArea').innerHTML = '<div class="msg success">Import complete.</div>';
             document.getElementById('ecrFileInput').value = '';
             loadReview();
+            showToast('Import complete.', 'success');
           }, function (err) { showToast(err, 'error'); });
-        }
-      );
+        });
     };
   }
 
   var cancelBtn = document.getElementById('ecrCancelBtn');
   if (cancelBtn) cancelBtn.onclick = function () { area.innerHTML = ''; document.getElementById('ecrFileInput').value = ''; };
 }
+
+function loadStudentsScreen() {
+  loadWorkspacesIntoState(function () {
+    var hasClass = !!state.currentWorkspaceId;
+    document.getElementById('studentsNoClassMsg').style.display = hasClass ? 'none' : 'block';
+    document.getElementById('studentsContent').style.display = hasClass ? 'block' : 'none';
+    if (!hasClass) return;
+    populateClassSelector(document.getElementById('studentsClassSelect'), loadStudentsScreen);
+    renderRosterTable();
+  });
+}
+
+function renderRosterTable() {
+  call('clientListRoster_', [state.sessionToken, state.currentWorkspaceId], function (roster) {
+    state.roster = roster;
+    var tbody = document.querySelector('#rosterTable tbody');
+    tbody.innerHTML = roster.length === 0
+      ? '<tr><td colspan="3" class="empty-state">No students yet.</td></tr>'
+      : roster.map(function (r) { return '<tr><td style="font-family:\'IBM Plex Mono\',monospace; font-size:0.95rem">' + r.studentCode + '</td><td>' + r.fullName + '</td><td>' + r.sex + '</td></tr>'; }).join('');
+  });
+}
+
+document.getElementById('addStudentForm').onsubmit = function (e) {
+  e.preventDefault();
+  var name = document.getElementById('newStudentName').value.trim();
+  var sex = document.getElementById('newStudentSex').value;
+  if (!name) return;
+  call('clientAddStudent_', [state.sessionToken, state.currentWorkspaceId, '', name, sex], function (data) {
+    document.getElementById('newStudentName').value = '';
+    renderRosterTable();
+    showToast('Added as ' + data.studentCode + '.', 'success');
+  }, function (err) { showToast(err, 'error'); });
+};
+
+function loadSettingsScreen() {
+  document.getElementById('darkModeToggle').checked = localStorage.getItem('markado_theme') === 'dark';
+  call('clientGetLicenseStatus_', [state.sessionToken], function (status) {
+    var el = document.getElementById('accountLicenseInfo');
+    if (status.status === 'TRIAL') {
+      el.innerHTML = '<p>Trial — ' + status.daysRemaining + ' day(s) remaining.</p>';
+    } else if (status.status === 'ACTIVE') {
+      el.innerHTML = '<p>Active license' + (status.expirationDate ? (' until ' + status.expirationDate.slice(0, 10)) : '') + '.</p>';
+    } else {
+      el.innerHTML = '<p>Status: ' + status.status + '. Contact your administrator to activate a license.</p>';
+    }
+  });
+}
+
+document.getElementById('darkModeToggle').onchange = function (e) {
+  if (e.target.checked) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    localStorage.setItem('markado_theme', 'dark');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('markado_theme', 'light');
+  }
+};
+
+document.getElementById('changePasswordBtn').onclick = function () {
+  var current = document.getElementById('currentPassword').value;
+  var next = document.getElementById('newPasswordField').value;
+  var msgEl = document.getElementById('changePasswordMsg');
+  if (!current || !next) return;
+  call('clientChangePassword_', [state.sessionToken, current, next], function () {
+    msgEl.innerHTML = '<div class="msg success">Password updated.</div>';
+    document.getElementById('currentPassword').value = '';
+    document.getElementById('newPasswordField').value = '';
+  }, function (err) { msgEl.innerHTML = '<div class="msg error">' + err + '</div>'; });
+};
 </script>
 </body>
 </html>
