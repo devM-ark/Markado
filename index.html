@@ -14,18 +14,21 @@
     --student-accent: #6B9071;
     --student-light: #E3EED4;
   }
+  
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  
   body {
     font-family: Arial, Helvetica, sans-serif;
-    background: var(--white);
-    color: var(--black);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
+	background-color: white;
+	color: black;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+  } 
+  
   .wordmark {
     font-family: Arial, Helvetica, sans-serif;
     font-weight: 700;
@@ -34,6 +37,7 @@
     text-align: center;
     margin-bottom: 8px;
   }
+  
   .tagline {
     text-align: center;
     color: #555;
@@ -41,6 +45,7 @@
     margin-bottom: 56px;
     max-width: 40ch;
   }
+  
   .choices {
     display: flex;
     gap: 20px;
@@ -49,6 +54,7 @@
     flex-wrap: wrap;
     justify-content: center;
   }
+  
   .choice {
     flex: 1 1 260px;
     text-decoration: none;
@@ -59,22 +65,44 @@
     flex-direction: column;
     gap: 6px;
     transition: transform 0.15s ease;
+	box-shadow: 0 4px 20px rgba(0,0,0,0.35);
   }
-  .choice:hover, .choice:focus-visible { transform: translateY(-2px); }
-  .choice:focus-visible { outline: 3px solid var(--black); outline-offset: 3px; }
-  .choice.teacher { background: var(--teacher-primary); }
-  .choice.student { background: var(--student-primary); }
+  
+  .choice:hover,
+  .choice:focus-visible {
+	transform: translateY(-2px);
+  }
+  
+  .choice:focus-visible {
+	outline: 3px solid var(--black);
+	outline-offset: 3px;
+  }
+  
+  .choice.teacher {
+	background: var(--teacher-primary);
+  }
+	
+  .choice.student {
+	background: var(--student-primary);
+  }
+  
   .choice-label {
     font-family: Arial, Helvetica, sans-serif;
     font-size: 1.5rem;
 	text-align: center;
     font-weight: 700;
   }
-  .choice-desc { font-size: 0.9rem; text-align: center; opacity: 0.85; }
+  
+  .choice-desc {
+	font-size: 0.9rem;
+	text-align: center;
+	opacity: 0.85;
+  }
   
   .developer-link {
 	text-decoration: none;
   }
+  
   footer {
     margin-top: 64px;
     font-size: 0.8rem;
@@ -85,10 +113,10 @@
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 </head>
 <body>
-  <img src="assets/logo-banner2.svg" alt="Markado — Online Grades Viewer" style="max-width:90%; width:420px; height:auto; display:block; margin:0 auto;">
+  <img src="assets/logo-banner2.svg" alt="Markado - Online Grades Viewer" style="max-width:90%; width:420px; height:auto; display:block; margin:0 auto;">
   <p class="tagline"></p>
   <div class="choices">
-    <a class="choice teacher" href="teacher.html">
+    <a class="choice teacher" href="teacher-login.html">
       <span class="choice-label">I'm a Teacher</span>
       <span class="choice-desc">Import or Manually Encode Grades</span>
     </a>
