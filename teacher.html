@@ -243,6 +243,12 @@
 	color: var(--danger);
   }
   
+  .msg.warn {
+	background: #FFF6E0;
+	color: #6B4E00;
+	border: 1px solid #F0D48A;
+  }
+
   .msg.success {
 	background: #E3EED4;
 	color: #375534;
@@ -374,6 +380,14 @@
 	justify-content: flex-end;
   }
 
+  .status-pill.NONE { background: var(--border); color: var(--text-muted); }
+  .grade-input { width: 84px; padding: 6px 8px; font: inherit; border: 1px solid var(--border); border-radius: 3px; }
+  .lrn-input { width: 150px; padding: 6px 8px; font: inherit; border: 1px solid var(--border); border-radius: 3px; }
+  .lock-tag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 20px; font-size: 0.72rem; background: var(--border); color: var(--text-muted); }
+  .term-choice { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; }
+  .term-choice input { margin-top: 4px; }
+  .import-facts { margin: 8px 0 12px; padding-left: 18px; line-height: 1.7; }
+  .import-title { font-size: 1.15rem; font-weight: 600; }
   .issue-block {
 	border-radius: 4px;
 	padding: 14px 16px;
@@ -429,6 +443,14 @@
 	font-size: 0.9rem;
   }
   
+  .license-banner.has-action {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	flex-wrap: wrap;
+  }
+
   .license-banner.trial {
 	background: var(--complement);
 	color: var(--primary);
@@ -554,6 +576,34 @@
 	border-bottom: none;
   }
   
+
+  /* ---------- Small screens ----------
+     Before this, the 220px sidebar and 36px page padding never adapted, leaving ~170px of content on a phone. */
+  main { min-width: 0; }
+  .subject-grid > .api-state { grid-column: 1 / -1; }
+
+  @media (max-width: 768px) {
+    .app-shell { flex-direction: column; min-height: 0; }
+    .sidebar { width: 100%; flex-direction: row; align-items: stretch; padding: 0; }
+    .sidebar-brand { display: none; }
+    /* five nav items + Log Out share the width equally so nothing (esp. Log Out) is scrolled out of sight */
+    .sidebar nav { display: flex; flex: 5 1 0; min-width: 0; }
+    .sidebar-footer { margin-top: 0; display: flex; flex: 1 1 0; min-width: 0; }
+    .nav-item { flex: 1 1 0; min-width: 0; width: auto; flex-direction: column; gap: 4px; padding: 10px 2px; font-size: 0.66rem; text-align: center; justify-content: center; }
+    main { padding: 16px 14px 60px; max-width: 100%; }
+    .panel { padding: 16px; }
+    table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+    th, td { padding: 8px 10px; }
+    .issue-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .issue-row .actions-inline { flex-wrap: wrap; width: 100%; }
+    .issue-row select { max-width: 100%; }
+    .class-selector { flex-wrap: wrap; }
+    .class-selector select { max-width: 100%; min-width: 0; font-size: 16px; }
+    .subject-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+    .term-tabs { flex-wrap: wrap; }
+    .modal { width: 92%; padding: 20px; }
+    select, input { font-size: 16px; } /* stops iOS Safari zooming the page on focus */
+  }
 </style>
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 </head>
@@ -579,6 +629,7 @@
     <nav>
       <button class="nav-item active" data-screen="dashboard"><img class="nav-icon" src="assets/icons/dashboard.svg" alt=""><span>Dashboard</span></button>
       <button class="nav-item" data-screen="classes"><img class="nav-icon" src="assets/icons/classes.svg" alt=""><span>Classes</span></button>
+      <button class="nav-item" data-screen="import"><img class="nav-icon" src="assets/icons/add.svg" alt=""><span>Import ECR</span></button>
       <button class="nav-item" data-screen="subjects"><img class="nav-icon" src="assets/icons/subjects.svg" alt=""><span>Subjects</span></button>
       <button class="nav-item" data-screen="students"><img class="nav-icon" src="assets/icons/students.svg" alt=""><span>Students</span></button>
       <button class="nav-item" data-screen="settings"><img class="nav-icon" src="assets/icons/settings.svg" alt=""><span>Settings</span></button>
@@ -597,7 +648,7 @@
       <div class="panel">
         <h3 style="margin-top:0">Your Classes</h3>
         <table id="dashboardClassTable">
-          <thead><tr><th>School Year</th><th>Grade</th><th>Section</th></tr></thead>
+          <thead><tr><th>School</th><th>School Year</th><th>Grade</th><th>Section</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -610,17 +661,32 @@
         <h3 style="margin-top:0">Add a Class</h3>
         <form id="createWorkspaceForm">
           <div class="row">
+            <div class="field"><label>School Name</label><input id="newSchoolName" placeholder="Your school (shown to students)"></div>
+          </div>
+          <div class="row">
             <div class="field"><label>School Year</label><input id="newSchoolYear" placeholder="2026-2027"></div>
             <div class="field"><label>Grade Level</label><input id="newGradeLevel" placeholder="6"></div>
             <div class="field"><label>Section</label><input id="newSection" placeholder="Rizal"></div>
           </div>
           <button class="btn" type="submit" id="createWorkspaceBtn">Add Class</button>
+          <button class="btn secondary" type="button" id="goImportBtn" style="margin-left:8px">Or import an E-CR</button>
         </form>
       </div>
       <table id="workspaceTable">
-        <thead><tr><th>School Year</th><th>Grade</th><th>Section</th><th></th></tr></thead>
+        <thead><tr><th>School</th><th>School Year</th><th>Grade</th><th>Section</th><th></th></tr></thead>
         <tbody></tbody>
       </table>
+    </section>
+
+    <section id="screen-import" class="screen">
+      <h2>Import an E-CR</h2>
+      <div class="panel">
+        <p style="margin-top:0">Upload the standard DepEd E-CR (.xlsx). The class, subject and learners are set up from the file, and you choose which terms to import.</p>
+        <p style="color:var(--text-muted); font-size:0.85rem">Only names, class details, term grades and descriptions are saved — never raw scores.</p>
+        <input type="file" id="ecrFileInput" accept=".xlsx">
+        <button class="btn" id="ecrUploadBtn" style="margin-top:12px">Check file</button>
+        <div id="ecrImportArea" style="margin-top:16px"></div>
+      </div>
     </section>
 
     <section id="screen-subjects" class="screen">
@@ -648,43 +714,19 @@
       </div>
 
       <div class="panel">
-        <h3 style="margin-top:0">Enter Scores</h3>
-        <div class="row">
-          <div class="field"><label>Learner</label><select id="scoreEnrollment"></select></div>
-        </div>
-        <div class="row">
-          <div class="field"><label>Written Work (raw / highest)</label>
-            <div style="display:flex;gap:8px"><input id="wwRaw" type="number" placeholder="raw"><input id="wwHigh" type="number" placeholder="highest" value="100"></div>
-          </div>
-          <div class="field"><label>Performance Task (raw / highest)</label>
-            <div style="display:flex;gap:8px"><input id="ptRaw" type="number" placeholder="raw"><input id="ptHigh" type="number" placeholder="highest" value="100"></div>
-          </div>
-          <div class="field"><label>Exam (raw / highest)</label>
-            <div style="display:flex;gap:8px"><input id="exRaw" type="number" placeholder="raw"><input id="exHigh" type="number" placeholder="highest" value="100"></div>
-          </div>
-        </div>
-        <button class="btn" id="saveScoresBtn">Save &amp; Compute Grade</button>
-        <div id="scoreResult" style="margin-top:12px"></div>
-      </div>
-
-      <div class="panel">
-        <h3 style="margin-top:0">Or Import an E-CR file</h3>
-        <p style="color:var(--text-muted); font-size:0.85rem; margin-top:-8px">Supports the standard DepEd E-CR.</p>
-        <input type="file" id="ecrFileInput" accept=".xlsx">
-        <button class="btn secondary" id="ecrUploadBtn" style="margin-top:12px">Check File</button>
-        <div id="ecrImportArea" style="margin-top:16px"></div>
-      </div>
-
-      <div class="panel">
-        <div style="display:flex; justify-content:space-between; align-items:center">
-          <h3 style="margin:0">Review - Term <span id="reviewTermLabel">1</span></h3>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px">
+          <h3 style="margin:0">Term <span id="reviewTermLabel">1</span> grades</h3>
           <div>
-            <button class="btn secondary" id="unpublishBtn">Unpublish</button>
-            <button class="btn" id="publishBtn">Publish</button>
+            <button class="btn secondary" id="unpublishBtn">Unpublish all</button>
+            <button class="btn secondary" id="saveGradesBtn">Save grades</button>
+            <button class="btn" id="publishBtn">Publish all</button>
           </div>
         </div>
-        <table style="margin-top:16px">
-          <thead><tr><th>Learner</th><th>Grade</th><th>Descriptor</th><th>Status</th><th>Source</th></tr></thead>
+        <p style="color:var(--text-muted); font-size:0.85rem; margin:8px 0 0">Type each learner's transmuted grade (60–100); the description fills in automatically. Published grades are locked — unpublish one to edit it.</p>
+        <div id="gradeMsg" style="margin-top:12px"></div>
+        <div id="lockNote"></div>
+        <table style="margin-top:8px">
+          <thead><tr><th>Learner</th><th>Grade</th><th>Description</th><th>Status</th><th></th></tr></thead>
           <tbody id="reviewTableBody"></tbody>
         </table>
       </div>
@@ -700,6 +742,7 @@
           <form id="addStudentForm">
             <div class="row">
               <div class="field"><label>Full name (Surname, Given Name)</label><input id="newStudentName" placeholder="Dela Cruz, Juan"></div>
+              <div class="field" style="max-width:190px"><label>LRN (optional)</label><input id="newStudentLrn" inputmode="numeric" maxlength="12" placeholder="12 digits"></div>
               <div class="field" style="max-width:120px"><label>Sex</label>
                 <select id="newStudentSex"><option value="M">M</option><option value="F">F</option></select>
               </div>
@@ -707,8 +750,9 @@
             <button class="btn secondary" type="submit" id="addStudentBtn">Add to List</button>
           </form>
         </div>
+        <p style="color:var(--text-muted); font-size:0.85rem">Students log in with their LRN and surname. An E-CR doesn't include LRNs, so add each learner's LRN here.</p>
         <table id="rosterTable">
-          <thead><tr><th>Student Code</th><th>Name</th><th>Sex</th></tr></thead>
+          <thead><tr><th>Student Code</th><th>Name</th><th>Sex</th><th>LRN</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -792,77 +836,213 @@ document.querySelectorAll('.nav-item[data-screen]').forEach(function (btn) {
     show('screen-' + screenName);
     if (screenName === 'dashboard') loadDashboard();
     if (screenName === 'classes') loadClassesScreen();
+    if (screenName === 'import') showImportScreen();
     if (screenName === 'subjects') loadSubjectsScreen();
     if (screenName === 'students') loadStudentsScreen();
     if (screenName === 'settings') loadSettingsScreen();
   };
 });
 
-document.getElementById('logoutBtn').onclick = function () {
+var ONBOARD_FLAG = 'markado_onboarded_token';
+
+// "Latest request wins": a slow response for something the user has already navigated away from
+// must not overwrite what is on screen now (e.g. rapid Term 1 -> Term 2 tab clicks).
+var requestSeq_ = {};
+function latest_(name) {
+  var id = (requestSeq_[name] || 0) + 1;
+  requestSeq_[name] = id;
+  return function () { return requestSeq_[name] === id; };
+}
+
+function endSession_() {
   localStorage.removeItem('ogv_teacher_session');
+  sessionStorage.removeItem(ONBOARD_FLAG);
+  invalidateApiCache();
   window.location.href = 'teacher-login.html';
-};
+  return true;
+}
+window.onApiSessionExpired = endSession_; // any call that finds the session gone sends the user to log in
 
-call('clientOnboard_', [state.sessionToken], function () {
-  loadWorkspacesIntoState(function () { loadDashboard(); });
-}, function (err) {
-  if (String(err).indexOf('expired') !== -1) {
-    localStorage.removeItem('ogv_teacher_session');
-    window.location.href = 'teacher-login.html';
-  } else {
-    loadWorkspacesIntoState(function () { loadDashboard(); });
+document.getElementById('logoutBtn').onclick = endSession_;
+
+// Onboarding is idempotent and only matters the first time a session opens the dashboard, so it is
+// skipped on later page loads of the same session. If the data call then reports a missing
+// spreadsheet, we fall back to onboarding and retry once.
+function startApp_() {
+  if (sessionStorage.getItem(ONBOARD_FLAG) === state.sessionToken) {
+    bootstrapData_(true);
+    return;
   }
-});
+  call('clientOnboard_', [state.sessionToken], function () {
+    sessionStorage.setItem(ONBOARD_FLAG, state.sessionToken);
+    bootstrapData_(false);
+  }, function () {
+    bootstrapData_(false); // as before: a failed onboarding doesn't block trying to load data
+  });
+}
 
-function loadWorkspacesIntoState(then) {
+function bootstrapData_(mayNeedOnboarding) {
+  var card = document.getElementById('dashboardTrialCard');
+  if (card && !card.innerHTML.trim()) card.innerHTML = '<p style="margin:0" class="loading-inline">Loading…</p>';
+  setLoading(document.querySelector('#dashboardClassTable tbody'), 'Loading your classes…');
+  // License status doesn't depend on workspaces: fetch both at once. The dashboard render below is
+  // then served from the cache instead of making the same calls again.
+  call('clientGetLicenseStatus_', [state.sessionToken], function () {}, function () {}, { silent: true });
+  loadWorkspacesIntoState(function () { loadDashboard(); }, function (err) {
+    if (mayNeedOnboarding) {
+      sessionStorage.removeItem(ONBOARD_FLAG);
+      call('clientOnboard_', [state.sessionToken], function () {
+        sessionStorage.setItem(ONBOARD_FLAG, state.sessionToken);
+        bootstrapData_(false);
+      }, function (e2) { setErrorState(document.querySelector('#dashboardClassTable tbody'), e2, function () { bootstrapData_(false); }); });
+    } else {
+      setErrorState(document.querySelector('#dashboardClassTable tbody'), err, function () { bootstrapData_(false); });
+    }
+  });
+}
+
+function loadWorkspacesIntoState(then, onErr) {
   call('clientListWorkspaces_', [state.sessionToken], function (workspaces) {
     state.workspaces = workspaces;
     if (!state.currentWorkspaceId && workspaces.length > 0) state.currentWorkspaceId = workspaces[0].workspaceId;
     if (then) then();
-  });
+  }, onErr || function (err) { showToast(err, 'error'); });
 }
 
-function loadLicenseBanner() {
-  call('clientGetLicenseStatus_', [state.sessionToken], function (status) {
-    var el = document.getElementById('licenseBanner');
-    if (status.status === 'TRIAL' && status.daysRemaining !== null && status.daysRemaining <= 3 && status.daysRemaining > 0) {
-      el.innerHTML = '<div class="license-banner trial">Trial ends in ' + status.daysRemaining + ' day(s).</div>';
-    } else if (status.status === 'EXPIRED' || status.status === 'SUSPENDED') {
-      el.innerHTML = '<div class="license-banner expired">Your trial has expired. Importing, entering, and publishing grades is paused — your students can still see anything already published.</div>';
-    } else {
-      el.innerHTML = '';
-    }
-  });
+function fmtDate_(iso) { return iso ? String(iso).slice(0, 10) : ''; }
+
+/** Days before expiry when a renewal can be requested: 7 for a monthly license, 30 otherwise (mirrors the server). */
+function renewalWindowDays_(licenseType) { return licenseType === 'monthly' ? 7 : 30; }
+
+function planLabel_(licenseType) { return licenseType === 'monthly' ? 'monthly ' : (licenseType === 'yearly' ? 'yearly ' : ''); }
+
+function renderLicenseBanner_(status) {
+  var el = document.getElementById('licenseBanner');
+  var text = '', cls = '', action = '';
+  if (status.status === 'TRIAL' && status.daysRemaining !== null && status.daysRemaining <= 7 && status.daysRemaining > 0) {
+    text = 'Trial ends in ' + status.daysRemaining + ' day(s).'; cls = 'trial'; action = 'Request a license';
+  } else if (status.status === 'EXPIRED') {
+    text = 'Your trial or license has expired. Importing, entering, and publishing grades is paused — your students can still see anything already published.'; cls = 'expired'; action = 'Request a license';
+  } else if (status.status === 'SUSPENDED') {
+    text = 'Your account has been suspended. Contact support for details. Your students can still see anything already published.'; cls = 'expired';
+  } else if (status.status === 'ACTIVE' && status.daysRemaining !== null && status.daysRemaining <= renewalWindowDays_(status.licenseType) && status.daysRemaining > 0) {
+    text = 'Your license expires in ' + status.daysRemaining + ' day(s).'; cls = 'trial'; action = 'Request renewal';
+  }
+  if (!text) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div class="license-banner ' + cls + (action ? ' has-action' : '') + '"><span>' + escapeHtml(text) + '</span>' +
+    (action ? '<button class="btn small" id="bannerRequestLicenseBtn">' + action + '</button>' : '') + '</div>';
+  var btn = document.getElementById('bannerRequestLicenseBtn');
+  if (btn) btn.onclick = function () { openLicenseRequestModal(refreshLicenseViews_); };
+}
+
+// ---------- License request (teacher applies; payment is by GCash, verified by the admin) ----------
+
+function closeModal_() { document.getElementById('modalRoot').innerHTML = ''; }
+
+function refreshLicenseViews_() { loadSettingsScreen(); }
+
+function openLicenseRequestModal(onDone) {
+  document.getElementById('modalRoot').innerHTML =
+    '<div class="modal-overlay"><div class="modal"><h3 style="margin-top:0">Request a license</h3><p>Loading…</p></div></div>';
+  call('clientGetLicenseRequestInfo_', [state.sessionToken], function (info) {
+    renderLicenseRequestModal_(info, onDone);
+  }, function (err) { closeModal_(); showToast(err, 'error'); });
+}
+
+function renderLicenseRequestModal_(info, onDone) {
+  var html = '<h3 style="margin-top:0">Request a license</h3>';
+  if (info.pending) {
+    var p = info.pending;
+    html += '<div class="msg warn">Your request is waiting for approval.</div>' +
+      '<p style="font-size:0.9rem; margin:0 0 6px">' + (p.planName ? 'Plan: <b>' + escapeHtml(p.planName) + '</b><br>' : '') + 'Sent: ' + escapeHtml(fmtDate_(p.requestedAt)) +
+      '<br>GCash reference: <b>' + escapeHtml(p.paymentReference) + '</b>' + (p.message ? '<br>Note: ' + escapeHtml(p.message) : '') + '</p>' +
+      '<p style="font-size:0.85rem">You will get an email once it has been reviewed.</p>' +
+      '<div id="lrMsg"></div><div class="actions"><button class="btn secondary" id="lrClose">Close</button><button class="btn secondary" id="lrCancelReq">Cancel request</button></div>';
+  } else if (!info.canRequest) {
+    html += '<p>' + escapeHtml(info.reason || 'You cannot request a license right now.') + '</p>' +
+      '<div class="actions"><button class="btn secondary" id="lrClose">Close</button></div>';
+  } else {
+    html += (info.lastDecision && info.lastDecision.status === 'DECLINED'
+        ? '<div class="msg error">Your last request was declined: ' + escapeHtml(info.lastDecision.adminNote) + '</div>' : '') +
+      '<div class="msg" style="white-space:pre-wrap; background:var(--complement)">' + escapeHtml(info.instructions || 'Ask your administrator how to pay for a license.') + '</div>' +
+      '<p style="font-size:0.88rem">Pay with GCash first, then choose the plan you paid for and enter the reference number from your receipt so the payment can be verified.</p>' +
+      '<div class="field"><label>Plan</label><select id="lrPlan"><option value="">Choose a plan…</option>' +
+        (info.plans || []).map(function (p) {
+          return '<option value="' + escapeHtml(p.id) + '">' + escapeHtml(p.name + ' (' + (p.durationLabel || (p.days ? p.days + ' days' : p.months + ' months')) + ')' + (p.price ? ' — ' + p.price : '')) + '</option>';
+        }).join('') + '</select></div>' +
+      '<div class="field"><label>GCash reference number</label><input id="lrRef" maxlength="40" autocomplete="off"></div>' +
+      '<div class="field"><label>Note (optional)</label><input id="lrNote" maxlength="300" autocomplete="off"></div>' +
+      '<div id="lrMsg"></div><div class="actions"><button class="btn secondary" id="lrClose">Cancel</button><button class="btn" id="lrSubmit">Send request</button></div>';
+  }
+  document.getElementById('modalRoot').innerHTML = '<div class="modal-overlay"><div class="modal">' + html + '</div></div>';
+
+  document.getElementById('lrClose').onclick = closeModal_;
+  var msgEl = document.getElementById('lrMsg');
+  var submit = document.getElementById('lrSubmit');
+  if (submit) submit.onclick = function () {
+    var plan = document.getElementById('lrPlan').value;
+    var ref = document.getElementById('lrRef').value.trim();
+    if (!plan) { msgEl.innerHTML = '<div class="msg error">Choose the plan you paid for.</div>'; return; }
+    if (!ref) { msgEl.innerHTML = '<div class="msg error">Enter the GCash reference number of your payment.</div>'; return; }
+    call('clientSubmitLicenseRequest_', [state.sessionToken, ref, document.getElementById('lrNote').value.trim(), plan], function () {
+      closeModal_();
+      showToast('Request sent. You will get an email once it has been reviewed.', 'success');
+      if (onDone) onDone();
+    }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; }, { button: submit });
+  };
+  var cancel = document.getElementById('lrCancelReq');
+  if (cancel) cancel.onclick = function () {
+    call('clientCancelLicenseRequest_', [state.sessionToken, info.pending.requestId], function () {
+      closeModal_(); showToast('Request cancelled.', 'success'); if (onDone) onDone();
+    }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; }, { button: cancel });
+  };
 }
 
 function loadDashboard() {
-  loadLicenseBanner();
+  var latest = latest_('dashboard');
+  var card = document.getElementById('dashboardTrialCard');
+  var tbody = document.querySelector('#dashboardClassTable tbody');
+  if (!card.innerHTML.trim()) card.innerHTML = '<p style="margin:0">Loading…</p>';
+  if (state.workspaces.length === 0) setLoading(tbody, 'Loading your classes…');
+
+  // ONE license request feeds both the banner and the card (it used to be requested twice).
   call('clientGetLicenseStatus_', [state.sessionToken], function (status) {
-    var card = document.getElementById('dashboardTrialCard');
+    if (!latest()) return;
+    renderLicenseBanner_(status);
     if (status.status === 'TRIAL') {
       card.innerHTML = '<h3 style="margin-top:0">Trial</h3><p style="font-size:1.1rem; margin:0">' + status.daysRemaining + ' day(s) remaining</p>';
     } else if (status.status === 'ACTIVE') {
-      card.innerHTML = '<h3 style="margin-top:0">License</h3><p style="margin:0">Active' + (status.expirationDate ? (' until ' + status.expirationDate.slice(0, 10)) : '') + '</p>';
+      card.innerHTML = '<h3 style="margin-top:0">License</h3><p style="margin:0">Active' + (status.expirationDate ? (' until ' + escapeHtml(status.expirationDate.slice(0, 10))) : '') + '</p>';
     } else {
-      card.innerHTML = '<h3 style="margin-top:0">License</h3><p style="margin:0">Status: ' + status.status + '</p>';
+      card.innerHTML = '<h3 style="margin-top:0">License</h3><p style="margin:0">Status: ' + escapeHtml(status.status) + '</p>';
     }
+  }, function (err) {
+    if (!latest()) return;
+    card.innerHTML = '<h3 style="margin-top:0">License</h3><p style="margin:0">Could not load license status.</p>';
   });
+
   call('clientListWorkspaces_', [state.sessionToken], function (workspaces) {
+    if (!latest()) return;
     state.workspaces = workspaces;
-    var tbody = document.querySelector('#dashboardClassTable tbody');
     tbody.innerHTML = workspaces.length === 0
-      ? '<tr><td colspan="3" class="empty-state">No classes yet — add one under "Classes."</td></tr>'
-      : workspaces.map(function (ws) { return '<tr><td>' + ws.schoolYearLabel + '</td><td>' + ws.gradeLevel + '</td><td>' + ws.section + '</td></tr>'; }).join('');
+      ? '<tr><td colspan="4" class="empty-state">No classes yet — add one under "Classes" or import an E-CR.</td></tr>'
+      : workspaces.map(function (ws) { return '<tr><td>' + escapeHtml(ws.schoolName) + '</td><td>' + escapeHtml(ws.schoolYearLabel) + '</td><td>' + escapeHtml(ws.gradeLevel) + '</td><td>' + escapeHtml(ws.section) + '</td></tr>'; }).join('');
+  }, function (err) {
+    if (!latest()) return;
+    setErrorState(tbody, err, loadDashboard);
   });
 }
 
 function loadClassesScreen() {
+  var latest = latest_('classes');
+  var tbody = document.querySelector('#workspaceTable tbody');
+  if (state.workspaces.length === 0) setLoading(tbody, 'Loading your classes…');
   call('clientListWorkspaces_', [state.sessionToken], function (workspaces) {
+    if (!latest()) return;
     state.workspaces = workspaces;
-    var tbody = document.querySelector('#workspaceTable tbody');
     tbody.innerHTML = workspaces.map(function (ws) {
-      return '<tr><td>' + ws.schoolYearLabel + '</td><td>' + ws.gradeLevel + '</td><td>' + ws.section + '</td>' +
-        '<td><button class="btn secondary small" data-select-workspace="' + ws.workspaceId + '">Select as active</button></td></tr>';
+      return '<tr><td>' + escapeHtml(ws.schoolName) + '</td><td>' + escapeHtml(ws.schoolYearLabel) + '</td><td>' + escapeHtml(ws.gradeLevel) + '</td><td>' + escapeHtml(ws.section) + '</td>' +
+        '<td><button class="btn secondary small" data-select-workspace="' + escapeHtml(ws.workspaceId) + '">Select as active</button></td></tr>';
     }).join('');
     tbody.querySelectorAll('[data-select-workspace]').forEach(function (btn) {
       btn.onclick = function () {
@@ -870,6 +1050,9 @@ function loadClassesScreen() {
         showToast('Active class updated.', 'success');
       };
     });
+  }, function (err) {
+    if (!latest()) return;
+    setErrorState(tbody, err, loadClassesScreen);
   });
 }
 
@@ -878,21 +1061,23 @@ document.getElementById('createWorkspaceForm').onsubmit = function (e) {
   var sy = document.getElementById('newSchoolYear').value.trim();
   var gl = document.getElementById('newGradeLevel').value.trim();
   var sec = document.getElementById('newSection').value.trim();
+  var schoolName = document.getElementById('newSchoolName').value.trim();
   var msgEl = document.getElementById('workspaceMsg');
   if (!sy || !gl || !sec) return;
-  call('clientCreateWorkspace_', [state.sessionToken, sy, gl, sec], function (data) {
+  call('clientCreateWorkspace_', [state.sessionToken, sy, gl, sec, schoolName], function (data) {
+    document.getElementById('newSchoolName').value = '';
     document.getElementById('newSchoolYear').value = '';
     document.getElementById('newGradeLevel').value = '';
     document.getElementById('newSection').value = '';
     state.currentWorkspaceId = data.workspaceId;
     loadClassesScreen();
     showToast('Class added.', 'success');
-  }, function (err) { msgEl.innerHTML = '<div class="msg error">' + err + '</div>'; });
+  }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; });
 };
 
 function populateClassSelector(selectEl, onChange) {
   selectEl.innerHTML = state.workspaces.map(function (ws) {
-    return '<option value="' + ws.workspaceId + '">' + ws.schoolYearLabel + ' · Grade ' + ws.gradeLevel + ' - ' + ws.section + '</option>';
+    return '<option value="' + escapeHtml(ws.workspaceId) + '">' + escapeHtml(ws.schoolYearLabel) + ' · Grade ' + escapeHtml(ws.gradeLevel) + ' - ' + escapeHtml(ws.section) + '</option>';
   }).join('');
   if (state.currentWorkspaceId) selectEl.value = state.currentWorkspaceId;
   selectEl.onchange = function () {
@@ -907,33 +1092,37 @@ function loadSubjectsScreen() {
     document.getElementById('subjectsNoClassMsg').style.display = hasClass ? 'none' : 'block';
     document.getElementById('subjectsContent').style.display = hasClass ? 'block' : 'none';
     if (!hasClass) return;
-    populateClassSelector(document.getElementById('subjectsClassSelect'), loadSubjectsScreen);
+    // Changing the class only needs that class's subjects -- not a reload of the workspace list.
+    populateClassSelector(document.getElementById('subjectsClassSelect'), renderSubjectGrid);
     renderSubjectGrid();
   });
 }
 
 function renderSubjectGrid() {
+  var latest = latest_('subjects');
+  var grid = document.getElementById('subjectGrid');
+  setLoading(grid, 'Loading subjects…');
   call('clientListClassSubjects_', [state.sessionToken, state.currentWorkspaceId], function (classSubjects) {
-    var grid = document.getElementById('subjectGrid');
+    if (!latest()) return;
     var addedByName = {};
     classSubjects.forEach(function (cs) { addedByName[cs.subjectName] = cs; });
 
     var cardsHtml = DEFAULT_SUBJECTS.map(function (subj) {
       var added = addedByName[subj.name];
       if (added) {
-        return '<div class="subject-card added" data-open-subject="' + added.classSubjectId + '" data-subject-name="' + subj.name + '">' +
-          '<span class="name">' + subj.name + '</span><span class="added-badge">Added — open →</span></div>';
+        return '<div class="subject-card added" data-open-subject="' + escapeHtml(added.classSubjectId) + '" data-subject-name="' + escapeHtml(subj.name) + '">' +
+          '<span class="name">' + escapeHtml(subj.name) + '</span><span class="added-badge">Added — open →</span></div>';
       }
       return '<div class="subject-card">' +
-        '<span class="name">' + subj.name + '</span>' +
+        '<span class="name">' + escapeHtml(subj.name) + '</span>' +
         '<button class="btn secondary small card-action" data-add-subject="' + subj.code + '">+ Add</button></div>';
     }).join('');
 
     var customCardsHtml = classSubjects
       .filter(function (cs) { return !DEFAULT_SUBJECTS.some(function (s) { return s.name === cs.subjectName; }); })
       .map(function (cs) {
-        return '<div class="subject-card added special" data-open-subject="' + cs.classSubjectId + '">' +
-          '<span class="name">' + cs.subjectName + '</span><span class="added-badge">Special · Added — open →</span></div>';
+        return '<div class="subject-card added special" data-open-subject="' + escapeHtml(cs.classSubjectId) + '">' +
+          '<span class="name">' + escapeHtml(cs.subjectName) + '</span><span class="added-badge">Special · Added — open →</span></div>';
       }).join('');
 
     grid.innerHTML = cardsHtml + customCardsHtml;
@@ -953,6 +1142,9 @@ function renderSubjectGrid() {
         openSubjectDetail(card.getAttribute('data-open-subject'), name);
       };
     });
+  }, function (err) {
+    if (!latest()) return;
+    setErrorState(grid, err, renderSubjectGrid);
   });
 }
 
@@ -971,8 +1163,12 @@ function openSubjectDetail(classSubjectId, subjectName) {
   state.currentTerm = 1;
   document.getElementById('subjectTitle').textContent = subjectName;
   document.querySelectorAll('#termTabs button').forEach(function (b) { b.classList.toggle('active', b.dataset.term === '1'); });
-  loadRosterForCurrentClass(function () { loadReview(); });
+  // Clear whatever the previous subject left on screen so it can't be mistaken for this one.
+  document.getElementById('gradeMsg').innerHTML = '';
+  document.getElementById('lockNote').innerHTML = '';
+  setLoading(document.getElementById('reviewTableBody'), 'Loading grades…');
   show('screen-subject-detail');
+  loadReview();
 }
 
 document.getElementById('backToSubjects').onclick = function () {
@@ -986,171 +1182,223 @@ document.querySelectorAll('#termTabs button').forEach(function (btn) {
     document.querySelectorAll('#termTabs button').forEach(function (b) { b.classList.remove('active'); });
     btn.classList.add('active');
     state.currentTerm = Number(btn.dataset.term);
+    document.getElementById('gradeMsg').innerHTML = '';
     loadReview();
   };
 });
 
-function loadRosterForCurrentClass(then) {
-  call('clientListRoster_', [state.sessionToken, state.currentWorkspaceId], function (roster) {
-    state.roster = roster;
-    var select = document.getElementById('scoreEnrollment');
-    select.innerHTML = roster.map(function (r) { return '<option value="' + r.enrollmentId + '">' + r.fullName + ' (' + r.studentCode + ')</option>'; }).join('');
-    if (then) then();
+/** One row of the grade sheet. A published grade is LOCKED: shown, not editable, until it is unpublished. */
+function gradeRowHtml_(g) {
+  var gradeCell = g.locked
+    ? '<strong>' + escapeHtml(g.termGrade) + '</strong><span class="lock-tag">Locked</span>'
+    : '<input class="grade-input" type="number" min="60" max="100" step="1" inputmode="numeric" data-enr="' + escapeHtml(g.enrollmentId) +
+      '" data-original="' + escapeHtml(g.termGrade) + '" value="' + escapeHtml(g.termGrade) + '" aria-label="Grade for ' + escapeHtml(g.fullName) + '">';
+  var pill = g.publicationState === 'NONE' ? '<span class="status-pill NONE">No grade</span>'
+    : '<span class="status-pill ' + escapeHtml(g.publicationState) + '">' + escapeHtml(g.publicationState) + '</span>';
+  var action = g.publicationState === 'PUBLISHED'
+    ? '<button class="btn small secondary" data-act="unpublish" data-enr="' + escapeHtml(g.enrollmentId) + '">Unpublish</button>'
+    : (g.publicationState === 'DRAFT' ? '<button class="btn small secondary" data-act="publish" data-enr="' + escapeHtml(g.enrollmentId) + '">Publish</button>' : '');
+  return '<tr><td>' + escapeHtml(g.fullName) + '</td><td>' + gradeCell + '</td><td>' + escapeHtml(g.descriptor) + '</td><td>' + pill + '</td>' +
+    '<td style="white-space:nowrap">' + action + '</td></tr>';
+}
+
+function loadReview(keepRows) {
+  var latest = latest_('review');
+  document.getElementById('reviewTermLabel').textContent = state.currentTerm;
+  var tbody = document.getElementById('reviewTableBody');
+  if (!keepRows) setLoading(tbody, 'Loading grades…'); // after a save/publish, keep the old rows until fresh ones arrive
+  call('clientGetClassRecordGrades_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function (rows) {
+    if (!latest()) return;
+    tbody.innerHTML = rows.length === 0
+      ? '<tr><td colspan="5" class="empty-state">No learners in this class yet. Add them under "Students", or import an E-CR.</td></tr>'
+      : rows.map(gradeRowHtml_).join('');
+    var lockedCount = rows.filter(function (r) { return r.locked; }).length;
+    document.getElementById('lockNote').innerHTML = lockedCount
+      ? '<div class="msg warn">' + lockedCount + ' grade(s) in this term are published and locked. To edit one, unpublish it first.</div>' : '';
+  }, function (err) {
+    if (!latest()) return;
+    setErrorState(tbody, err, function () { loadReview(); });
   });
 }
 
-document.getElementById('saveScoresBtn').onclick = function () {
-  var enrollmentId = document.getElementById('scoreEnrollment').value;
-  var components = [
-    { componentCode: 'WW', rawValue: Number(document.getElementById('wwRaw').value), highestPossible: Number(document.getElementById('wwHigh').value) },
-    { componentCode: 'PT', rawValue: Number(document.getElementById('ptRaw').value), highestPossible: Number(document.getElementById('ptHigh').value) },
-    { componentCode: 'EX', rawValue: Number(document.getElementById('exRaw').value), highestPossible: Number(document.getElementById('exHigh').value) },
-  ];
-  var resultEl = document.getElementById('scoreResult');
-  call('clientSaveManualScores_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm, enrollmentId, components], function (data) {
-    resultEl.innerHTML = data
-      ? '<div class="msg success">Computed grade: ' + data.termGrade + ' (' + data.descriptor + ')</div>'
-      : '<div class="msg error">Could not compute a grade from those scores.</div>';
-    loadReview();
-  }, function (err) { resultEl.innerHTML = '<div class="msg error">' + err + '</div>'; });
+document.getElementById('saveGradesBtn').onclick = function () {
+  var msgEl = document.getElementById('gradeMsg');
+  var entries = [];
+  document.querySelectorAll('#reviewTableBody input.grade-input').forEach(function (input) {
+    var value = input.value.trim();
+    if (value !== '' && value !== input.getAttribute('data-original')) entries.push({ enrollmentId: input.getAttribute('data-enr'), grade: Number(value) });
+  });
+  if (entries.length === 0) { msgEl.innerHTML = '<div class="msg error">Nothing to save — type a grade first.</div>'; return; }
+  call('clientSaveManualGrades_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm, entries], function (data) {
+    msgEl.innerHTML = '<div class="msg success">Saved ' + data.saved + ' grade(s). They stay unpublished (Draft) until you publish them.</div>';
+    loadReview(true);
+  }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; },
+  { button: document.getElementById('saveGradesBtn') });
 };
 
-function loadReview() {
-  document.getElementById('reviewTermLabel').textContent = state.currentTerm;
-  call('clientGetClassRecordGrades_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function (grades) {
-    var tbody = document.getElementById('reviewTableBody');
-    tbody.innerHTML = grades.length === 0
-      ? '<tr><td colspan="5" class="empty-state">No scores entered for this term yet.</td></tr>'
-      : grades.map(function (g) {
-          return '<tr><td>' + g.fullName + '</td><td>' + g.termGrade + '</td><td>' + g.descriptor + '</td>' +
-            '<td><span class="status-pill ' + g.publicationState + '">' + g.publicationState + '</span></td><td>' + g.source + '</td></tr>';
-        }).join('');
-  });
-}
+// Per-learner Publish / Unpublish (event delegation: the rows are re-rendered after every load)
+document.getElementById('reviewTableBody').addEventListener('click', function (e) {
+  var btn = e.target.closest && e.target.closest('button[data-act]');
+  if (!btn) return;
+  var publish = btn.getAttribute('data-act') === 'publish';
+  call(publish ? 'clientPublishLearner_' : 'clientUnpublishLearner_',
+    [state.sessionToken, state.currentClassSubjectId, state.currentTerm, btn.getAttribute('data-enr')],
+    function () { loadReview(true); showToast(publish ? 'Published — this grade is now locked.' : 'Unpublished — you can edit this grade again.', 'success'); },
+    function (err) { showToast(err, 'error'); },
+    { button: btn });
+});
 
 document.getElementById('publishBtn').onclick = function () {
-  confirmModal('Publish Term ' + state.currentTerm + ' grades?', 'These grades will become visible to students and parents immediately.', 'Publish', function () {
-    call('clientPublish_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function () { loadReview(); showToast('Published.', 'success'); }, function (err) { showToast(err, 'error'); });
+  confirmModal('Publish Term ' + state.currentTerm + ' grades?', 'These grades will become visible to students immediately, and will be locked: they can\'t be edited or overwritten by an import until you unpublish them.', 'Publish', function () {
+    call('clientPublish_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function () { loadReview(true); showToast('Published and locked.', 'success'); }, function (err) { showToast(err, 'error'); }, { button: document.getElementById('publishBtn') });
   });
 };
 
 document.getElementById('unpublishBtn').onclick = function () {
-  confirmModal('Unpublish Term ' + state.currentTerm + ' grades?', 'Students will no longer be able to see these grades until you publish again. Nothing is deleted.', 'Unpublish', function () {
-    call('clientUnpublish_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function () { loadReview(); showToast('Unpublished.', 'success'); }, function (err) { showToast(err, 'error'); });
+  confirmModal('Unpublish Term ' + state.currentTerm + ' grades?', 'Students will no longer be able to see these grades, and they become editable again. Nothing is deleted.', 'Unpublish', function () {
+    call('clientUnpublish_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function () { loadReview(true); showToast('Unpublished.', 'success'); }, function (err) { showToast(err, 'error'); }, { button: document.getElementById('unpublishBtn') });
   });
 };
 
-var importState = { previewId: null, convertedSpreadsheetId: null };
+// ---------- Import an E-CR: the file sets up the class, subject and learners; the teacher picks the terms ----------
+
+var importState = { previewId: null, file: null };
+
+function showImportScreen() {
+  document.getElementById('ecrImportArea').innerHTML = '';
+  document.getElementById('ecrFileInput').value = '';
+  importState = { previewId: null, file: null };
+}
+
+document.getElementById('goImportBtn').onclick = function () {
+  setActiveNav('import');
+  show('screen-import');
+  showImportScreen();
+};
 
 document.getElementById('ecrUploadBtn').onclick = function () {
   var fileInput = document.getElementById('ecrFileInput');
   var file = fileInput.files[0];
   var area = document.getElementById('ecrImportArea');
   if (!file) { area.innerHTML = '<div class="msg error">Choose a file first.</div>'; return; }
+  if (file.size > 10 * 1024 * 1024) { area.innerHTML = '<div class="msg error">That file is larger than 10 MB, which is too big for an E-CR. Please check you chose the right file.</div>'; return; }
 
-  area.innerHTML = '<div class="summary-line">Checking your file…</div>';
+  area.innerHTML = '<div class="summary-line"><span class="api-spinner"></span>Uploading and checking your file…</div>';
+  var uploadBtn = document.getElementById('ecrUploadBtn');
   var reader = new FileReader();
   reader.onload = function () {
     var base64 = reader.result.split(',')[1];
-    call('clientImportEcr_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm, base64, file.name, file.type], function (preview) {
+    call('clientPreviewEcrUpload_', [state.sessionToken, base64, file.name, file.type], function (preview) {
       renderImportPreview(preview);
-    }, function (err) { area.innerHTML = '<div class="msg error">' + err + '</div>'; });
+    }, function (err) { area.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; }, { button: uploadBtn });
   };
+  reader.onerror = function () { area.innerHTML = '<div class="msg error">Could not read that file. Please try choosing it again.</div>'; };
   reader.readAsDataURL(file);
 };
 
-function renderImportPreview(preview) {
-  importState.previewId = preview.previewId;
-  importState.convertedSpreadsheetId = preview.convertedSpreadsheetId;
-  var area = document.getElementById('ecrImportArea');
+function termChoiceHtml_(t) {
+  var label = 'Term ' + t.term;
+  if (t.gradedCount === 0) return '<div class="term-choice" style="color:var(--text-muted)">' + label + ' — no grades in this file</div>';
+  var notes = [];
+  if (t.lockedCount > 0) notes.push(t.lockedCount + ' already published and locked — will be skipped');
+  if (t.skippedInvalid > 0) notes.push(t.skippedInvalid + ' cell(s) had no usable grade');
+  return '<label class="term-choice"><input type="checkbox" data-term-check="' + t.term + '"' + (t.importable ? ' checked' : ' disabled') + '>' +
+    '<span>' + label + ' — ' + t.gradedCount + ' grade(s)' + (t.importable ? '' : ' (all locked)') + (notes.length ? '<br><span style="color:var(--text-muted); font-size:0.85rem">' + escapeHtml(notes.join(' · ')) + '</span>' : '') + '</span></label>';
+}
 
-  if (!preview.previewId) {
-    area.innerHTML = '<div class="issue-block blocking"><h4>This file doesn\'t match this class</h4>' +
-      preview.blockingIssues.map(function (r) { return '<div>' + r + '</div>'; }).join('') + '</div>';
+function renderImportPreview(preview) {
+  var area = document.getElementById('ecrImportArea');
+  if (preview.blockingIssues && preview.blockingIssues.length > 0) {
+    area.innerHTML = '<div class="issue-block blocking"><h4>This file can\'t be imported yet</h4>' +
+      preview.blockingIssues.map(function (i) { return '<div class="issue-row"><span>' + escapeHtml(i) + '</span></div>'; }).join('') + '</div>';
     return;
   }
+  importState.previewId = preview.previewId;
+  importState.file = preview.file;
+  var f = preview.file;
 
-  var html = '<div class="summary-line">' + preview.totalLearners + ' learners detected · ' +
-    preview.matchedCount + ' matched · ' + preview.unmatchedCount + ' not matched</div>';
+  var html = '<div class="import-title">' + escapeHtml(f.subject) + ' — Grade ' + escapeHtml(f.gradeLevel) + ' · ' + escapeHtml(f.section) + '</div>' +
+    '<div style="color:var(--text-muted); margin-bottom:6px">' + (f.schoolName ? escapeHtml(f.schoolName) + ' · ' : '') + 'School year ' + escapeHtml(f.schoolYear) + '</div>' +
+    '<ul class="import-facts">' +
+    '<li>Class: <b>' + (preview.classExists ? 'already in your classes' : 'new — will be created') + '</b>' + (preview.schoolNameWillChange ? ' (school name will be updated)' : '') + '</li>' +
+    '<li>Subject: <b>' + (preview.classSubjectExists ? 'already in this class' : 'new — will be added') + '</b></li>' +
+    '<li>Learners: <b>' + preview.learnerCount + '</b> in the file · ' + preview.matchedCount + ' already in the class · <b>' + preview.newCount + '</b> will be added</li></ul>';
 
-  if (preview.unmatchedCount > 0) {
-    html += '<div class="issue-block blocking"><h4>Needs your attention — not matched to your roster</h4>';
-    var rosterOptions = '<option value="">Match to existing…</option>' +
-      state.roster.map(function (r) { return '<option value="' + r.enrollmentId + '">' + r.fullName + '</option>'; }).join('');
-    preview.unmatched.forEach(function (name) {
-      var safeName = name.replace(/"/g, '&quot;');
-      html += '<div class="issue-row"><span>' + name + '</span>' +
-        '<div class="actions-inline">' +
-        '<select data-match-name="' + safeName + '">' + rosterOptions + '</select>' +
-        '<button class="btn small secondary" data-add-name="' + safeName + '">Add as new</button>' +
-        '</div></div>';
-    });
-    html += '</div>';
+  if (preview.classExists && preview.newCount > 0) {
+    var options = '<option value="">Add as new</option>' + preview.existingRoster.map(function (r) {
+      return '<option value="' + escapeHtml(r.enrollmentId) + '">Same as: ' + escapeHtml(r.fullName) + '</option>';
+    }).join('');
+    html += '<div class="issue-block info"><h4>' + preview.newCount + ' learner(s) are not in this class yet — they will be added as new</h4>' +
+      '<p style="margin:0 0 10px; font-size:0.88rem">If a name is only spelled differently from your list, match it to the existing learner instead.</p>' +
+      preview.newLearners.map(function (name) {
+        return '<div class="issue-row"><span>' + escapeHtml(name) + '</span><span class="actions-inline"><select data-match-name="' + escapeHtml(name) + '">' + options + '</select></span></div>';
+      }).join('') + '</div>';
   }
 
-  if (preview.incompleteLearners && preview.incompleteLearners.length > 0) {
-    html += '<div class="issue-block info"><h4>Incomplete sub-subject data — will be skipped</h4>' +
-      '<p style="margin:0 0 10px; font-size:0.88rem">These learners are missing scores from one of the two combined sheets (e.g. only ICT, not AFA). They will NOT be imported.</p>';
-    preview.incompleteLearners.forEach(function (name) { html += '<div class="issue-row"><span>' + name + '</span></div>'; });
-    if (!preview.requiresIncompleteAck) {
-      html += '<div style="margin-top:8px"><span class="status-pill PUBLISHED">Acknowledged</span></div>';
-    } else {
-      html += '<button class="btn small secondary" id="ackIncompleteBtn" style="margin-top:8px">I understand — skip these learners</button>';
-    }
-    html += '</div>';
+  var importable = preview.terms.filter(function (t) { return t.importable; });
+  html += '<h4 style="margin:16px 0 4px">Terms</h4>' +
+    (preview.needsTermChoice ? '<p style="margin:0 0 6px; font-size:0.9rem">This file has grades for more than one term. Choose which to import.</p>' : '') +
+    preview.terms.map(termChoiceHtml_).join('');
+
+  var needsSetup = !preview.classExists || !preview.classSubjectExists || preview.newCount > 0;
+  html += '<p style="font-size:0.85rem; color:var(--text-muted)">Imported grades stay unpublished (Draft) until you publish them.</p>';
+  if (importable.length === 0 && !needsSetup) {
+    html += '<div class="msg warn">Nothing new to import from this file.</div>';
+  } else {
+    html += '<button class="btn" id="ecrConfirmBtn">' + (importable.length > 0 ? 'Import' : 'Set up class only') + '</button> ';
   }
-
-  html += '<button class="btn" id="ecrConfirmBtn"' + (preview.unmatchedCount > 0 || preview.requiresIncompleteAck ? ' disabled' : '') + '>Confirm import (' + preview.matchedCount + ' learners)</button> ' +
-    '<button class="btn secondary" id="ecrCancelBtn">Cancel</button>';
-
+  html += '<button class="btn secondary" id="ecrCancelBtn">Cancel</button>';
   area.innerHTML = html;
-
-  var ackBtn = document.getElementById('ackIncompleteBtn');
-  if (ackBtn) {
-    ackBtn.onclick = function () {
-      call('clientAcknowledgeIncompleteEcrLearners_', [state.sessionToken, importState.previewId], renderImportPreview, function (err) { showToast(err, 'error'); });
-    };
-  }
-
-  area.querySelectorAll('[data-add-name]').forEach(function (btn) {
-    btn.onclick = function () {
-      var name = btn.getAttribute('data-add-name');
-      var sex = prompt('Sex for ' + name + '? (M/F)', 'M');
-      if (!sex) return;
-      call('clientAddAndResolveEcrRow_', [state.sessionToken, state.currentWorkspaceId, importState.previewId, name, sex.toUpperCase()], function (data) {
-        loadRosterForCurrentClass();
-        renderImportPreview(data);
-      }, function (err) { showToast(err, 'error'); });
-    };
-  });
 
   area.querySelectorAll('[data-match-name]').forEach(function (select) {
     select.onchange = function () {
       var enrollmentId = select.value;
       if (!enrollmentId) return;
-      var name = select.getAttribute('data-match-name');
-      call('clientResolveEcrMatchToExisting_', [state.sessionToken, importState.previewId, name, enrollmentId], renderImportPreview, function (err) { showToast(err, 'error'); });
+      select.disabled = true; // no spinner on a <select>: block a second change while the request runs
+      call('clientResolveEcrMatchToExisting_', [state.sessionToken, importState.previewId, select.getAttribute('data-match-name'), enrollmentId],
+        renderImportPreview, function (err) { select.disabled = false; select.value = ''; showToast(err, 'error'); });
     };
   });
 
   var confirmBtn = document.getElementById('ecrConfirmBtn');
-  if (confirmBtn && !confirmBtn.disabled) {
-    confirmBtn.onclick = function () {
-      confirmModal('Import ' + preview.matchedCount + ' learners\' Term ' + state.currentTerm + ' grades?',
-        'This will save the grades exactly as calculated in the uploaded file. They stay unpublished until you publish them.', 'Import',
-        function () {
-          call('clientConfirmEcrImport_', [state.sessionToken, importState.previewId, importState.convertedSpreadsheetId], function () {
-            document.getElementById('ecrImportArea').innerHTML = '<div class="msg success">Import complete.</div>';
-            document.getElementById('ecrFileInput').value = '';
-            loadReview();
-            showToast('Import complete.', 'success');
-          }, function (err) { showToast(err, 'error'); });
-        });
-    };
-  }
+  if (confirmBtn) confirmBtn.onclick = function () {
+    var terms = [];
+    area.querySelectorAll('[data-term-check]').forEach(function (box) { if (box.checked) terms.push(Number(box.getAttribute('data-term-check'))); });
+    var what = [];
+    if (!preview.classExists) what.push('create the class');
+    if (!preview.classSubjectExists) what.push('add the subject');
+    if (preview.newCount > 0) what.push('add ' + preview.newCount + ' learner(s)');
+    if (terms.length > 0) what.push('import the grades for ' + terms.map(function (t) { return 'Term ' + t; }).join(', '));
+    confirmModal('Import this E-CR?', escapeHtml('This will ' + (what.join(', ') || 'make no changes') + '. Grades stay unpublished until you publish them.'), 'Import', function () {
+      call('clientConfirmEcrUpload_', [state.sessionToken, importState.previewId, terms], renderImportDone,
+        function (err) { showToast(err, 'error'); }, { button: confirmBtn });
+    });
+  };
 
   var cancelBtn = document.getElementById('ecrCancelBtn');
-  if (cancelBtn) cancelBtn.onclick = function () { area.innerHTML = ''; document.getElementById('ecrFileInput').value = ''; };
+  if (cancelBtn) cancelBtn.onclick = function () { showImportScreen(); };
+}
+
+function renderImportDone(result) {
+  var area = document.getElementById('ecrImportArea');
+  state.currentWorkspaceId = result.workspaceId;
+  state.workspaces = [];
+  var lines = [];
+  if (result.createdClass) lines.push('Class created.');
+  if (result.createdSubject) lines.push('Subject added.');
+  if (result.addedLearners > 0) lines.push(result.addedLearners + ' learner(s) added.');
+  result.terms.forEach(function (t) {
+    lines.push('Term ' + t.term + ': ' + t.imported + ' grade(s) imported' + (t.skippedLocked > 0 ? ', ' + t.skippedLocked + ' locked grade(s) skipped' : '') + '.');
+  });
+  area.innerHTML = '<div class="msg success">Import complete.</div><ul class="import-facts">' +
+    lines.map(function (l) { return '<li>' + escapeHtml(l) + '</li>'; }).join('') + '</ul>' +
+    '<button class="btn" id="ecrOpenSubjectBtn">Open ' + escapeHtml(importState.file ? importState.file.subject : 'subject') + '</button> ' +
+    (result.addedLearners > 0 ? '<button class="btn secondary" id="ecrGoStudentsBtn">Add LRNs in Students</button>' : '');
+  showToast('Import complete.', 'success');
+  var subjectName = importState.file ? importState.file.subject : '';
+  document.getElementById('ecrOpenSubjectBtn').onclick = function () { setActiveNav('subjects'); openSubjectDetail(result.classSubjectId, subjectName); };
+  var studentsBtn = document.getElementById('ecrGoStudentsBtn');
+  if (studentsBtn) studentsBtn.onclick = function () { setActiveNav('students'); loadStudentsScreen(); show('screen-students'); };
 }
 
 function loadStudentsScreen() {
@@ -1159,44 +1407,91 @@ function loadStudentsScreen() {
     document.getElementById('studentsNoClassMsg').style.display = hasClass ? 'none' : 'block';
     document.getElementById('studentsContent').style.display = hasClass ? 'block' : 'none';
     if (!hasClass) return;
-    populateClassSelector(document.getElementById('studentsClassSelect'), loadStudentsScreen);
+    populateClassSelector(document.getElementById('studentsClassSelect'), renderRosterTable);
     renderRosterTable();
   });
 }
 
 function renderRosterTable() {
+  var latest = latest_('roster');
+  var tbody = document.querySelector('#rosterTable tbody');
+  setLoading(tbody, 'Loading students…');
   call('clientListRoster_', [state.sessionToken, state.currentWorkspaceId], function (roster) {
+    if (!latest()) return;
     state.roster = roster;
-    var tbody = document.querySelector('#rosterTable tbody');
     tbody.innerHTML = roster.length === 0
-      ? '<tr><td colspan="3" class="empty-state">No students yet.</td></tr>'
-      : roster.map(function (r) { return '<tr><td style="font-family:\'IBM Plex Mono\',monospace; font-size:0.95rem">' + r.studentCode + '</td><td>' + r.fullName + '</td><td>' + r.sex + '</td></tr>'; }).join('');
+      ? '<tr><td colspan="4" class="empty-state">No students yet.</td></tr>'
+      : roster.map(function (r) {
+          return '<tr><td style="font-family:\'IBM Plex Mono\',monospace; font-size:0.95rem">' + escapeHtml(r.studentCode) + '</td><td>' + escapeHtml(r.fullName) + '</td><td>' + escapeHtml(r.sex) + '</td>' +
+            '<td style="white-space:nowrap"><input class="lrn-input" inputmode="numeric" maxlength="12" placeholder="12-digit LRN" value="' + escapeHtml(r.lrn) + '" data-lrn-enr="' + escapeHtml(r.enrollmentId) + '" aria-label="LRN for ' + escapeHtml(r.fullName) + '"> ' +
+            '<button class="btn small secondary" data-save-lrn="' + escapeHtml(r.enrollmentId) + '">' + (r.lrn ? 'Change' : 'Save') + '</button></td></tr>';
+        }).join('');
+  }, function (err) {
+    if (!latest()) return;
+    setErrorState(tbody, err, renderRosterTable);
   });
 }
+
+document.querySelector('#rosterTable tbody').addEventListener('click', function (e) {
+  var btn = e.target.closest && e.target.closest('button[data-save-lrn]');
+  if (!btn) return;
+  var enrollmentId = btn.getAttribute('data-save-lrn');
+  var input = document.querySelector('input[data-lrn-enr="' + enrollmentId + '"]');
+  var lrn = input ? input.value.trim() : '';
+  if (!/^\d{12}$/.test(lrn)) { showToast('The LRN must be exactly 12 digits.', 'error'); return; }
+  call('clientUpdateStudentLrn_', [state.sessionToken, enrollmentId, lrn], function (data) {
+    showToast(data.merged ? 'LRN saved — linked to the same learner in another class.' : 'LRN saved.', 'success');
+    renderRosterTable();
+  }, function (err) { showToast(err, 'error'); }, { button: btn });
+});
 
 document.getElementById('addStudentForm').onsubmit = function (e) {
   e.preventDefault();
   var name = document.getElementById('newStudentName').value.trim();
   var sex = document.getElementById('newStudentSex').value;
+  var lrn = document.getElementById('newStudentLrn').value.trim();
   if (!name) return;
-  call('clientAddStudent_', [state.sessionToken, state.currentWorkspaceId, '', name, sex], function (data) {
+  call('clientAddStudent_', [state.sessionToken, state.currentWorkspaceId, lrn, name, sex], function (data) {
     document.getElementById('newStudentName').value = '';
+    document.getElementById('newStudentLrn').value = '';
     renderRosterTable();
     showToast('Added as ' + data.studentCode + '.', 'success');
   }, function (err) { showToast(err, 'error'); });
 };
 
+function renderAccountLicense_(status, info) {
+  var html;
+  if (status.status === 'TRIAL') html = '<p>Trial — ' + status.daysRemaining + ' day(s) remaining.</p>';
+  else if (status.status === 'ACTIVE') html = '<p>Active ' + planLabel_(status.licenseType) + 'license' + (status.expirationDate ? (' until ' + escapeHtml(fmtDate_(status.expirationDate))) : '') + '.</p>';
+  else if (status.status === 'SUSPENDED') html = '<p>Your account is suspended. Contact support for details.</p>';
+  else html = '<p>Your trial or license has expired.</p>';
+
+  if (info) {
+    if (info.pending) {
+      html += '<div class="msg warn">License request sent on ' + escapeHtml(fmtDate_(info.pending.requestedAt)) + ' — waiting for approval.</div>' +
+        '<button class="btn small secondary" id="acctRequestBtn">View request</button>';
+    } else {
+      if (info.lastDecision && info.lastDecision.status === 'DECLINED') {
+        html += '<div class="msg error">Your last request was declined: ' + escapeHtml(info.lastDecision.adminNote) + '</div>';
+      }
+      if (info.canRequest) html += '<button class="btn small" id="acctRequestBtn">' + (status.status === 'ACTIVE' ? 'Request renewal' : 'Request a license') + '</button>';
+      else if (info.reason && status.status !== 'SUSPENDED') html += '<p style="font-size:0.85rem; opacity:0.8">' + escapeHtml(info.reason) + '</p>';
+    }
+  }
+  document.getElementById('accountLicenseInfo').innerHTML = html;
+  var btn = document.getElementById('acctRequestBtn');
+  if (btn) btn.onclick = function () { openLicenseRequestModal(refreshLicenseViews_); };
+}
+
 function loadSettingsScreen() {
   document.getElementById('darkModeToggle').checked = localStorage.getItem('markado_theme') === 'dark';
   call('clientGetLicenseStatus_', [state.sessionToken], function (status) {
-    var el = document.getElementById('accountLicenseInfo');
-    if (status.status === 'TRIAL') {
-      el.innerHTML = '<p>Trial — ' + status.daysRemaining + ' day(s) remaining.</p>';
-    } else if (status.status === 'ACTIVE') {
-      el.innerHTML = '<p>Active license' + (status.expirationDate ? (' until ' + status.expirationDate.slice(0, 10)) : '') + '.</p>';
-    } else {
-      el.innerHTML = '<p>Status: ' + status.status + '. Contact your administrator to activate a license.</p>';
-    }
+    renderAccountLicense_(status, null); // show the status immediately; the request state follows
+    call('clientGetLicenseRequestInfo_', [state.sessionToken], function (info) {
+      renderAccountLicense_(status, info);
+    }, function () { /* status alone is still useful */ });
+  }, function () {
+    document.getElementById('accountLicenseInfo').innerHTML = '<p>Could not load license status.</p>';
   });
 }
 
@@ -1219,8 +1514,10 @@ document.getElementById('changePasswordBtn').onclick = function () {
     msgEl.innerHTML = '<div class="msg success">Password updated.</div>';
     document.getElementById('currentPassword').value = '';
     document.getElementById('newPasswordField').value = '';
-  }, function (err) { msgEl.innerHTML = '<div class="msg error">' + err + '</div>'; });
+  }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; });
 };
+
+startApp_();
 </script>
 </body>
 </html>

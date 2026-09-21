@@ -272,7 +272,7 @@
           document.getElementById('authPassword').value = '';
           isRegisterMode = false;
           document.getElementById('toggleAuthBtn').click();
-        }, function (err) { msgEl.innerHTML = '<div class="msg error">' + err + '</div>'; });
+        }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; }, { button: document.getElementById('authSubmit') });
       } else {
         if (!email || !password) return;
         call('clientLogin_', [email, password], function (data) {
@@ -282,15 +282,19 @@
           document.getElementById('authEmail').value = '';
           document.getElementById('authPassword').value = '';
           window.location.href = 'teacher.html';
-        }, function (err) { msgEl.innerHTML = '<div class="msg error">' + err + '</div>'; });
+        }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; }, { button: document.getElementById('authSubmit') });
       }
     }
+
+    // Wake the Apps Script instance while the user types their details, so the login request
+    // itself doesn't pay the cold-start delay. Silent: no spinner, errors ignored.
+    call('clientPing_', [], function () {}, function () {}, { silent: true });
 
     document.getElementById('forgotPasswordBtn').onclick = function () {
       var email = prompt('Enter the email address on your account:');
       if (!email) return;
       call('clientRequestPasswordReset_', [email], function (data) {
-        document.getElementById('authMsg').innerHTML = '<div class="msg success">' + data.message + '</div>';
+        document.getElementById('authMsg').innerHTML = '<div class="msg success">' + escapeHtml(data.message) + '</div>';
       }, function () {
         document.getElementById('authMsg').innerHTML = '<div class="msg success">If that email is registered, a reset link has been sent.</div>';
       });

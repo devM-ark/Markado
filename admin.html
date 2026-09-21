@@ -3,20 +3,49 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin - Online Grades Viewer</title>
+<title>Markado: Online Grades Viewer - Admin Page</title>
 <style>
   :root {
-    --black: #0B0B0B; --white: #FFFFFF;
-    --gray-1: #F4F4F4; --gray-2: #E2E2E2; --gray-3: #9A9A9A; --gray-4: #4A4A4A;
-    --danger: #A3402F; --success: #2E5B3E;
+    --black: #0B0B0B;
+	--white: #FFFFFF;
+    --gray-1: #F4F4F4;
+	--gray-2: #E2E2E2;
+	--gray-3: #9A9A9A;
+	--gray-4: #4A4A4A;
+    --danger: #A3402F;
+	--success: #2E5B3E;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: var(--black); background: var(--white); }
-  h1, h3, .display { font-family: Arial, Helvetica, sans-serif; font-weight: 500; }
-  h2 { font-family: Arial, Helvetica, sans-serif; font-weight: 600; }
-  .mono { font-family: Arial, Helvetica, sans-serif; }
-  button { font-family: inherit; cursor: pointer; }
-  input, select { font-family: inherit; }
+  
+  body {
+	margin: 0;
+	font-family: Arial, Helvetica, sans-serif;
+	color: var(--black);
+	background: var(--white);
+  }
+  
+  h1, h3, .display {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: 500;
+  }
+  
+  h2 {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: 600;
+  }
+  
+  .mono {
+	font-family: Arial, Helvetica, sans-serif;
+  }
+  
+  button {
+	font-family: inherit;
+	cursor: pointer;
+  }
+  
+  input, select {
+	font-family: inherit;
+  }
 
   header { 
 	background: var(--black);
@@ -28,66 +57,318 @@
     justify-content: space-between;
   }
   
-    .header-logo {
+  .header-logo {
 	height: 40px;
 	width: auto;
 	display: block;
 	transform: scale(1.3);
 	transform-origin: left center;
 	margin-left: 0px;
-	}
+  }
 	
-  header .display { font-size: 1.15rem; }
-  header nav button { background: none; border: none; color: var(--white); opacity: 0.8; font-size: 0.85rem; }
-  header nav button:hover { opacity: 1; text-decoration: underline; }
+  header .display {
+	font-size: 1.15rem;
+  }
+  
+  header nav button {
+	background: none;
+	border: none;
+	color: var(--white);
+	opacity: 0.8;
+	font-size: 0.85rem;
+  }
+  
+  header nav button:hover {
+	opacity: 1;
+	text-decoration: underline;
+  }
 
-  main { max-width: 1040px; margin: 0 auto; padding: 32px; }
-  .screen { display: none; } .screen.active { display: block; }
+  main {
+	max-width: 1040px;
+	margin: 0 auto;
+	padding: 32px;
+  }
+  
+  .screen {
+	display: none;
+  }
+  
+  .screen.active {
+	display: block;
+  }
 
-  .panel { border: 1px solid var(--gray-2); border-radius: 2px; padding: 24px; margin-bottom: 20px; }
+  .panel {
+	border: 1px solid var(--gray-2);
+	border-radius: 2px;
+	padding: 24px;
+	margin-bottom: 20px;
+  }
 
-  .field { margin-bottom: 14px; }
-  .field label { display: block; font-size: 0.8rem; color: var(--gray-4); margin-bottom: 5px; }
-  .field input { width: 100%; padding: 9px 11px; border: 1px solid var(--gray-2); border-radius: 2px; font-size: 0.95rem; }
+  .field {
+	margin-bottom: 14px;
+  }
+  
+  .field label {
+	display: block;
+	font-size: 0.8rem;
+	color: var(--gray-4);
+	margin-bottom: 5px;
+  }
+  
+  .field textarea {
+	width: 100%;
+	padding: 9px 11px;
+	border: 1px solid var(--gray-2);
+	border-radius: 2px;
+	font: inherit;
+	font-size: 0.95rem;
+	resize: vertical;
+  }
+  
+  .field input {
+	width: 100%;
+	padding: 9px 11px;
+	border: 1px solid var(--gray-2);
+	border-radius: 2px;
+	font-size: 0.95rem;
+  }
 
-  .btn { background: var(--black); color: var(--white); border: none; border-radius: 2px; padding: 10px 18px; font-size: 0.88rem; font-weight: 500; }
-  .btn:hover { background: var(--gray-4); }
-  .btn.secondary { background: var(--white); color: var(--black); border: 1px solid var(--black); }
-  .btn.secondary:hover { background: var(--gray-1); }
-  .btn.danger { background: var(--danger); }
-  .btn.small { padding: 5px 12px; font-size: 0.8rem; }
+  .btn {
+	background: var(--black);
+	color: var(--white);
+	border: none;
+	border-radius: 2px;
+	padding: 10px 18px;
+	font-size: 0.88rem;
+	font-weight: 500;
+  }
+  
+  .btn:hover {
+	background: var(--gray-4);
+  }
+  
+  .btn.secondary {
+	background: var(--white);
+	color: var(--black);
+	border: 1px solid var(--black);
+  }
+  
+  .btn.secondary:hover {
+	background: var(--gray-1);
+  }
+  
+  .btn.danger {
+	background: var(--danger);
+  }
+  
+  .btn.small {
+    padding: 5px 12px;
+	font-size: 0.8rem;
+  }
 
-  .msg { padding: 9px 13px; border-radius: 2px; font-size: 0.88rem; margin-bottom: 14px; }
-  .msg.error { background: #F7E4E0; color: var(--danger); }
-  .msg.success { background: #E4EFE7; color: var(--success); }
+  .msg {
+	padding: 9px 13px;
+	border-radius: 2px;
+	font-size: 0.88rem;
+	margin-bottom: 14px;
+  }
+  
+  .msg.error {
+	background: #F7E4E0;
+	color: var(--danger);
+  }
+  
+  .msg.success {
+	background: #E4EFE7;
+	color: var(--success);
+  }
 
-  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
-  .stat-card { border: 1px solid var(--gray-2); padding: 18px; border-radius: 2px; }
-  .stat-card .num { font-family: Arial, Helvetica, sans-serif; font-size: 2rem; font-weight: 600; }
-  .stat-card .label { font-size: 0.78rem; color: var(--gray-4); text-transform: uppercase; letter-spacing: 0.03em; }
+  .stat-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	gap: 14px;
+  }
+  
+  .lr-item {
+	border-top: 1px solid var(--gray-2);
+	padding: 14px 0;
+	display: flex;
+	gap: 16px;
+	justify-content: space-between;
+	flex-wrap: wrap;
+  }
+  
+  .lr-item:first-child {
+	border-top: none;
+	padding-top: 0;
+  }
+  
+  .lr-meta {
+	font-size: 0.82rem;
+	color: var(--gray-4);
+	margin-top: 4px;
+	line-height: 1.6;
+  }
+  
+  .lr-actions {
+	display: flex;
+	gap: 8px;
+	align-items: flex-start;
+  }
+  
+  .stat-card {
+	border: 1px solid var(--gray-2);
+	padding: 18px;
+	border-radius: 2px;
+  }
+  
+  .stat-card .num {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 2rem;
+	font-weight: 600;
+  }
+  
+  .stat-card .label {
+	font-size: 0.78rem;
+	color: var(--gray-4);
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+  }
 
-  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--gray-2); }
-  th { color: var(--gray-4); font-weight: 500; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.02em; }
-  tr.clickable { cursor: pointer; } tr.clickable:hover { background: var(--gray-1); }
+  table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.9rem;
+  }
+  
+  th, td {
+	text-align: left;
+	padding: 10px 12px;
+	border-bottom: 1px solid var(--gray-2);
+  }
+  
+  th {
+	color: var(--gray-4);
+	font-weight: 500;
+	font-size: 0.78rem;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+  }
+  
+  tr.clickable {
+	cursor: pointer;
+  }
+  
+  tr.clickable:hover {
+	background: var(--gray-1);
+  }
 
-  .status-pill { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 0.74rem; font-weight: 500; }
-  .status-pill.TRIAL { background: var(--gray-2); color: var(--black); }
-  .status-pill.ACTIVE { background: var(--success); color: var(--white); }
-  .status-pill.EXPIRED, .status-pill.SUSPENDED { background: var(--danger); color: var(--white); }
-  .status-pill.NONE { background: var(--gray-1); color: var(--gray-4); }
+  .status-pill {
+	display: inline-block;
+	padding: 2px 9px;
+	border-radius: 20px;
+	font-size: 0.74rem;
+	font-weight: 500;
+  }
+  
+  .status-pill.TRIAL {
+	background: var(--gray-2);
+	color: var(--black);
+  }
+  
+  .status-pill.ACTIVE {
+	background: var(--success);
+	color: var(--white);
+  }
+  
+  .status-pill.EXPIRED,
+  .status-pill.SUSPENDED {
+	background: var(--danger);
+	color: var(--white);
+  }
+  
+  .status-pill.NONE {
+	background: var(--gray-1);
+	color: var(--gray-4);
+  }
 
-  .breadcrumb { font-size: 0.85rem; color: var(--gray-4); margin-bottom: 18px; }
-  .breadcrumb button { background: none; border: none; color: var(--black); text-decoration: underline; padding: 0; font-size: 0.85rem; }
+  .breadcrumb {
+	font-size: 0.85rem;
+	color: var(--gray-4);
+	margin-bottom: 18px;
+  }
+  
+  .breadcrumb button {
+	background: none;
+	border: none;
+	color: var(--black);
+	text-decoration: underline;
+	padding: 0;
+	font-size: 0.85rem;
+  }
 
-  .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--gray-1); font-size: 0.9rem; }
-  .detail-row .label { color: var(--gray-4); }
+  .detail-row {
+	display: flex;
+	justify-content: space-between;
+	padding: 8px 0;
+	border-bottom: 1px solid var(--gray-1);
+	font-size: 0.9rem;
+  }
+  
+  .detail-row .label {
+	color: var(--gray-4);
+  }
 
-  .action-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  .action-row {
+	display: flex;
+	gap: 10px;
+	flex-wrap: wrap;
+	margin-top: 16px;
+  }
 
-  .modal-overlay { position: fixed; inset: 0; background: rgba(11,11,11,0.5); display: flex; align-items: center; justify-content: center; z-index: 10; }
-  .modal { background: var(--white); border-radius: 2px; padding: 26px; max-width: 380px; width: 90%; }
-  .modal .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+  .modal-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(11,11,11,0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 10;
+  }
+  
+  .modal {
+	background: var(--white);
+	border-radius: 2px;
+	padding: 26px;
+	max-width: 380px;
+	width: 90%;
+  }
+  
+  .modal .actions {
+	display: flex;
+	gap: 10px;
+	justify-content: flex-end;
+	margin-top: 18px;
+  }
+
+  .stat-grid > .api-state { grid-column: 1 / -1; }
+  
+  @media (max-width: 768px) {
+	
+	main { padding: 16px 14px 60px; }
+    .panel { padding: 16px; }
+    table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+    #teacherSearch { width: 100% !important; box-sizing: border-box; font-size: 16px; }
+    .detail-row { flex-direction: column; gap: 2px; word-break: break-word; }
+    .action-row { flex-wrap: wrap; }
+    .modal { width: 92%; padding: 20px; }
+    input, select { font-size: 16px; }
+    header { height: auto; flex-wrap: wrap; gap: 10px; padding: 14px 16px; }
+    #headerNav { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+    header nav button { padding: 6px 0; }
+    .header-logo { transform: none; height: 34px; }
+  }
+  
 </style>
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <script src="config.js"></script>
@@ -109,7 +390,7 @@
       <div id="loginMsg"></div>
       <div class="field"><label>Email</label><input id="adminEmail" type="email"></div>
       <div class="field"><label>Password</label><input id="adminPassword" type="password"></div>
-      <button class="btn" id="loginBtn" style="width:100%">Log in</button>
+      <button class="btn" id="loginBtn" style="width:100%">Log In</button>
     </div>
   </section>
 
@@ -118,14 +399,18 @@
     <h2>Dashboard</h2>
     <div class="stat-grid" id="statGrid"></div>
     <div class="panel" style="margin-top:24px">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px">
+      <h3 style="margin-top:0">License Requests <span id="licenseRequestsCount" class="status-pill TRIAL" style="display:none; margin-left:6px"></span></h3>
+      <div id="licenseRequestsList"></div>
+    </div>
+    <div class="panel" style="margin-top:24px">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px">
         <h3 style="margin:0">Teachers</h3>
         <input id="teacherSearch" placeholder="Search by name or email" style="padding:8px 10px; border:1px solid var(--gray-2); border-radius:2px; width:240px">
       </div>
       <div class="action-row" id="bulkActionBar" style="display:none; margin-top:0; margin-bottom:12px">
         <span id="bulkSelectedCount" class="mono" style="align-self:center"></span>
-        <button class="btn secondary small" id="bulkExtendTrialBtn">Extend trial</button>
-        <button class="btn secondary small" id="bulkActivateLicenseBtn">Activate license</button>
+        <button class="btn secondary small" id="bulkExtendTrialBtn">Extend Trial</button>
+        <button class="btn secondary small" id="bulkActivateLicenseBtn">Activate License</button>
         <button class="btn danger small" id="bulkSuspendBtn">Suspend</button>
       </div>
       <table id="teacherTable">
@@ -137,7 +422,7 @@
 
   <!-- TEACHER DETAIL -->
   <section id="screen-detail" class="screen">
-    <div class="breadcrumb"><button id="backToDashboard">← Dashboard</button></div>
+    <div class="breadcrumb"><button id="backToDashboard">Dashboard</button></div>
     <h2 id="detailName"></h2>
     <div class="panel">
       <div class="detail-row"><span class="label">Email</span><span id="detailEmail" class="mono"></span></div>
@@ -192,10 +477,20 @@
       <button class="btn secondary small" id="saveSettingsBtn">Save</button>
     </div>
 
+    <div class="panel" style="max-width:520px">
+      <h3 style="margin-top:0">License Requests</h3>
+      <div id="licenseSettingsMsg"></div>
+      <div class="field"><label>Payment instructions shown to teachers (GCash number, account name, amount…)</label><textarea id="licenseInstructionsInput" rows="5" maxlength="1000"></textarea></div>
+      <div class="field"><label>Monthly Plan Price</label><input id="monthlyPriceInput" maxlength="30"></div>
+      <div class="field"><label>Yearly Plan Price</label><input id="yearlyPriceInput" maxlength="30"></div>
+      <p style="font-size:0.8rem; color:var(--gray-4); margin-top:-4px">Monthly = a fixed 30 days, Yearly = 12 months, counted from approval or from the teacher's current expiry.</p>
+      <button class="btn secondary small" id="saveLicenseSettingsBtn">Save</button>
+    </div>
+
     <div class="panel" style="max-width:420px; border-color: var(--danger)">
-      <h3 style="margin-top:0; color:var(--danger)">Danger zone - testing phase only</h3>
-      <p style="font-size:0.86rem; color:var(--gray-4)">Permanently trashes every teacher's spreadsheet and clears all teacher, trial, license, session, and activity data. Admin accounts and curriculum reference data (subjects, grading templates) are preserved. This cannot be undone from here — trashed files go to Drive's trash, not permanent deletion, but treat this as irreversible.</p>
-      <button class="btn danger small" id="openWipeModalBtn">Delete all data</button>
+      <h3 style="margin-top:0; color:var(--danger)">Danger XZne - For Testing Phase Only</h3>
+      <p style="font-size:0.86rem; color:var(--gray-4)">Permanently trashes every teacher's spreadsheet and clears all teacher, trial, license, session, and activity data. DO NOT USED ONCE THE SYSTEM IS ALREADY DEPLOYED!</p>
+      <button class="btn danger small" id="openWipeModalBtn">Delete All Data</button>
     </div>
   </section>
 
@@ -204,19 +499,29 @@
 <div id="modalRoot"></div>
 
 <script>
+var requestSeq_ = {};
 var sessionToken = localStorage.getItem('ogv_admin_session') || null;
 var currentTeacherId = null;
 
 function show(id) { document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('active'); }); document.getElementById(id).classList.add('active'); }
 
-/* call() is provided by api.js */
+function backToLogin_() {
+  localStorage.removeItem('ogv_admin_session'); sessionToken = null; invalidateApiCache();
+  show('screen-login'); renderHeaderNav(false);
+  return true;
+}
+window.onApiSessionExpired = backToLogin_; 
+
+function dateToIso_(value) {
+  var d = new Date(value);
+  if (!value || isNaN(d.getTime())) { showToast('Please enter a valid date (YYYY-MM-DD).', 'error'); return null; }
+  return d.toISOString();
+}
 
 function renderHeaderNav(loggedIn) {
   document.getElementById('headerNav').innerHTML = loggedIn ? '<button id="activityNavBtn">Activity log</button><button id="settingsNavBtn">Settings</button><button id="logoutBtn">Log out</button>' : '';
   if (loggedIn) {
-    document.getElementById('logoutBtn').onclick = function () {
-      localStorage.removeItem('ogv_admin_session'); sessionToken = null; show('screen-login'); renderHeaderNav(false);
-    };
+    document.getElementById('logoutBtn').onclick = backToLogin_;
     document.getElementById('activityNavBtn').onclick = function () { loadActivityLog(); show('screen-activity'); };
     document.getElementById('settingsNavBtn').onclick = function () { loadSettings(); show('screen-settings'); };
   }
@@ -227,6 +532,11 @@ document.getElementById('backFromSettings').onclick = function () { loadDashboar
 function loadSettings() {
   call('clientGetSystemSettings_', [sessionToken], function (settings) {
     document.getElementById('trialDurationInput').value = settings.trialDurationDays;
+    document.getElementById('licenseInstructionsInput').value = settings.licenseInstructions || '';
+    document.getElementById('monthlyPriceInput').value = settings.monthlyPrice || '';
+    document.getElementById('yearlyPriceInput').value = settings.yearlyPrice || '';
+  }, function (err) {
+    document.getElementById('settingsMsg').innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>';
   });
 }
 
@@ -235,7 +545,15 @@ document.getElementById('saveSettingsBtn').onclick = function () {
   var msgEl = document.getElementById('settingsMsg');
   call('clientUpdateSystemSettings_', [sessionToken, Number(days)], function () {
     msgEl.innerHTML = '<div class="msg success">Saved.</div>';
-  }, function (err) { msgEl.innerHTML = '<div class="msg error">' + err + '</div>'; });
+  }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; }, { button: document.getElementById('saveSettingsBtn') });
+};
+
+document.getElementById('saveLicenseSettingsBtn').onclick = function () {
+  var msgEl = document.getElementById('licenseSettingsMsg');
+  call('clientUpdateLicenseSettings_', [sessionToken, document.getElementById('licenseInstructionsInput').value,
+    document.getElementById('monthlyPriceInput').value.trim(), document.getElementById('yearlyPriceInput').value.trim()], function () {
+    msgEl.innerHTML = '<div class="msg success">Saved.</div>';
+  }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; }, { button: document.getElementById('saveLicenseSettingsBtn') });
 };
 
 document.getElementById('openWipeModalBtn').onclick = function () {
@@ -256,12 +574,12 @@ document.getElementById('openWipeModalBtn').onclick = function () {
       loadDashboard();
       show('screen-dashboard');
     }, function (err) {
-      document.getElementById('wipeModalMsg').innerHTML = '<div class="msg error">' + err + '</div>';
-    });
+      document.getElementById('wipeModalMsg').innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>';
+    }, { button: document.getElementById('wipeConfirmBtn') });
   };
 };
 
-/* ---------- Bulk actions ---------- */
+/* Bulk actions */
 function getSelectedTeacherIds() {
   return Array.prototype.slice.call(document.querySelectorAll('.teacher-row-checkbox:checked')).map(function (cb) { return cb.value; });
 }
@@ -279,18 +597,20 @@ document.getElementById('selectAllCheckbox').onchange = function (e) {
 
 document.getElementById('bulkExtendTrialBtn').onclick = function () {
   promptModal('Extend trial for ' + getSelectedTeacherIds().length + ' teacher(s)', [{ key: 'date', label: 'New trial end date (YYYY-MM-DD)' }], function (values) {
-    call('clientBulkApplyAdminAction_', [sessionToken, getSelectedTeacherIds(), 'extendTrial', { newTrialEndIso: new Date(values.date).toISOString() }], function (result) {
+    var iso = dateToIso_(values.date); if (!iso) return;
+    call('clientBulkApplyAdminAction_', [sessionToken, getSelectedTeacherIds(), 'extendTrial', { newTrialEndIso: iso }], function (result) {
       showToast(result.succeeded.length + ' succeeded, ' + result.failed.length + ' failed.', result.failed.length > 0 ? 'error' : 'success');
-      loadTeacherList(document.getElementById('teacherSearch').value);
+      loadTeacherList();
     }, function (err) { showToast(err, 'error'); });
   });
 };
 
 document.getElementById('bulkActivateLicenseBtn').onclick = function () {
   promptModal('Activate license for ' + getSelectedTeacherIds().length + ' teacher(s)', [{ key: 'date', label: 'Expiration date (YYYY-MM-DD)' }], function (values) {
-    call('clientBulkApplyAdminAction_', [sessionToken, getSelectedTeacherIds(), 'activateLicense', { expirationIso: new Date(values.date).toISOString() }], function (result) {
+    var iso = dateToIso_(values.date); if (!iso) return;
+    call('clientBulkApplyAdminAction_', [sessionToken, getSelectedTeacherIds(), 'activateLicense', { expirationIso: iso }], function (result) {
       showToast(result.succeeded.length + ' succeeded, ' + result.failed.length + ' failed.', result.failed.length > 0 ? 'error' : 'success');
-      loadTeacherList(document.getElementById('teacherSearch').value);
+      loadTeacherList();
     }, function (err) { showToast(err, 'error'); });
   });
 };
@@ -300,7 +620,7 @@ document.getElementById('bulkSuspendBtn').onclick = function () {
   if (!confirm('Suspend ' + ids.length + ' account(s)? They will be logged out immediately.')) return;
   call('clientBulkApplyAdminAction_', [sessionToken, ids, 'suspend', {}], function (result) {
     showToast(result.succeeded.length + ' succeeded, ' + result.failed.length + ' failed.', result.failed.length > 0 ? 'error' : 'success');
-    loadTeacherList(document.getElementById('teacherSearch').value);
+    loadTeacherList();
   }, function (err) { showToast(err, 'error'); });
 };
 
@@ -309,24 +629,30 @@ document.getElementById('activityRefreshBtn').onclick = function () { loadActivi
 document.getElementById('activityActorFilter').onchange = function () { loadActivityLog(); };
 
 function loadActivityLog() {
+  var latest = latest_('activity');
   var actorType = document.getElementById('activityActorFilter').value;
+  var tbody = document.querySelector('#activityTable tbody');
+  setLoading(tbody, 'Loading activity…');
   call('clientListAuditLogs_', [sessionToken, { actorType: actorType || undefined, limit: 100 }], function (logs) {
-    var tbody = document.querySelector('#activityTable tbody');
+    if (!latest()) return;
     if (logs.length === 0) {
       tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--gray-3); padding:24px">No activity recorded yet.</td></tr>';
       return;
     }
     tbody.innerHTML = logs.map(function (l) {
       var when = l.createdAt ? String(l.createdAt).slice(0, 19).replace('T', ' ') : '';
-      return '<tr><td class="mono">' + when + '</td><td>' + l.actorType + '</td><td>' + l.action + '</td><td class="mono">' + (l.targetType || '') + (l.targetId ? ' · ' + String(l.targetId).slice(0, 8) : '') + '</td></tr>';
+      return '<tr><td class="mono">' + escapeHtml(when) + '</td><td>' + escapeHtml(l.actorType) + '</td><td>' + escapeHtml(l.action) + '</td><td class="mono">' + escapeHtml((l.targetType || '') + (l.targetId ? ' · ' + String(l.targetId).slice(0, 8) : '')) + '</td></tr>';
     }).join('');
-  });
+  }, function (err) {
+    if (!latest()) return;
+    setErrorState(tbody, err, loadActivityLog);
+  }, { fresh: true });
 }
 
 function promptModal(title, fields, onSubmit) {
   var root = document.getElementById('modalRoot');
   var fieldsHtml = fields.map(function (f) {
-    return '<div class="field"><label>' + f.label + '</label><input id="modalField_' + f.key + '" type="' + (f.type || 'text') + '" value="' + (f.value || '') + '"></div>';
+    return '<div class="field"><label>' + escapeHtml(f.label) + '</label><input id="modalField_' + f.key + '" type="' + (f.type || 'text') + '" value="' + escapeHtml(f.value || '') + '"></div>';
   }).join('');
   root.innerHTML = '<div class="modal-overlay"><div class="modal"><h3 style="margin-top:0">' + title + '</h3>' + fieldsHtml +
     '<div class="actions"><button class="btn secondary" id="modalCancel">Cancel</button><button class="btn" id="modalSubmit">Confirm</button></div></div></div>';
@@ -348,7 +674,7 @@ document.getElementById('loginBtn').onclick = function () {
     sessionToken = data.sessionToken;
     localStorage.setItem('ogv_admin_session', sessionToken);
     afterLogin();
-  }, function (err) { msgEl.innerHTML = '<div class="msg error">' + err + '</div>'; });
+  }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; }, { button: document.getElementById('loginBtn') });
 };
 
 function afterLogin() {
@@ -358,97 +684,222 @@ function afterLogin() {
 }
 if (sessionToken) { afterLogin(); }
 
+function latest_(name) {
+  var id = (requestSeq_[name] || 0) + 1;
+  requestSeq_[name] = id;
+  return function () { return requestSeq_[name] === id; };
+}
+
+// License Requests
+
+var licenseRequests = { items: [] };
+
+function loadLicenseRequests() {
+  var latest = latest_('licenseRequests');
+  var list = document.getElementById('licenseRequestsList');
+  setLoading(list, 'Loading requests…');
+  call('clientListLicenseRequests_', [sessionToken, 'PENDING'], function (data) {
+    if (!latest()) return;
+    licenseRequests.items = data.requests;
+    renderLicenseRequests_();
+  }, function (err) {
+    if (!latest()) return;
+    setErrorState(list, err, loadLicenseRequests);
+  });
+}
+
+function renderLicenseRequests_() {
+  var list = document.getElementById('licenseRequestsList');
+  var badge = document.getElementById('licenseRequestsCount');
+  var items = licenseRequests.items;
+  badge.textContent = items.length + ' waiting';
+  badge.style.display = items.length ? 'inline-block' : 'none';
+  if (items.length === 0) {
+    list.innerHTML = '<p style="margin:0; color:var(--gray-4); font-size:0.9rem">No requests waiting.</p>';
+    return;
+  }
+  list.innerHTML = items.map(function (r) {
+    return '<div class="lr-item"><div>' +
+      '<strong>' + escapeHtml(r.teacherName) + '</strong> <span class="mono" style="color:var(--gray-4)">' + escapeHtml(r.teacherEmail) + '</span>' +
+      '<div class="lr-meta">Plan: <strong>' + escapeHtml(r.planName) + '</strong>' + (r.planPrice ? ' · ' + escapeHtml(r.planPrice) : '') + '<br>GCash reference: <strong>' + escapeHtml(r.paymentReference) + '</strong><br>' +
+      (r.message ? 'Note: ' + escapeHtml(r.message) + '<br>' : '') +
+      'Requested ' + escapeHtml(String(r.requestedAt).slice(0, 10)) + ' · Current: <span class="status-pill ' + escapeHtml(r.currentLicenseStatus) + '">' + escapeHtml(r.currentLicenseStatus) + '</span>' +
+      (r.currentExpirationDate ? ' until ' + escapeHtml(String(r.currentExpirationDate).slice(0, 10)) : '') + '</div></div>' +
+      '<div class="lr-actions"><button class="btn small" data-lr-approve="' + escapeHtml(r.requestId) + '">Approve</button>' +
+      '<button class="btn secondary small" data-lr-decline="' + escapeHtml(r.requestId) + '">Decline</button></div></div>';
+  }).join('');
+}
+
+document.getElementById('licenseRequestsList').addEventListener('click', function (e) {
+  var approveBtn = e.target.closest && e.target.closest('button[data-lr-approve]');
+  var declineBtn = e.target.closest && e.target.closest('button[data-lr-decline]');
+  var btn = approveBtn || declineBtn;
+  if (!btn) return;
+  var id = btn.getAttribute(approveBtn ? 'data-lr-approve' : 'data-lr-decline');
+  var r = licenseRequests.items.filter(function (x) { return x.requestId === id; })[0];
+  if (!r) return;
+
+  if (approveBtn) {
+    // The server suggests the expiry: the plan's length counted from today, or from the current expiry
+    // (running license OR trial) so early payment never swallows days the teacher already has.
+    promptModal('Approve ' + escapeHtml(r.planName.toLowerCase()) + ' license for ' + escapeHtml(r.teacherName), [
+      { key: 'date', label: 'License expires (YYYY-MM-DD)', value: String(r.suggestedExpiration || '').slice(0, 10) },
+      { key: 'note', label: 'Note to teacher (optional)' },
+    ], function (values) {
+      var iso = dateToIso_(values.date); if (!iso) return;
+      call('clientApproveLicenseRequest_', [sessionToken, r.requestId, iso, values.note], function () {
+        showToast('License approved. The teacher has been emailed.', 'success');
+        loadDashboard();
+      }, function (err) { showToast(err, 'error'); }, { button: btn });
+    });
+  } else {
+    promptModal('Decline request from ' + escapeHtml(r.teacherName), [
+      { key: 'note', label: 'Reason (shown to the teacher)' },
+    ], function (values) {
+      if (!values.note.trim()) { showToast('Please give a short reason.', 'error'); return; }
+      call('clientDeclineLicenseRequest_', [sessionToken, r.requestId, values.note.trim()], function () {
+        showToast('Request declined. The teacher has been emailed.', 'success');
+        loadDashboard();
+      }, function (err) { showToast(err, 'error'); }, { button: btn });
+    });
+  }
+});
+
 function loadDashboard() {
+  var latest = latest_('stats');
+  var grid = document.getElementById('statGrid');
+  setLoading(grid, 'Loading dashboard…');
   call('clientGetDashboardStats_', [sessionToken], function (stats) {
-    var grid = document.getElementById('statGrid');
+    if (!latest()) return;
     var cards = [
       ['Total teachers', stats.totalTeachers], ['Active teachers', stats.activeTeachers],
       ['Active trials', stats.activeTrials], ['Expired trials', stats.expiredTrials],
       ['Active licenses', stats.activeLicenses], ['Expired licenses', stats.expiredLicenses],
       ['Total workspaces', stats.totalWorkspaces], ['Total students', stats.totalStudents],
     ];
-    grid.innerHTML = cards.map(function (c) { return '<div class="stat-card"><div class="num">' + c[1] + '</div><div class="label">' + c[0] + '</div></div>'; }).join('');
+    if (stats.pendingLicenseRequests !== undefined) cards.unshift(['License requests waiting', stats.pendingLicenseRequests]);
+    grid.innerHTML = cards.map(function (c) { return '<div class="stat-card"><div class="num">' + escapeHtml(c[1]) + '</div><div class="label">' + escapeHtml(c[0]) + '</div></div>'; }).join('');
   }, function (err) {
-    if (String(err).indexOf('expired') !== -1) { localStorage.removeItem('ogv_admin_session'); sessionToken = null; show('screen-login'); }
+    if (!latest()) return;
+    setErrorState(grid, err, loadDashboard); // an expired session is handled globally by onApiSessionExpired
   });
-  loadTeacherList('');
+  loadTeacherList();
+  loadLicenseRequests();
 }
 
-function loadTeacherList(query) {
-  call('clientListTeachersForAdmin_', [sessionToken, query], function (teachers) {
-    var tbody = document.querySelector('#teacherTable tbody');
-    tbody.innerHTML = teachers.map(function (t) {
-      return '<tr>' +
-        '<td><input type="checkbox" class="teacher-row-checkbox" value="' + t.teacherId + '"></td>' +
-        '<td class="clickable" data-teacher-id="' + t.teacherId + '">' + t.fullName + '</td>' +
-        '<td class="mono">' + t.email + '</td>' +
-        '<td>' + t.accountStatus + '</td>' +
-        '<td><span class="status-pill ' + t.licenseStatus + '">' + t.licenseStatus + '</span></td>' +
-        '<td>' + t.workspaceCount + '</td></tr>';
-    }).join('');
-    tbody.querySelectorAll('td.clickable').forEach(function (td) {
-      td.onclick = function () { openTeacherDetail(td.getAttribute('data-teacher-id')); };
-    });
-    tbody.querySelectorAll('.teacher-row-checkbox').forEach(function (cb) {
-      cb.onchange = updateBulkActionBar;
-    });
-    document.getElementById('selectAllCheckbox').checked = false;
-    updateBulkActionBar();
+var allTeachers = [];
+
+/** Fetches the full teacher list once; searching then filters it locally (same rule the server applies:
+ *  name or email contains the query, case-insensitive). It used to call the server on every keystroke,
+ *  and each of those calls made the backend walk every teacher. */
+function loadTeacherList() {
+  var latest = latest_('teachers');
+  var tbody = document.querySelector('#teacherTable tbody');
+  setLoading(tbody, 'Loading teachers…');
+  call('clientListTeachersForAdmin_', [sessionToken, ''], function (teachers) {
+    if (!latest()) return;
+    allTeachers = teachers;
+    renderTeacherList();
+  }, function (err) {
+    if (!latest()) return;
+    setErrorState(tbody, err, loadTeacherList);
   });
+}
+
+function renderTeacherList() {
+  var tbody = document.querySelector('#teacherTable tbody');
+  var q = document.getElementById('teacherSearch').value.trim().toLowerCase();
+  var teachers = !q ? allTeachers : allTeachers.filter(function (t) {
+    return String(t.fullName).toLowerCase().indexOf(q) !== -1 || String(t.email).toLowerCase().indexOf(q) !== -1;
+  });
+  tbody.innerHTML = teachers.length === 0
+    ? '<tr><td colspan="6" style="text-align:center; color:var(--gray-3); padding:24px">' + (q ? 'No teachers match your search.' : 'No teachers yet.') + '</td></tr>'
+    : teachers.map(function (t) {
+      return '<tr>' +
+        '<td><input type="checkbox" class="teacher-row-checkbox" value="' + escapeHtml(t.teacherId) + '"></td>' +
+        '<td class="clickable" data-teacher-id="' + escapeHtml(t.teacherId) + '">' + escapeHtml(t.fullName) + '</td>' +
+        '<td class="mono">' + escapeHtml(t.email) + '</td>' +
+        '<td>' + escapeHtml(t.accountStatus) + '</td>' +
+        '<td><span class="status-pill ' + escapeHtml(t.licenseStatus) + '">' + escapeHtml(t.licenseStatus) + '</span></td>' +
+        '<td>' + escapeHtml(t.workspaceCount) + '</td></tr>';
+    }).join('');
+  tbody.querySelectorAll('td.clickable').forEach(function (td) {
+    td.onclick = function () { openTeacherDetail(td.getAttribute('data-teacher-id')); };
+  });
+  tbody.querySelectorAll('.teacher-row-checkbox').forEach(function (cb) {
+    cb.onchange = updateBulkActionBar;
+  });
+  document.getElementById('selectAllCheckbox').checked = false;
+  updateBulkActionBar();
 }
 
 var searchTimeout;
-document.getElementById('teacherSearch').oninput = function (e) {
+document.getElementById('teacherSearch').oninput = function () {
   clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(function () { loadTeacherList(e.target.value); }, 250);
+  searchTimeout = setTimeout(renderTeacherList, 120); // local filter: no network involved
 };
 
 document.getElementById('backToDashboard').onclick = function () { loadDashboard(); show('screen-dashboard'); };
 
 function openTeacherDetail(teacherId) {
   currentTeacherId = teacherId;
+  var latest = latest_('detail');
+  // Show a neutral placeholder instead of the previously viewed teacher's data while this one loads.
+  document.getElementById('detailName').textContent = 'Loading…';
+  ['detailEmail', 'detailAccountStatus', 'detailVerified', 'detailCreated', 'detailTrial', 'detailLicenseStatus', 'detailWorkspaceCount', 'detailStudentCount']
+    .forEach(function (id) { document.getElementById(id).textContent = '…'; });
+  document.getElementById('suspendBtn').style.display = 'none';
+  document.getElementById('reactivateBtn').style.display = 'none';
+  show('screen-detail');
   call('clientGetTeacherDetailForAdmin_', [sessionToken, teacherId], function (d) {
+    if (!latest()) return;
     document.getElementById('detailName').textContent = d.fullName;
     document.getElementById('detailEmail').textContent = d.email;
     document.getElementById('detailAccountStatus').textContent = d.accountStatus;
     document.getElementById('detailVerified').textContent = d.emailVerified ? 'Yes' : 'No';
     document.getElementById('detailCreated').textContent = d.createdAt ? String(d.createdAt).slice(0, 10) : '—';
     document.getElementById('detailTrial').textContent = d.trial ? (String(d.trial.start).slice(0, 10) + ' → ' + String(d.trial.end).slice(0, 10)) : 'No trial record';
-    document.getElementById('detailLicenseStatus').innerHTML = '<span class="status-pill ' + d.currentLicenseStatus.status + '">' + d.currentLicenseStatus.status + '</span>' +
-      (d.currentLicenseStatus.daysRemaining !== null ? ' (' + d.currentLicenseStatus.daysRemaining + ' days remaining)' : '');
+    document.getElementById('detailLicenseStatus').innerHTML = '<span class="status-pill ' + escapeHtml(d.currentLicenseStatus.status) + '">' + escapeHtml(d.currentLicenseStatus.status) + '</span>' +
+      (d.currentLicenseStatus.daysRemaining !== null ? ' (' + escapeHtml(d.currentLicenseStatus.daysRemaining) + ' days remaining)' : '');
     document.getElementById('detailWorkspaceCount').textContent = d.workspaceCount;
     document.getElementById('detailStudentCount').textContent = d.studentCount;
     document.getElementById('suspendBtn').style.display = d.accountStatus === 'suspended' ? 'none' : 'inline-block';
     document.getElementById('reactivateBtn').style.display = d.accountStatus === 'suspended' ? 'inline-block' : 'none';
+  }, function (err) {
+    if (!latest()) return;
+    document.getElementById('detailName').textContent = 'Could not load this teacher';
+    showToast(err, 'error');
   });
-  show('screen-detail');
 }
 
 document.getElementById('extendTrialBtn').onclick = function () {
   promptModal('Extend trial', [{ key: 'date', label: 'New trial end date (YYYY-MM-DD)' }], function (values) {
-    call('clientExtendTrial_', [sessionToken, currentTeacherId, new Date(values.date).toISOString()], function () { openTeacherDetail(currentTeacherId); });
+    var iso = dateToIso_(values.date); if (!iso) return;
+    call('clientExtendTrial_', [sessionToken, currentTeacherId, iso], function () { openTeacherDetail(currentTeacherId); }, function (err) { showToast(err, 'error'); }, { button: document.getElementById('extendTrialBtn') });
   });
 };
 
 document.getElementById('activateLicenseBtn').onclick = function () {
   promptModal('Activate license', [{ key: 'date', label: 'Expiration date (YYYY-MM-DD)' }], function (values) {
-    call('clientActivateLicense_', [sessionToken, currentTeacherId, new Date(values.date).toISOString()], function () { openTeacherDetail(currentTeacherId); });
+    var iso = dateToIso_(values.date); if (!iso) return;
+    call('clientActivateLicense_', [sessionToken, currentTeacherId, iso], function () { openTeacherDetail(currentTeacherId); }, function (err) { showToast(err, 'error'); }, { button: document.getElementById('activateLicenseBtn') });
   });
 };
 
 document.getElementById('extendLicenseBtn').onclick = function () {
   promptModal('Extend license', [{ key: 'date', label: 'New expiration date (YYYY-MM-DD)' }], function (values) {
-    call('clientExtendLicense_', [sessionToken, currentTeacherId, new Date(values.date).toISOString()], function () { openTeacherDetail(currentTeacherId); }, function (err) { showToast(err, 'error'); });
+    var iso = dateToIso_(values.date); if (!iso) return;
+    call('clientExtendLicense_', [sessionToken, currentTeacherId, iso], function () { openTeacherDetail(currentTeacherId); }, function (err) { showToast(err, 'error'); }, { button: document.getElementById('extendLicenseBtn') });
   });
 };
 
 document.getElementById('suspendBtn').onclick = function () {
   if (!confirm('Suspend this account? The teacher will be logged out immediately and management actions will be blocked. Previously published student grades remain visible.')) return;
-  call('clientSuspendAccount_', [sessionToken, currentTeacherId], function () { openTeacherDetail(currentTeacherId); });
+  call('clientSuspendAccount_', [sessionToken, currentTeacherId], function () { openTeacherDetail(currentTeacherId); }, function (err) { showToast(err, 'error'); }, { button: document.getElementById('suspendBtn') });
 };
 
 document.getElementById('reactivateBtn').onclick = function () {
-  call('clientReactivateAccount_', [sessionToken, currentTeacherId, 'ACTIVE'], function () { openTeacherDetail(currentTeacherId); });
+  call('clientReactivateAccount_', [sessionToken, currentTeacherId, 'ACTIVE'], function () { openTeacherDetail(currentTeacherId); }, function (err) { showToast(err, 'error'); }, { button: document.getElementById('reactivateBtn') });
 };
 </script>
 </body>
