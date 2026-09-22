@@ -36,6 +36,7 @@
   * { box-sizing: border-box; }
   
   body {
+	margin: 0;
 	font-family: Arial, Helvetica, sans-serif;
 	color: var(--black);
 	background: var(--surface);
@@ -43,14 +44,18 @@
 	color 0.2s;
   }
  
-   header {
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
     background: var(--primary);
     color: var(--white);
-	height:76px;
-    padding: 18px 20px;
+	height: 76px;
+    padding: 0 clamp(14px, 2vw, 24px);
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 12px;
   }
  
   h2, .display {
@@ -66,6 +71,7 @@
   .header-logo {
 	height: 40px;
 	width: auto;
+	flex-shrink: 0;
 	display: block;
 	transform: scale(1.3);
 	transform-origin: left center;
@@ -78,7 +84,8 @@
 
   .app-shell {
 	display: flex;
-	min-height: 100vh;
+	align-items: flex-start;
+	min-height: calc(100vh - 76px);
   }
   
   .sidebar {
@@ -89,6 +96,10 @@
 	flex-direction: column;
 	padding: 20px 0;
 	flex-shrink: 0;
+	position: sticky;
+	top: 76px;
+	height: calc(100vh - 76px);
+	overflow-y: auto;
   }
   
   .sidebar-brand {
@@ -140,8 +151,9 @@
 
   main {
 	flex: 1;
-	padding: 32px 36px 100px;
-	max-width: 1040px;
+	min-width: 0;
+	min-height: calc(100vh - 76px);
+	padding: 28px clamp(16px, 3vw, 40px) 80px;
   }
   
   .screen {
@@ -199,6 +211,10 @@
   }
 
   .btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
 	background: var(--primary);
 	color: #fff;
 	border: none;
@@ -358,7 +374,8 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	z-index: 10;
+	z-index: 50;
+	padding: 16px;
   }
   
   .modal {
@@ -367,6 +384,8 @@
 	padding: 28px;
 	max-width: 420px;
 	width: 90%;
+	max-height: calc(100vh - 32px);
+	overflow-y: auto;
   }
   
   .modal p {
@@ -380,14 +399,53 @@
 	justify-content: flex-end;
   }
 
-  .status-pill.NONE { background: var(--border); color: var(--text-muted); }
-  .grade-input { width: 84px; padding: 6px 8px; font: inherit; border: 1px solid var(--border); border-radius: 3px; }
-  .lrn-input { width: 150px; padding: 6px 8px; font: inherit; border: 1px solid var(--border); border-radius: 3px; }
-  .lock-tag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 20px; font-size: 0.72rem; background: var(--border); color: var(--text-muted); }
-  .term-choice { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; }
-  .term-choice input { margin-top: 4px; }
-  .import-facts { margin: 8px 0 12px; padding-left: 18px; line-height: 1.7; }
-  .import-title { font-size: 1.15rem; font-weight: 600; }
+  .status-pill.NONE {
+	background: var(--border);
+	color: var(--text-muted);
+  }
+  
+  .grade-input {
+	width: 84px;
+	padding: 6px 8px;
+	font: inherit;
+	border: 1px solid var(--border);
+	border-radius: 3px;
+	background: var(--white);
+	color: var(--black);
+  }
+  
+  .lock-tag {
+	display: inline-block;
+	margin-left: 6px;
+	padding: 1px 8px;
+	border-radius: 20px;
+	font-size: 0.72rem;
+	background: var(--border);
+	color: var(--text-muted);
+  }
+  
+  .term-choice {
+	display: flex;
+	gap: 8px;
+	align-items: flex-start;
+	padding: 6px 0;
+  }
+  
+  .term-choice input {
+	margin-top: 4px;
+  }
+  
+  .import-facts {
+	margin: 8px 0 12px;
+	padding-left: 18px;
+	line-height: 1.7;
+  }
+  
+  .import-title {
+	font-size: 1.15rem;
+	font-weight: 600;
+  }
+  
   .issue-block {
 	border-radius: 4px;
 	padding: 14px 16px;
@@ -461,51 +519,6 @@
 	color: var(--danger);
   }
 
-  .subject-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-	gap: 14px;
-  }
-  
-  .subject-card {
-    border: 1px solid var(--border);
-	border-radius: 6px;
-	padding: 18px 16px;
-	background: var(--white);
-    display: flex;
-	flex-direction: column;
-	gap: 10px;
-	min-height: 92px;
-  }
-  
-  .subject-card .name {
-	font-weight: 500;
-	font-size: 0.98rem;
-  }
-  
-  .subject-card.added {
-	border-color: var(--primary);
-	cursor: pointer;
-  }
-  
-  .subject-card.added:hover {
-	background: var(--complement);
-  }
-  
-  .subject-card .card-action {
-	margin-top: auto;
-  }
-  
-  .subject-card .added-badge {
-	color: var(--primary);
-	font-size: 0.8rem;
-	font-weight: 500;
-  }
-  
-  .subject-card.special {
-	border-style: dashed;
-  }
-
   .class-selector {
 	display: flex;
 	align-items: center;
@@ -575,22 +588,166 @@
   .settings-row:last-child {
 	border-bottom: none;
   }
-  
 
-  /* ---------- Small screens ----------
-     Before this, the 220px sidebar and 36px page padding never adapted, leaving ~170px of content on a phone. */
-  main { min-width: 0; }
+  [hidden] {
+	display: none !important;
+  }
+  
+  main .screen > h2 { margin-top: 0; }
+
+  :root {
+    --male: #2F6FAE;
+	--male-bg: #E3EEF9;
+    --female: #B8457A;
+	--female-bg: #FAE6EF;
+  }
+  
+  [data-theme="dark"] {
+    --male: #7DB2E8;
+	--male-bg: #1B2F45;
+    --female: #EE8DB4;
+	--female-bg: #42222F;
+  }
+
+  .ico {
+	width: 16px;
+	height: 16px;
+	flex-shrink: 0;
+	filter: brightness(0);
+	opacity: 0.7;
+  }
+  
+  [data-theme="dark"] .ico {
+	filter: brightness(0) invert(1);
+	opacity: 0.85;
+  }
+  
+  .btn:not(.secondary) .ico,
+  .profile .ico { filter: brightness(0) invert(1); opacity: 1; }
+  .ico-fallback { font-size: 0.85rem; line-height: 1; }
+
+  .icon-btn {
+    width: 32px;
+	height: 32px;
+	padding: 0;
+    display: inline-flex;
+	align-items: center;
+	justify-content: center;
+    background: var(--white);
+	color: var(--text-muted);
+    border: 1px solid var(--border);
+	border-radius: 4px;
+  }
+  
+  .icon-btn:hover { background: var(--complement); }
+  .icon-btn.danger:hover { background: #F7E4E0; border-color: #E3B5A8; }
+  [data-theme="dark"] .icon-btn.danger:hover { background: #3A1F1A; border-color: #6B3328; }
+  .icon-btn .ico { width: 16px; height: 16px; }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .profile {
+    display: flex; align-items: center; gap: 10px;
+    background: none; border: none; color: #fff;
+    padding: 6px 10px; border-radius: 6px; min-width: 0; text-align: left;
+  }
+  .profile:hover { background: rgba(255,255,255,0.12); }
+  .profile .ico { width: 32px; height: 32px; }
+  .profile-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
+  .profile-name { font-weight: 700; font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-license { font-size: 0.76rem; opacity: 0.9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+
+  .nav-item.nav-sub { display: none; padding: 9px 20px 9px 52px; font-size: 0.86rem; }
+  body[data-nav="subjects"] .nav-item.nav-sub { display: flex; }
+  .nav-item.nav-sub .nav-icon { width: 16px; height: 16px; }
+
+
+  .page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .page-head h2 { margin: 0; }
+  .page-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .instruction { margin: 0 0 16px; color: var(--text-muted); font-size: 0.92rem; line-height: 1.5; max-width: 72ch; }
+  .only-mobile { display: none; }
+  .panel.flush { padding: 0; overflow-x: auto; }
+  .panel.flush table th:first-child, .panel.flush table td:first-child { padding-left: 16px; }
+  .muted { color: var(--text-muted); }
+
+
+  .active-pill {
+    display: inline-block; margin-left: 8px; padding: 2px 9px; border-radius: 20px;
+    font-size: 0.72rem; font-weight: 600; background: #375534; color: #fff; vertical-align: middle;
+  }
+  tr.is-active td { background: rgba(77,106,146,0.08); }
+  .row-actions { display: flex; gap: 6px; align-items: center; justify-content: flex-end; }
+
+
+  .subject-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
   .subject-grid > .api-state { grid-column: 1 / -1; }
+  .subject-card {
+    text-align: left; font: inherit; color: inherit;
+    display: flex; flex-direction: column; gap: 6px;
+    min-height: 108px; padding: 16px;
+    background: var(--white); border: 1px solid var(--border); border-radius: 6px;
+  }
+  .subject-card:hover { border-color: var(--primary); background: var(--complement); }
+  .subject-card .name { font-weight: 600; font-size: 1rem; }
+  .subject-card .sub { font-size: 0.8rem; color: var(--text-muted); line-height: 1.35; }
+  .subject-card .terms { margin-top: auto; padding-top: 8px; display: flex; gap: 6px; }
+  .subject-card.special { border-style: dashed; }
+  .term-chip { font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+  .term-chip.PUBLISHED { background: #375534; color: #fff; }
+  .term-chip.DRAFT { background: var(--complement); color: var(--primary); }
+  .term-chip.EMPTY { background: var(--border); color: var(--text-muted); }
+
+  .back-btn { display: inline-flex; align-items: center; gap: 6px; background: none; border: none; padding: 4px 0; color: var(--primary); font-size: 0.9rem; }
+  .back-btn:hover { text-decoration: underline; }
+  .back-btn .ico { filter: brightness(0); opacity: 0.6; }
+  [data-theme="dark"] .back-btn .ico { filter: brightness(0) invert(1); }
+
+
+  tr.group-row td { text-align: center; font-weight: 600; padding: 8px 12px; }
+  tr.group-row.male td { background: var(--male-bg); color: var(--male); }
+  tr.group-row.female td { background: var(--female-bg); color: var(--female); }
+  td.empty-row { text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 14px; }
+  td.num-cell { width: 44px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .calc-grade { font-weight: 600; }
+  .calc-grade.preview { font-style: italic; color: var(--text-muted); }
+  .grade-input.comp { width: 76px; }
+
+  .gender-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .gender-col { background: var(--white); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; min-width: 0; }
+  .gender-head { padding: 10px 14px; font-weight: 600; text-align: center; border-bottom: 2px solid; }
+  .gender-col.male .gender-head { background: var(--male-bg); color: var(--male); border-color: var(--male); }
+  .gender-col.female .gender-head { background: var(--female-bg); color: var(--female); border-color: var(--female); }
+  .gender-col table { font-size: 0.9rem; }
+  .gender-col td.lrn { font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+  .pill-missing { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 0.74rem; font-weight: 500; background: #F7E4E0; color: var(--danger); }
+  [data-theme="dark"] .pill-missing { background: #3A1F1A; color: #E8A090; }
+
+
+  .modal.wide { max-width: 640px; }
+  .modal > form > h3, .modal-head h3 { margin: 0 0 4px; }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+  .modal-intro { margin: 4px 0 16px !important; color: var(--text-muted); font-size: 0.9rem; }
+  .modal form .actions { margin-top: 20px; }
+  .modal .row .field { flex: 1 1 150px; }
+  .hint { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; line-height: 1.4; }
+  .csv-problems { margin: 8px 0 0; padding-left: 18px; font-size: 0.86rem; line-height: 1.6; color: var(--danger); }
+
 
   @media (max-width: 768px) {
-    .app-shell { flex-direction: column; min-height: 0; }
-    .sidebar { width: 100%; flex-direction: row; align-items: stretch; padding: 0; }
+    header { position: static; height: 68px; }
+    .header-logo { height: 34px; }
+    .app-shell { flex-direction: column; align-items: stretch; min-height: 0; }
+    .sidebar { position: static; height: auto; overflow: visible; width: 100%; flex-direction: row; align-items: stretch; padding: 0; }
     .sidebar-brand { display: none; }
     /* five nav items + Log Out share the width equally so nothing (esp. Log Out) is scrolled out of sight */
     .sidebar nav { display: flex; flex: 5 1 0; min-width: 0; }
     .sidebar-footer { margin-top: 0; display: flex; flex: 1 1 0; min-width: 0; }
     .nav-item { flex: 1 1 0; min-width: 0; width: auto; flex-direction: column; gap: 4px; padding: 10px 2px; font-size: 0.66rem; text-align: center; justify-content: center; }
-    main { padding: 16px 14px 60px; max-width: 100%; }
+    .nav-item.nav-sub, body[data-nav="subjects"] .nav-item.nav-sub { display: none; } /* Import ECR moves into the Subjects screen */
+    .only-mobile { display: inline-flex; }
+    main { min-height: 0; padding: 16px 14px 60px; }
     .panel { padding: 16px; }
     table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
     th, td { padding: 8px 10px; }
@@ -599,19 +756,32 @@
     .issue-row select { max-width: 100%; }
     .class-selector { flex-wrap: wrap; }
     .class-selector select { max-width: 100%; min-width: 0; font-size: 16px; }
-    .subject-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+    .subject-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+    .gender-cols { grid-template-columns: 1fr; }
     .term-tabs { flex-wrap: wrap; }
-    .modal { width: 92%; padding: 20px; }
+    .modal { width: 100%; padding: 20px; }
+    .page-actions .btn { padding: 9px 14px; }
     select, input { font-size: 16px; } /* stops iOS Safari zooming the page on focus */
   }
+  @media (max-width: 480px) {
+    .profile-license { display: none; }
+    .profile .ico { width: 28px; height: 28px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 </head>
 
-<body>
+<body data-nav="dashboard">
 <header>
   <img src="assets/logo-banner.svg" alt="Markado" class="header-logo">
-  <nav id="headerNav"></nav>
+  <button class="profile" id="profileBtn" type="button" title="Account and license">
+    <img class="ico" data-icon="user" data-fallback="&#128100;" alt="">
+    <span class="profile-text">
+      <span class="profile-name" id="profileName">&nbsp;</span>
+      <span class="profile-license" id="profileLicense"></span>
+    </span>
+  </button>
 </header>
 
 <script>
@@ -629,9 +799,9 @@
     <nav>
       <button class="nav-item active" data-screen="dashboard"><img class="nav-icon" src="assets/icons/dashboard.svg" alt=""><span>Dashboard</span></button>
       <button class="nav-item" data-screen="classes"><img class="nav-icon" src="assets/icons/classes.svg" alt=""><span>Classes</span></button>
-      <button class="nav-item" data-screen="import"><img class="nav-icon" src="assets/icons/add.svg" alt=""><span>Import ECR</span></button>
-      <button class="nav-item" data-screen="subjects"><img class="nav-icon" src="assets/icons/subjects.svg" alt=""><span>Subjects</span></button>
       <button class="nav-item" data-screen="students"><img class="nav-icon" src="assets/icons/students.svg" alt=""><span>Students</span></button>
+      <button class="nav-item" data-screen="subjects"><img class="nav-icon" src="assets/icons/subjects.svg" alt=""><span>Subjects</span></button>
+      <button class="nav-item nav-sub" id="navImportEcr" type="button"><img class="nav-icon" src="assets/icons/add.svg" alt=""><span>Import ECR</span></button>
       <button class="nav-item" data-screen="settings"><img class="nav-icon" src="assets/icons/settings.svg" alt=""><span>Settings</span></button>
     </nav>
     <div class="sidebar-footer">
@@ -644,67 +814,66 @@
 
     <section id="screen-dashboard" class="screen active">
       <h2>Dashboard</h2>
-      <div class="panel" id="dashboardTrialCard"></div>
       <div class="panel">
         <h3 style="margin-top:0">Your Classes</h3>
         <table id="dashboardClassTable">
-          <thead><tr><th>School</th><th>School Year</th><th>Grade</th><th>Section</th></tr></thead>
+          <thead><tr><th>School</th><th>School Year</th><th>Grade</th><th>Section</th><th>Adviser</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
     </section>
 
     <section id="screen-classes" class="screen">
-      <h2>Classes</h2>
-      <div id="workspaceMsg"></div>
-      <div class="panel">
-        <h3 style="margin-top:0">Add a Class</h3>
-        <form id="createWorkspaceForm">
-          <div class="row">
-            <div class="field"><label>School Name</label><input id="newSchoolName" placeholder="Your school (shown to students)"></div>
-          </div>
-          <div class="row">
-            <div class="field"><label>School Year</label><input id="newSchoolYear" placeholder="2026-2027"></div>
-            <div class="field"><label>Grade Level</label><input id="newGradeLevel" placeholder="6"></div>
-            <div class="field"><label>Section</label><input id="newSection" placeholder="Rizal"></div>
-          </div>
-          <button class="btn" type="submit" id="createWorkspaceBtn">Add Class</button>
-          <button class="btn secondary" type="button" id="goImportBtn" style="margin-left:8px">Or import an E-CR</button>
-        </form>
+      <div class="page-head">
+        <h2>Classes</h2>
+        <div class="page-actions">
+          <button class="btn" id="addClassBtn" type="button"><img class="ico" data-icon="plus" data-fallback="+" alt=""><span>Add Class</span></button>
+        </div>
       </div>
-      <table id="workspaceTable">
-        <thead><tr><th>School</th><th>School Year</th><th>Grade</th><th>Section</th><th></th></tr></thead>
-        <tbody></tbody>
-      </table>
+      <div class="panel flush">
+        <table id="workspaceTable">
+          <thead><tr><th>School Year</th><th>Class</th><th>School</th><th>Adviser</th><th>Designation</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </section>
 
-    <section id="screen-import" class="screen">
-      <h2>Import an E-CR</h2>
-      <div class="panel">
-        <p style="margin-top:0">Upload the standard DepEd E-CR (.xlsx). The class, subject and learners are set up from the file, and you choose which terms to import.</p>
-        <p style="color:var(--text-muted); font-size:0.85rem">Only names, class details, term grades and descriptions are saved — never raw scores.</p>
-        <input type="file" id="ecrFileInput" accept=".xlsx">
-        <button class="btn" id="ecrUploadBtn" style="margin-top:12px">Check file</button>
-        <div id="ecrImportArea" style="margin-top:16px"></div>
+    <section id="screen-students" class="screen">
+      <div class="page-head">
+        <h2>Students</h2>
+        <div class="page-actions" id="studentActions">
+          <button class="btn" id="addStudentBtn" type="button"><img class="ico" data-icon="plus" data-fallback="+" alt=""><span>Add Student</span></button>
+          <button class="btn secondary" id="downloadCsvBtn" type="button"><img class="ico" data-icon="download" alt=""><span>Download .CSV</span></button>
+          <button class="btn secondary" id="importCsvBtn" type="button"><img class="ico" data-icon="import" alt=""><span>Import .CSV</span></button>
+          <input type="file" id="csvFileInput" accept=".csv,text/csv" hidden>
+        </div>
+      </div>
+      <div id="studentsNoClassMsg" class="empty-state" style="display:none"><div class="display">No Class Selected</div><p>Add or Select a class first, under "Classes."</p></div>
+      <div id="studentsContent">
+        <div class="class-selector"><label for="studentsClassSelect">Class:</label><select id="studentsClassSelect"></select></div>
+        <p class="instruction">Students log in with their LRN and surname. Every student needs a 12-digit LRN. Names are written as Surname, Given Name.</p>
+        <div id="rosterArea"></div>
       </div>
     </section>
 
     <section id="screen-subjects" class="screen">
-      <h2>Subjects</h2>
-      <div class="class-selector"><label for="subjectsClassSelect">Class:</label><select id="subjectsClassSelect"></select></div>
+      <div class="page-head">
+        <h2>Subjects</h2>
+        <div class="page-actions">
+          <button class="btn secondary only-mobile" id="importEcrMobileBtn" type="button"><img class="ico" data-icon="import" alt=""><span>Import ECR</span></button>
+          <button class="btn" id="addSubjectBtn" type="button"><img class="ico" data-icon="plus" data-fallback="+" alt=""><span>Add Subject</span></button>
+        </div>
+      </div>
       <div id="subjectsNoClassMsg" class="empty-state" style="display:none"><div class="display">No Class Selected</div><p>Add or Select a class first, under "Classes."</p></div>
       <div id="subjectsContent">
+        <p class="instruction">Click the subject you want to encode or import grades. You can also Publish and Unpublish the grades here.</p>
+        <div class="class-selector"><label for="subjectsClassSelect">Class:</label><select id="subjectsClassSelect"></select></div>
         <div class="subject-grid" id="subjectGrid"></div>
-        <div class="panel" style="margin-top:20px; max-width:360px">
-          <h3 style="margin-top:0">Add a Subject</h3>
-          <div class="field"><label>Subject Name</label><input id="specialSubjectName" placeholder="Religion"></div>
-          <button class="btn secondary" id="addSpecialSubjectBtn">Add Subject</button>
-        </div>
       </div>
     </section>
 
     <section id="screen-subject-detail" class="screen">
-      <div class="breadcrumb"><button id="backToSubjects">← Subjects</button></div>
+      <div class="breadcrumb"><button class="back-btn" id="backToSubjects" type="button"><img class="ico" data-icon="back" data-fallback="&larr;" alt=""><span>Subjects</span></button></div>
       <h2 id="subjectTitle"></h2>
 
       <div class="term-tabs" id="termTabs">
@@ -715,45 +884,19 @@
 
       <div class="panel">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px">
-          <h3 style="margin:0">Term <span id="reviewTermLabel">1</span> grades</h3>
-          <div>
-            <button class="btn secondary" id="unpublishBtn">Unpublish all</button>
-            <button class="btn secondary" id="saveGradesBtn">Save grades</button>
-            <button class="btn" id="publishBtn">Publish all</button>
+          <h3 style="margin:0">Term <span id="reviewTermLabel">1</span> Grades</h3>
+          <div class="page-actions">
+            <button class="btn secondary" id="saveGradesBtn">Save Grades</button>
+            <button class="btn secondary" id="unpublishBtn">Unpublish All</button>
+            <button class="btn" id="publishBtn">Publish All</button>
           </div>
         </div>
-        <p style="color:var(--text-muted); font-size:0.85rem; margin:8px 0 0">Type each learner's transmuted grade (60–100); the description fills in automatically. Published grades are locked — unpublish one to edit it.</p>
+        <p id="gradeHint" style="color:var(--text-muted); font-size:0.85rem; margin:8px 0 0"></p>
         <div id="gradeMsg" style="margin-top:12px"></div>
         <div id="lockNote"></div>
-        <table style="margin-top:8px">
-          <thead><tr><th>Learner</th><th>Grade</th><th>Description</th><th>Status</th><th></th></tr></thead>
+        <table id="gradesTable" style="margin-top:8px">
+          <thead><tr><th>#</th><th>Student Name</th><th>Grade</th><th>Description</th><th>Status</th><th></th></tr></thead>
           <tbody id="reviewTableBody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <section id="screen-students" class="screen">
-      <h2>Students</h2>
-      <div class="class-selector"><label for="studentsClassSelect">Class:</label><select id="studentsClassSelect"></select></div>
-      <div id="studentsNoClassMsg" class="empty-state" style="display:none"><div class="display">No Class Selected</div><p>Add or Select a class first, under "Classes."</p></div>
-      <div id="studentsContent">
-        <div class="panel">
-          <h3 style="margin-top:0">Add a Student</h3>
-          <form id="addStudentForm">
-            <div class="row">
-              <div class="field"><label>Full name (Surname, Given Name)</label><input id="newStudentName" placeholder="Dela Cruz, Juan"></div>
-              <div class="field" style="max-width:190px"><label>LRN (optional)</label><input id="newStudentLrn" inputmode="numeric" maxlength="12" placeholder="12 digits"></div>
-              <div class="field" style="max-width:120px"><label>Sex</label>
-                <select id="newStudentSex"><option value="M">M</option><option value="F">F</option></select>
-              </div>
-            </div>
-            <button class="btn secondary" type="submit" id="addStudentBtn">Add to List</button>
-          </form>
-        </div>
-        <p style="color:var(--text-muted); font-size:0.85rem">Students log in with their LRN and surname. An E-CR doesn't include LRNs, so add each learner's LRN here.</p>
-        <table id="rosterTable">
-          <thead><tr><th>Student Code</th><th>Name</th><th>Sex</th><th>LRN</th></tr></thead>
-          <tbody></tbody>
         </table>
       </div>
     </section>
@@ -782,28 +925,68 @@
   </main>
 </div>
 
+
+<div class="modal-overlay" id="ecrModal" hidden>
+  <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="ecrTitle">
+    <div class="modal-head">
+      <h3 id="ecrTitle">Import an E-CR</h3>
+      <button class="icon-btn" id="ecrCloseBtn" type="button" aria-label="Close">&#10005;</button>
+    </div>
+    <p style="margin-top:0">Upload the standard DepEd E-CR file.</p>
+    <input type="file" id="ecrFileInput" accept=".xlsx">
+    <button class="btn" id="ecrUploadBtn" style="margin-top:12px">Check File</button>
+    <div id="ecrImportArea" style="margin-top:16px"></div>
+  </div>
+</div>
+
 <div id="modalRoot"></div>
 
 <script>
+var ACTIVE_CLASS_KEY = 'markado_active_class';
+
 var state = {
   sessionToken: localStorage.getItem('ogv_teacher_session'),
   workspaces: [],
-  currentWorkspaceId: null,
+  currentWorkspaceId: localStorage.getItem(ACTIVE_CLASS_KEY),
   currentClassSubjectId: null,
+  currentSubject: null,
   currentTerm: 1,
   roster: [],
+  profile: null,
 };
 
-var DEFAULT_SUBJECTS = [
-  { code: 'FIL', name: 'Filipino' },
-  { code: 'ENG', name: 'English' },
-  { code: 'MATH', name: 'Mathematics' },
-  { code: 'SCI', name: 'Science' },
-  { code: 'AP', name: 'Araling Panlipunan' },
-  { code: 'GMRC', name: 'GMRC / Values Education' },
-  { code: 'MAPEH', name: 'MAPEH' },
-  { code: 'TLE', name: 'EPP / TLE' },
-];
+
+var ICONS = {
+  user: 'assets/icons/user.svg',
+  edit: 'assets/icons/edit.svg',
+  delete: 'assets/icons/delete.svg',
+  plus: 'assets/icons/plus.svg',
+  back: 'assets/icons/back.svg',
+  download: 'assets/icons/download.svg',
+  import: 'assets/icons/import.svg',
+};
+
+function iconHtml_(name, fallbackText) {
+  return '<img class="ico" src="' + ICONS[name] + '" data-fallback="' + escapeHtml(fallbackText || '') + '" alt="">';
+}
+
+document.querySelectorAll('img[data-icon]').forEach(function (img) { img.src = ICONS[img.getAttribute('data-icon')]; });
+
+
+document.addEventListener('error', function (e) {
+  var el = e.target;
+  if (!el || el.tagName !== 'IMG' || !el.classList.contains('ico')) return;
+  var fallback = el.getAttribute('data-fallback');
+  if (fallback) {
+    var span = document.createElement('span');
+    span.className = 'ico-fallback';
+    span.textContent = fallback;
+    el.replaceWith(span);
+  } else {
+    el.remove();
+  }
+}, true);
+
 
 function show(screenId) {
   document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('active'); });
@@ -814,20 +997,82 @@ function setActiveNav(screenName) {
   document.querySelectorAll('.nav-item[data-screen]').forEach(function (btn) {
     btn.classList.toggle('active', btn.getAttribute('data-screen') === screenName);
   });
+  document.body.setAttribute('data-nav', screenName);
 }
 
-function confirmModal(title, bodyHtml, confirmLabel, onConfirm) {
+function byName_(a, b) { return String(a.fullName).localeCompare(String(b.fullName)); }
+
+function valueOf_(id) { return document.getElementById(id).value.trim(); }
+
+function fmtLongDate_(iso) {
+  var d = iso ? new Date(iso) : null;
+  return d && !isNaN(d.getTime()) ? d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+}
+
+function classLabel_(ws) { return 'Grade ' + ws.gradeLevel + ' – ' + ws.section; }
+
+function defaultSchoolYear_() {
+  var now = new Date();
+  var start = now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1;
+  return start + '-' + (start + 1);
+}
+
+function setActiveClass_(workspaceId) {
+  state.currentWorkspaceId = workspaceId || null;
+  if (workspaceId) localStorage.setItem(ACTIVE_CLASS_KEY, workspaceId); else localStorage.removeItem(ACTIVE_CLASS_KEY);
+}
+
+
+function ensureActiveClass_() {
+  var ids = state.workspaces.map(function (w) { return w.workspaceId; });
+  if (ids.indexOf(state.currentWorkspaceId) === -1) setActiveClass_(ids.length > 0 ? ids[0] : null);
+}
+
+function confirmModal(title, bodyHtml, confirmLabel, onConfirm, danger) {
   var root = document.getElementById('modalRoot');
   root.innerHTML =
-    '<div class="modal-overlay"><div class="modal">' +
+    '<div class="modal-overlay"><div class="modal" role="dialog" aria-modal="true">' +
     '<h3 style="margin-top:0">' + title + '</h3>' +
     '<p>' + bodyHtml + '</p>' +
     '<div class="actions"><button class="btn secondary" id="modalCancel">Cancel</button>' +
-    '<button class="btn" id="modalConfirm">' + confirmLabel + '</button></div>' +
+    '<button class="btn' + (danger ? ' danger' : '') + '" id="modalConfirm">' + confirmLabel + '</button></div>' +
     '</div></div>';
   document.getElementById('modalCancel').onclick = function () { root.innerHTML = ''; };
   document.getElementById('modalConfirm').onclick = function () { root.innerHTML = ''; onConfirm(); };
+  document.getElementById('modalCancel').focus();
 }
+
+function openModal_(innerHtml, opts) {
+  var root = document.getElementById('modalRoot');
+  root.innerHTML = '<div class="modal-overlay"><div class="modal' + (opts && opts.wide ? ' wide' : '') + '" role="dialog" aria-modal="true">' + innerHtml + '</div></div>';
+  var modal = root.querySelector('.modal');
+  var first = modal.querySelector('[data-autofocus]') || modal.querySelector('input, select, button');
+  if (first) first.focus();
+  return modal;
+}
+
+
+function formModal_(o) {
+  openModal_(
+    '<form id="formModal" novalidate><h3>' + escapeHtml(o.title) + '</h3>' +
+    (o.intro ? '<p class="modal-intro">' + escapeHtml(o.intro) + '</p>' : '') +
+    '<div id="formModalMsg"></div>' + o.fieldsHtml +
+    '<div class="actions"><button type="button" class="btn secondary" id="formCancel">Cancel</button>' +
+    '<button type="submit" class="btn" id="formSubmit">' + escapeHtml(o.submitLabel) + '</button></div></form>',
+    { wide: o.wide });
+  var submitBtn = document.getElementById('formSubmit');
+  var setError = function (message) {
+    document.getElementById('formModalMsg').innerHTML = message ? '<div class="msg error">' + escapeHtml(message) + '</div>' : '';
+  };
+  document.getElementById('formCancel').onclick = closeModal_;
+  document.getElementById('formModal').onsubmit = function (e) { e.preventDefault(); setError(''); o.onSubmit(setError, submitBtn); };
+}
+
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Escape') return;
+  if (document.getElementById('modalRoot').firstChild) { closeModal_(); return; }
+  if (!document.getElementById('ecrModal').hidden) closeEcrModal_();
+});
 
 document.querySelectorAll('.nav-item[data-screen]').forEach(function (btn) {
   btn.onclick = function () {
@@ -836,17 +1081,18 @@ document.querySelectorAll('.nav-item[data-screen]').forEach(function (btn) {
     show('screen-' + screenName);
     if (screenName === 'dashboard') loadDashboard();
     if (screenName === 'classes') loadClassesScreen();
-    if (screenName === 'import') showImportScreen();
-    if (screenName === 'subjects') loadSubjectsScreen();
     if (screenName === 'students') loadStudentsScreen();
+    if (screenName === 'subjects') loadSubjectsScreen();
     if (screenName === 'settings') loadSettingsScreen();
   };
 });
 
+document.getElementById('navImportEcr').onclick = function () { openEcrModal_(); };
+document.getElementById('importEcrMobileBtn').onclick = function () { openEcrModal_(); };
+document.getElementById('profileBtn').onclick = function () { document.querySelector('.nav-item[data-screen="settings"]').click(); };
+
 var ONBOARD_FLAG = 'markado_onboarded_token';
 
-// "Latest request wins": a slow response for something the user has already navigated away from
-// must not overwrite what is on screen now (e.g. rapid Term 1 -> Term 2 tab clicks).
 var requestSeq_ = {};
 function latest_(name) {
   var id = (requestSeq_[name] || 0) + 1;
@@ -861,13 +1107,10 @@ function endSession_() {
   window.location.href = 'teacher-login.html';
   return true;
 }
-window.onApiSessionExpired = endSession_; // any call that finds the session gone sends the user to log in
+window.onApiSessionExpired = endSession_;
 
 document.getElementById('logoutBtn').onclick = endSession_;
 
-// Onboarding is idempotent and only matters the first time a session opens the dashboard, so it is
-// skipped on later page loads of the same session. If the data call then reports a missing
-// spreadsheet, we fall back to onboarding and retry once.
 function startApp_() {
   if (sessionStorage.getItem(ONBOARD_FLAG) === state.sessionToken) {
     bootstrapData_(true);
@@ -877,17 +1120,13 @@ function startApp_() {
     sessionStorage.setItem(ONBOARD_FLAG, state.sessionToken);
     bootstrapData_(false);
   }, function () {
-    bootstrapData_(false); // as before: a failed onboarding doesn't block trying to load data
+    bootstrapData_(false);
   });
 }
 
 function bootstrapData_(mayNeedOnboarding) {
-  var card = document.getElementById('dashboardTrialCard');
-  if (card && !card.innerHTML.trim()) card.innerHTML = '<p style="margin:0" class="loading-inline">Loading…</p>';
   setLoading(document.querySelector('#dashboardClassTable tbody'), 'Loading your classes…');
-  // License status doesn't depend on workspaces: fetch both at once. The dashboard render below is
-  // then served from the cache instead of making the same calls again.
-  call('clientGetLicenseStatus_', [state.sessionToken], function () {}, function () {}, { silent: true });
+  loadProfile_();
   loadWorkspacesIntoState(function () { loadDashboard(); }, function (err) {
     if (mayNeedOnboarding) {
       sessionStorage.removeItem(ONBOARD_FLAG);
@@ -904,14 +1143,50 @@ function bootstrapData_(mayNeedOnboarding) {
 function loadWorkspacesIntoState(then, onErr) {
   call('clientListWorkspaces_', [state.sessionToken], function (workspaces) {
     state.workspaces = workspaces;
-    if (!state.currentWorkspaceId && workspaces.length > 0) state.currentWorkspaceId = workspaces[0].workspaceId;
+    ensureActiveClass_();
     if (then) then();
   }, onErr || function (err) { showToast(err, 'error'); });
 }
 
-function fmtDate_(iso) { return iso ? String(iso).slice(0, 10) : ''; }
 
-/** Days before expiry when a renewal can be requested: 7 for a monthly license, 30 otherwise (mirrors the server). */
+function licenseLabel_(license) {
+  if (!license) return '';
+  if (license.status === 'TRIAL') return 'Free Trial';
+  if (license.status === 'ACTIVE') {
+    return license.licenseType === 'monthly' ? 'Monthly Subscription' : (license.licenseType === 'yearly' ? 'Yearly Subscription' : 'Subscription');
+  }
+  if (license.status === 'EXPIRED') return 'License expired';
+  if (license.status === 'SUSPENDED') return 'Account suspended';
+  return 'No active license';
+}
+
+function licenseLine_(license) {
+  var label = licenseLabel_(license);
+  var date = license && license.expirationDate ? fmtLongDate_(license.expirationDate) : '';
+  if (!date) return label;
+  if (license.status === 'TRIAL' || license.status === 'ACTIVE') return label + ' • Expires on ' + date;
+  if (license.status === 'EXPIRED') return label + ' • Ended on ' + date;
+  return label;
+}
+
+function renderProfile_(profile) {
+  var line = profile ? licenseLine_(profile.license) : '';
+  document.getElementById('profileName').textContent = profile ? profile.fullName : 'My Account';
+  document.getElementById('profileLicense').textContent = line;
+  document.getElementById('profileBtn').title = line ? line + ' - open Settings' : 'Open Settings';
+}
+
+function loadProfile_() {
+  call('clientGetMyProfile_', [state.sessionToken], function (profile) {
+    state.profile = profile;
+    renderProfile_(profile);
+    renderLicenseBanner_(profile.license); 
+  }, function () { renderProfile_(null); }, { silent: true });
+}
+
+function fmtDate_(iso) { return iso ? String(iso).slice(0, 10) : ''; }  
+
+
 function renewalWindowDays_(licenseType) { return licenseType === 'monthly' ? 7 : 30; }
 
 function planLabel_(licenseType) { return licenseType === 'monthly' ? 'monthly ' : (licenseType === 'yearly' ? 'yearly ' : ''); }
@@ -922,7 +1197,7 @@ function renderLicenseBanner_(status) {
   if (status.status === 'TRIAL' && status.daysRemaining !== null && status.daysRemaining <= 7 && status.daysRemaining > 0) {
     text = 'Trial ends in ' + status.daysRemaining + ' day(s).'; cls = 'trial'; action = 'Request a license';
   } else if (status.status === 'EXPIRED') {
-    text = 'Your trial or license has expired. Importing, entering, and publishing grades is paused — your students can still see anything already published.'; cls = 'expired'; action = 'Request a license';
+    text = 'Your trial or license has expired. Importing, entering, and publishing grades is paused - your students can still see anything already published.'; cls = 'expired'; action = 'Request a license';
   } else if (status.status === 'SUSPENDED') {
     text = 'Your account has been suspended. Contact support for details. Your students can still see anything already published.'; cls = 'expired';
   } else if (status.status === 'ACTIVE' && status.daysRemaining !== null && status.daysRemaining <= renewalWindowDays_(status.licenseType) && status.daysRemaining > 0) {
@@ -935,7 +1210,6 @@ function renderLicenseBanner_(status) {
   if (btn) btn.onclick = function () { openLicenseRequestModal(refreshLicenseViews_); };
 }
 
-// ---------- License request (teacher applies; payment is by GCash, verified by the admin) ----------
 
 function closeModal_() { document.getElementById('modalRoot').innerHTML = ''; }
 
@@ -968,7 +1242,7 @@ function renderLicenseRequestModal_(info, onDone) {
       '<p style="font-size:0.88rem">Pay with GCash first, then choose the plan you paid for and enter the reference number from your receipt so the payment can be verified.</p>' +
       '<div class="field"><label>Plan</label><select id="lrPlan"><option value="">Choose a plan…</option>' +
         (info.plans || []).map(function (p) {
-          return '<option value="' + escapeHtml(p.id) + '">' + escapeHtml(p.name + ' (' + (p.durationLabel || (p.days ? p.days + ' days' : p.months + ' months')) + ')' + (p.price ? ' — ' + p.price : '')) + '</option>';
+          return '<option value="' + escapeHtml(p.id) + '">' + escapeHtml(p.name + ' (' + (p.durationLabel || (p.days ? p.days + ' days' : p.months + ' months')) + ')' + (p.price ? ' - ' + p.price : '')) + '</option>';
         }).join('') + '</select></div>' +
       '<div class="field"><label>GCash reference number</label><input id="lrRef" maxlength="40" autocomplete="off"></div>' +
       '<div class="field"><label>Note (optional)</label><input id="lrNote" maxlength="300" autocomplete="off"></div>' +
@@ -998,40 +1272,26 @@ function renderLicenseRequestModal_(info, onDone) {
   };
 }
 
+
 function loadDashboard() {
   var latest = latest_('dashboard');
-  var card = document.getElementById('dashboardTrialCard');
   var tbody = document.querySelector('#dashboardClassTable tbody');
-  if (!card.innerHTML.trim()) card.innerHTML = '<p style="margin:0">Loading…</p>';
   if (state.workspaces.length === 0) setLoading(tbody, 'Loading your classes…');
-
-  // ONE license request feeds both the banner and the card (it used to be requested twice).
-  call('clientGetLicenseStatus_', [state.sessionToken], function (status) {
-    if (!latest()) return;
-    renderLicenseBanner_(status);
-    if (status.status === 'TRIAL') {
-      card.innerHTML = '<h3 style="margin-top:0">Trial</h3><p style="font-size:1.1rem; margin:0">' + status.daysRemaining + ' day(s) remaining</p>';
-    } else if (status.status === 'ACTIVE') {
-      card.innerHTML = '<h3 style="margin-top:0">License</h3><p style="margin:0">Active' + (status.expirationDate ? (' until ' + escapeHtml(status.expirationDate.slice(0, 10))) : '') + '</p>';
-    } else {
-      card.innerHTML = '<h3 style="margin-top:0">License</h3><p style="margin:0">Status: ' + escapeHtml(status.status) + '</p>';
-    }
-  }, function (err) {
-    if (!latest()) return;
-    card.innerHTML = '<h3 style="margin-top:0">License</h3><p style="margin:0">Could not load license status.</p>';
-  });
-
   call('clientListWorkspaces_', [state.sessionToken], function (workspaces) {
     if (!latest()) return;
     state.workspaces = workspaces;
+    ensureActiveClass_();
     tbody.innerHTML = workspaces.length === 0
-      ? '<tr><td colspan="4" class="empty-state">No classes yet — add one under "Classes" or import an E-CR.</td></tr>'
-      : workspaces.map(function (ws) { return '<tr><td>' + escapeHtml(ws.schoolName) + '</td><td>' + escapeHtml(ws.schoolYearLabel) + '</td><td>' + escapeHtml(ws.gradeLevel) + '</td><td>' + escapeHtml(ws.section) + '</td></tr>'; }).join('');
+      ? '<tr><td colspan="5" class="empty-state">No classes yet - add one under "Classes", or import an E-CR under "Subjects".</td></tr>'
+      : workspaces.map(function (ws) {
+          return '<tr><td>' + escapeHtml(ws.schoolName) + '</td><td>' + escapeHtml(ws.schoolYearLabel) + '</td><td>' + escapeHtml(ws.gradeLevel) + '</td><td>' + escapeHtml(ws.section) + '</td><td>' + escapeHtml(ws.adviserName) + '</td></tr>';
+        }).join('');
   }, function (err) {
     if (!latest()) return;
     setErrorState(tbody, err, loadDashboard);
   });
 }
+
 
 function loadClassesScreen() {
   var latest = latest_('classes');
@@ -1040,62 +1300,165 @@ function loadClassesScreen() {
   call('clientListWorkspaces_', [state.sessionToken], function (workspaces) {
     if (!latest()) return;
     state.workspaces = workspaces;
-    tbody.innerHTML = workspaces.map(function (ws) {
-      return '<tr><td>' + escapeHtml(ws.schoolName) + '</td><td>' + escapeHtml(ws.schoolYearLabel) + '</td><td>' + escapeHtml(ws.gradeLevel) + '</td><td>' + escapeHtml(ws.section) + '</td>' +
-        '<td><button class="btn secondary small" data-select-workspace="' + escapeHtml(ws.workspaceId) + '">Select as active</button></td></tr>';
-    }).join('');
-    tbody.querySelectorAll('[data-select-workspace]').forEach(function (btn) {
-      btn.onclick = function () {
-        state.currentWorkspaceId = btn.getAttribute('data-select-workspace');
-        showToast('Active class updated.', 'success');
-      };
-    });
+    ensureActiveClass_();
+    renderClassesTable_();
   }, function (err) {
     if (!latest()) return;
     setErrorState(tbody, err, loadClassesScreen);
   });
 }
 
-document.getElementById('createWorkspaceForm').onsubmit = function (e) {
-  e.preventDefault();
-  var sy = document.getElementById('newSchoolYear').value.trim();
-  var gl = document.getElementById('newGradeLevel').value.trim();
-  var sec = document.getElementById('newSection').value.trim();
-  var schoolName = document.getElementById('newSchoolName').value.trim();
-  var msgEl = document.getElementById('workspaceMsg');
-  if (!sy || !gl || !sec) return;
-  call('clientCreateWorkspace_', [state.sessionToken, sy, gl, sec, schoolName], function (data) {
-    document.getElementById('newSchoolName').value = '';
-    document.getElementById('newSchoolYear').value = '';
-    document.getElementById('newGradeLevel').value = '';
-    document.getElementById('newSection').value = '';
-    state.currentWorkspaceId = data.workspaceId;
-    loadClassesScreen();
-    showToast('Class added.', 'success');
-  }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; });
-};
+function renderClassesTable_() {
+  var tbody = document.querySelector('#workspaceTable tbody');
+  if (state.workspaces.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No classes yet. Click <b>Add Class</b> to create your first one.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = state.workspaces.map(function (ws) {
+    var active = ws.workspaceId === state.currentWorkspaceId;
+    var id = escapeHtml(ws.workspaceId);
+    var label = escapeHtml(classLabel_(ws));
+    return '<tr class="' + (active ? 'is-active' : '') + '">' +
+      '<td>' + escapeHtml(ws.schoolYearLabel) + '</td>' +
+      '<td><b>' + label + '</b>' + (active ? '<span class="active-pill">Active Class</span>' : '') + '</td>' +
+      '<td>' + escapeHtml(ws.schoolName) + '</td>' +
+      '<td>' + (ws.adviserName ? escapeHtml(ws.adviserName) : '<span class="muted">-</span>') + '</td>' +
+      '<td>' + (ws.adviserDesignation ? escapeHtml(ws.adviserDesignation) : '<span class="muted">-</span>') + '</td>' +
+      '<td><div class="row-actions">' +
+        (active ? '' : '<button class="btn secondary small" data-set-active="' + id + '">Set active</button>') +
+        '<button class="icon-btn" data-edit-class="' + id + '" title="Edit class" aria-label="Edit ' + label + '">' + iconHtml_('edit', 'Edit') + '</button>' +
+        '<button class="icon-btn danger" data-delete-class="' + id + '" title="Delete class" aria-label="Delete ' + label + '">' + iconHtml_('delete', 'Delete') + '</button>' +
+      '</div></td></tr>';
+  }).join('');
+}
 
+function workspaceById_(id) {
+  return state.workspaces.filter(function (w) { return w.workspaceId === id; })[0] || null;
+}
+
+document.querySelector('#workspaceTable tbody').addEventListener('click', function (e) {
+  var setBtn = e.target.closest('[data-set-active]');
+  var editBtn = e.target.closest('[data-edit-class]');
+  var delBtn = e.target.closest('[data-delete-class]');
+  if (setBtn) {
+    setActiveClass_(setBtn.getAttribute('data-set-active'));
+    renderClassesTable_();
+    showToast('Active class updated.', 'success');
+  } else if (editBtn) {
+    var ws = workspaceById_(editBtn.getAttribute('data-edit-class'));
+    if (ws) openClassModal_(ws);
+  } else if (delBtn) {
+    var doomed = workspaceById_(delBtn.getAttribute('data-delete-class'));
+    if (doomed) confirmDeleteClass_(doomed);
+  }
+});
+
+document.getElementById('addClassBtn').onclick = function () { openClassModal_(null); };
+
+var DESIGNATIONS_ = ['Teacher I', 'Teacher II', 'Teacher III', 'Master Teacher I', 'Master Teacher II', 'Master Teacher III', 'Master Teacher IV'];
+
+function gradeOptionsHtml_(selected) {
+  var grades = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+  var current = selected === undefined || selected === null ? '' : String(selected);
+  if (current && grades.indexOf(current) === -1) grades.push(current); // a grade written some other way in an older class
+  return '<option value="">Choose…</option>' + grades.map(function (g) {
+    return '<option value="' + escapeHtml(g) + '"' + (g === current ? ' selected' : '') + '>Grade ' + escapeHtml(g) + '</option>';
+  }).join('');
+}
+
+
+function openClassModal_(ws) {
+  var editing = !!ws;
+  var v = editing ? ws : {
+    schoolName: state.workspaces[0] ? state.workspaces[0].schoolName : '', 
+    schoolYearLabel: defaultSchoolYear_(), gradeLevel: '', section: '', adviserName: '', adviserDesignation: '',
+  };
+  formModal_({
+    title: editing ? 'Edit class' : 'Add class',
+    intro: editing ? classLabel_(ws) + ' · ' + ws.schoolYearLabel : 'Subjects are added to the class automatically.',
+    wide: true,
+    submitLabel: editing ? 'Save changes' : 'Add Class',
+    fieldsHtml:
+      '<div class="field"><label for="cfSchool">School name</label><input id="cfSchool" maxlength="120" placeholder="Shown to students" value="' + escapeHtml(v.schoolName) + '"></div>' +
+      '<div class="row">' +
+        '<div class="field"><label for="cfYear">School year</label><input id="cfYear" maxlength="30" placeholder="2026-2027" value="' + escapeHtml(v.schoolYearLabel) + '"></div>' +
+        '<div class="field"><label for="cfGrade">Grade level</label><select id="cfGrade"' + (editing ? '' : ' data-autofocus') + '>' + gradeOptionsHtml_(v.gradeLevel) + '</select></div>' +
+        '<div class="field"><label for="cfSection">Section</label><input id="cfSection" maxlength="60" placeholder="Rizal" value="' + escapeHtml(v.section) + '"></div>' +
+      '</div>' +
+      '<div class="row">' +
+        '<div class="field"><label for="cfAdviser">Adviser name</label><input id="cfAdviser" maxlength="80" placeholder="Raymark R. Remo" value="' + escapeHtml(v.adviserName) + '"></div>' +
+        '<div class="field"><label for="cfDesignation">Designation</label><input id="cfDesignation" list="designationList" maxlength="60" placeholder="Teacher III" value="' + escapeHtml(v.adviserDesignation) + '">' +
+          '<datalist id="designationList">' + DESIGNATIONS_.map(function (d) { return '<option value="' + d + '">'; }).join('') + '</datalist></div>' +
+      '</div>',
+    onSubmit: function (setError, submitBtn) {
+      var school = valueOf_('cfSchool'), year = valueOf_('cfYear'), grade = valueOf_('cfGrade'), section = valueOf_('cfSection');
+      var adviser = valueOf_('cfAdviser'), designation = valueOf_('cfDesignation');
+      if (!year || !grade || !section) { setError('Enter the school year, grade level and section.'); return; }
+      if (editing) {
+        call('clientUpdateWorkspace_', [state.sessionToken, ws.workspaceId, year, grade, section, school, adviser, designation], function () {
+          closeModal_(); loadClassesScreen(); showToast('Class updated.', 'success');
+        }, setError, { button: submitBtn });
+      } else {
+        call('clientCreateWorkspace_', [state.sessionToken, year, grade, section, school, adviser, designation], function (data) {
+          setActiveClass_(data.workspaceId); // a new class becomes the active one
+          closeModal_(); loadClassesScreen(); showToast('Class added.', 'success');
+        }, setError, { button: submitBtn });
+      }
+    },
+  });
+}
+
+function confirmDeleteClass_(ws) {
+  confirmModal('Delete ' + escapeHtml(classLabel_(ws)) + '?',
+    'This permanently removes the class (' + escapeHtml(ws.schoolYearLabel) + ') with its students, subjects and grades - including grades already published to students. This can\'t be undone.',
+    'Delete class', function () {
+      call('clientDeleteWorkspace_', [state.sessionToken, ws.workspaceId], function () {
+        if (state.currentWorkspaceId === ws.workspaceId) setActiveClass_(null);
+        state.workspaces = state.workspaces.filter(function (w) { return w.workspaceId !== ws.workspaceId; });
+        ensureActiveClass_();
+        renderClassesTable_();
+        showToast('Class deleted.', 'success');
+      }, function (err) { showToast(err, 'error'); });
+    }, true);
+}
+
+/** The Subjects and Students screens both pick a class; choosing one here makes it the active class. */
 function populateClassSelector(selectEl, onChange) {
   selectEl.innerHTML = state.workspaces.map(function (ws) {
-    return '<option value="' + escapeHtml(ws.workspaceId) + '">' + escapeHtml(ws.schoolYearLabel) + ' · Grade ' + escapeHtml(ws.gradeLevel) + ' - ' + escapeHtml(ws.section) + '</option>';
+    return '<option value="' + escapeHtml(ws.workspaceId) + '">' + escapeHtml(ws.schoolYearLabel) + ' · ' + escapeHtml(classLabel_(ws)) + '</option>';
   }).join('');
   if (state.currentWorkspaceId) selectEl.value = state.currentWorkspaceId;
   selectEl.onchange = function () {
-    state.currentWorkspaceId = selectEl.value;
+    setActiveClass_(selectEl.value);
     onChange();
   };
 }
 
+
 function loadSubjectsScreen() {
+  setLoading(document.getElementById('subjectGrid'), 'Loading subjects…'); 
   loadWorkspacesIntoState(function () {
     var hasClass = !!state.currentWorkspaceId;
     document.getElementById('subjectsNoClassMsg').style.display = hasClass ? 'none' : 'block';
     document.getElementById('subjectsContent').style.display = hasClass ? 'block' : 'none';
+    document.getElementById('addSubjectBtn').hidden = !hasClass;
     if (!hasClass) return;
-    // Changing the class only needs that class's subjects -- not a reload of the workspace list.
     populateClassSelector(document.getElementById('subjectsClassSelect'), renderSubjectGrid);
     renderSubjectGrid();
   });
+}
+
+var TERM_STATUS_TEXT_ = { PUBLISHED: 'Published', DRAFT: 'Draft', EMPTY: 'No grades yet' };
+
+function termChipsHtml_(cs) {
+  var label = [];
+  var chips = [1, 2, 3].map(function (n) {
+    var found = (cs.terms || []).filter(function (t) { return Number(t.term) === n; })[0];
+    var status = found ? found.status : 'EMPTY';
+    label.push('Term ' + n + ': ' + TERM_STATUS_TEXT_[status]);
+    return '<span class="term-chip ' + status + '">T' + n + '</span>';
+  }).join('');
+  return '<span class="terms" title="' + escapeHtml(label.join(' · ')) + '">' + chips + '</span>';
 }
 
 function renderSubjectGrid() {
@@ -1104,68 +1467,53 @@ function renderSubjectGrid() {
   setLoading(grid, 'Loading subjects…');
   call('clientListClassSubjects_', [state.sessionToken, state.currentWorkspaceId], function (classSubjects) {
     if (!latest()) return;
-    var addedByName = {};
-    classSubjects.forEach(function (cs) { addedByName[cs.subjectName] = cs; });
-
-    var cardsHtml = DEFAULT_SUBJECTS.map(function (subj) {
-      var added = addedByName[subj.name];
-      if (added) {
-        return '<div class="subject-card added" data-open-subject="' + escapeHtml(added.classSubjectId) + '" data-subject-name="' + escapeHtml(subj.name) + '">' +
-          '<span class="name">' + escapeHtml(subj.name) + '</span><span class="added-badge">Added — open →</span></div>';
-      }
-      return '<div class="subject-card">' +
-        '<span class="name">' + escapeHtml(subj.name) + '</span>' +
-        '<button class="btn secondary small card-action" data-add-subject="' + subj.code + '">+ Add</button></div>';
+    grid.innerHTML = classSubjects.map(function (cs) {
+      var sub = cs.components.length > 0
+        ? cs.components.map(function (c) { return escapeHtml(c.subjectName); }).join(' · ')
+        : (cs.isCustom ? 'Special subject' : '');
+      return '<button type="button" class="subject-card' + (cs.isCustom ? ' special' : '') + '" data-open-subject="' + escapeHtml(cs.classSubjectId) + '" data-subject-name="' + escapeHtml(cs.subjectName) + '">' +
+        '<span class="name">' + escapeHtml(cs.subjectName) + '</span>' +
+        (sub ? '<span class="sub">' + sub + '</span>' : '') +
+        termChipsHtml_(cs) + '</button>';
     }).join('');
-
-    var customCardsHtml = classSubjects
-      .filter(function (cs) { return !DEFAULT_SUBJECTS.some(function (s) { return s.name === cs.subjectName; }); })
-      .map(function (cs) {
-        return '<div class="subject-card added special" data-open-subject="' + escapeHtml(cs.classSubjectId) + '">' +
-          '<span class="name">' + escapeHtml(cs.subjectName) + '</span><span class="added-badge">Special · Added — open →</span></div>';
-      }).join('');
-
-    grid.innerHTML = cardsHtml + customCardsHtml;
-
-    grid.querySelectorAll('[data-add-subject]').forEach(function (btn) {
-      btn.onclick = function () {
-        var code = btn.getAttribute('data-add-subject');
-        call('clientCreateClassSubject_', [state.sessionToken, state.currentWorkspaceId, code, null], function () {
-          renderSubjectGrid();
-          showToast('Subject added.', 'success');
-        }, function (err) { showToast(err, 'error'); });
-      };
-    });
-    grid.querySelectorAll('[data-open-subject]').forEach(function (card) {
-      card.onclick = function () {
-        var name = card.getAttribute('data-subject-name') || card.querySelector('.name').textContent;
-        openSubjectDetail(card.getAttribute('data-open-subject'), name);
-      };
-    });
   }, function (err) {
     if (!latest()) return;
     setErrorState(grid, err, renderSubjectGrid);
   });
 }
 
-document.getElementById('addSpecialSubjectBtn').onclick = function () {
-  var name = document.getElementById('specialSubjectName').value.trim();
-  if (!name) return;
-  call('clientCreateClassSubject_', [state.sessionToken, state.currentWorkspaceId, null, name], function () {
-    document.getElementById('specialSubjectName').value = '';
-    renderSubjectGrid();
-    showToast('Special subject added.', 'success');
-  }, function (err) { showToast(err, 'error'); });
+document.getElementById('subjectGrid').addEventListener('click', function (e) {
+  var card = e.target.closest('[data-open-subject]');
+  if (card) openSubjectDetail(card.getAttribute('data-open-subject'), card.getAttribute('data-subject-name'));
+});
+
+document.getElementById('addSubjectBtn').onclick = function () {
+  formModal_({
+    title: 'Add subject',
+    intro: 'For a subject that is not in the list, such as Religion. The regular subjects are already there.',
+    submitLabel: 'Add Subject',
+    fieldsHtml: '<div class="field"><label for="asName">Subject name</label><input id="asName" maxlength="80" placeholder="Religion" data-autofocus></div>',
+    onSubmit: function (setError, submitBtn) {
+      var name = valueOf_('asName');
+      if (!name) { setError('Enter the subject name.'); return; }
+      call('clientCreateClassSubject_', [state.sessionToken, state.currentWorkspaceId, null, name], function () {
+        closeModal_(); renderSubjectGrid(); showToast('Subject added.', 'success');
+      }, setError, { button: submitBtn });
+    },
+  });
 };
 
-function openSubjectDetail(classSubjectId, subjectName) {
+
+function openSubjectDetail(classSubjectId, nameHint) {
   state.currentClassSubjectId = classSubjectId;
+  state.currentSubject = null;
   state.currentTerm = 1;
-  document.getElementById('subjectTitle').textContent = subjectName;
+  document.getElementById('subjectTitle').textContent = nameHint || '';
   document.querySelectorAll('#termTabs button').forEach(function (b) { b.classList.toggle('active', b.dataset.term === '1'); });
-  // Clear whatever the previous subject left on screen so it can't be mistaken for this one.
   document.getElementById('gradeMsg').innerHTML = '';
   document.getElementById('lockNote').innerHTML = '';
+  document.getElementById('gradeHint').textContent = '';
+  renderGradeHead_([]);
   setLoading(document.getElementById('reviewTableBody'), 'Loading grades…');
   show('screen-subject-detail');
   loadReview();
@@ -1187,19 +1535,55 @@ document.querySelectorAll('#termTabs button').forEach(function (btn) {
   };
 });
 
-/** One row of the grade sheet. A published grade is LOCKED: shown, not editable, until it is unpublished. */
-function gradeRowHtml_(g) {
-  var gradeCell = g.locked
-    ? '<strong>' + escapeHtml(g.termGrade) + '</strong><span class="lock-tag">Locked</span>'
-    : '<input class="grade-input" type="number" min="60" max="100" step="1" inputmode="numeric" data-enr="' + escapeHtml(g.enrollmentId) +
-      '" data-original="' + escapeHtml(g.termGrade) + '" value="' + escapeHtml(g.termGrade) + '" aria-label="Grade for ' + escapeHtml(g.fullName) + '">';
+function renderGradeHead_(components) {
+  var cols = ['#', 'Student Name'].concat(components.map(function (c) { return c.subjectName; })).concat(['Grade', 'Description', 'Status', '']);
+  document.querySelector('#gradesTable thead').innerHTML = '<tr>' + cols.map(function (c) { return '<th>' + escapeHtml(c) + '</th>'; }).join('') + '</tr>';
+}
+
+function gradeRowHtml_(g, number, components) {
+  var name = escapeHtml(g.fullName);
+  var enr = escapeHtml(g.enrollmentId);
+  var cells = '<td class="num-cell">' + number + '</td><td>' + name + '</td>';
+
+  if (components.length > 0) {
+    components.forEach(function (c) {
+      var value = g.components ? g.components[c.classSubjectId] : '';
+      cells += g.locked
+        ? '<td>' + escapeHtml(value) + '</td>'
+        : '<td><input class="grade-input comp" type="number" min="60" max="100" step="1" inputmode="numeric" data-enr="' + enr + '" data-comp="' + escapeHtml(c.classSubjectId) +
+          '" data-original="' + escapeHtml(value) + '" value="' + escapeHtml(value) + '" aria-label="' + escapeHtml(c.subjectName) + ' grade for ' + name + '"></td>';
+    });
+    cells += '<td><strong class="calc-grade" data-saved="' + escapeHtml(g.termGrade) + '">' + (g.termGrade !== '' ? escapeHtml(g.termGrade) : '-') + '</strong>' +
+      (g.locked ? '<span class="lock-tag">Locked</span>' : '') + '</td>';
+  } else {
+    cells += g.locked
+      ? '<td><strong>' + escapeHtml(g.termGrade) + '</strong><span class="lock-tag">Locked</span></td>'
+      : '<td><input class="grade-input" type="number" min="60" max="100" step="1" inputmode="numeric" data-enr="' + enr +
+        '" data-original="' + escapeHtml(g.termGrade) + '" value="' + escapeHtml(g.termGrade) + '" aria-label="Grade for ' + name + '"></td>';
+  }
+
   var pill = g.publicationState === 'NONE' ? '<span class="status-pill NONE">No grade</span>'
     : '<span class="status-pill ' + escapeHtml(g.publicationState) + '">' + escapeHtml(g.publicationState) + '</span>';
   var action = g.publicationState === 'PUBLISHED'
-    ? '<button class="btn small secondary" data-act="unpublish" data-enr="' + escapeHtml(g.enrollmentId) + '">Unpublish</button>'
-    : (g.publicationState === 'DRAFT' ? '<button class="btn small secondary" data-act="publish" data-enr="' + escapeHtml(g.enrollmentId) + '">Publish</button>' : '');
-  return '<tr><td>' + escapeHtml(g.fullName) + '</td><td>' + gradeCell + '</td><td>' + escapeHtml(g.descriptor) + '</td><td>' + pill + '</td>' +
-    '<td style="white-space:nowrap">' + action + '</td></tr>';
+    ? '<button class="btn small secondary" data-act="unpublish" data-enr="' + enr + '">Unpublish</button>'
+    : (g.publicationState === 'DRAFT' ? '<button class="btn small secondary" data-act="publish" data-enr="' + enr + '">Publish</button>' : '');
+  return '<tr>' + cells + '<td>' + escapeHtml(g.descriptor) + '</td><td>' + pill + '</td><td style="white-space:nowrap">' + action + '</td></tr>';
+}
+
+
+function gradeSheetHtml_(data) {
+  var components = data.components;
+  var columns = 6 + components.length;
+  if (data.rows.length === 0) {
+    return '<tr><td colspan="' + columns + '" class="empty-state">No learners in this class yet. Add them under "Students", or import an E-CR.</td></tr>';
+  }
+  return [['M', 'Male', 'male'], ['F', 'Female', 'female']].map(function (group) {
+    var learners = data.rows.filter(function (r) { return r.sex === group[0]; }).sort(byName_);
+    return '<tr class="group-row ' + group[2] + '"><td colspan="' + columns + '">' + group[1] + '</td></tr>' +
+      (learners.length === 0
+        ? '<tr><td colspan="' + columns + '" class="empty-row">No ' + group[1].toLowerCase() + ' students.</td></tr>'
+        : learners.map(function (g, i) { return gradeRowHtml_(g, i + 1, components); }).join(''));
+  }).join('');
 }
 
 function loadReview(keepRows) {
@@ -1207,12 +1591,16 @@ function loadReview(keepRows) {
   document.getElementById('reviewTermLabel').textContent = state.currentTerm;
   var tbody = document.getElementById('reviewTableBody');
   if (!keepRows) setLoading(tbody, 'Loading grades…'); // after a save/publish, keep the old rows until fresh ones arrive
-  call('clientGetClassRecordGrades_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function (rows) {
+  call('clientGetClassRecordGrades_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function (data) {
     if (!latest()) return;
-    tbody.innerHTML = rows.length === 0
-      ? '<tr><td colspan="5" class="empty-state">No learners in this class yet. Add them under "Students", or import an E-CR.</td></tr>'
-      : rows.map(gradeRowHtml_).join('');
-    var lockedCount = rows.filter(function (r) { return r.locked; }).length;
+    state.currentSubject = data;
+    document.getElementById('subjectTitle').textContent = data.subjectName;
+    document.getElementById('gradeHint').textContent = data.components.length > 0
+      ? 'Type each learner\'s grade for both components. The MAPEH grade is their average and appears once both have a grade; the description fills in automatically. Published grades are locked - unpublish one to edit it.'
+      : 'Type each learner\'s transmuted grade; the description fills in automatically. Published grades are locked - unpublish one to edit it.';
+    renderGradeHead_(data.components);
+    tbody.innerHTML = gradeSheetHtml_(data);
+    var lockedCount = data.rows.filter(function (r) { return r.locked; }).length;
     document.getElementById('lockNote').innerHTML = lockedCount
       ? '<div class="msg warn">' + lockedCount + ' grade(s) in this term are published and locked. To edit one, unpublish it first.</div>' : '';
   }, function (err) {
@@ -1221,29 +1609,49 @@ function loadReview(keepRows) {
   });
 }
 
+
+document.getElementById('reviewTableBody').addEventListener('input', function (e) {
+  if (!e.target.matches || !e.target.matches('input[data-comp]')) return;
+  var tr = e.target.closest('tr');
+  var out = tr.querySelector('.calc-grade');
+  var inputs = tr.querySelectorAll('input[data-comp]');
+  var total = 0, complete = true;
+  inputs.forEach(function (input) {
+    var n = Number(input.value);
+    if (input.value.trim() === '' || !isFinite(n) || Math.floor(n) !== n || n < 60 || n > 100) complete = false; else total += n;
+  });
+  if (complete) { out.textContent = Math.round(total / inputs.length); out.classList.add('preview'); }
+  else { out.textContent = out.getAttribute('data-saved') || '-'; out.classList.remove('preview'); }
+});
+
 document.getElementById('saveGradesBtn').onclick = function () {
   var msgEl = document.getElementById('gradeMsg');
   var entries = [];
   document.querySelectorAll('#reviewTableBody input.grade-input').forEach(function (input) {
     var value = input.value.trim();
-    if (value !== '' && value !== input.getAttribute('data-original')) entries.push({ enrollmentId: input.getAttribute('data-enr'), grade: Number(value) });
+    if (value === '' || value === input.getAttribute('data-original')) return;
+    var entry = { enrollmentId: input.getAttribute('data-enr'), grade: Number(value) };
+    if (input.hasAttribute('data-comp')) entry.componentId = input.getAttribute('data-comp');
+    entries.push(entry);
   });
-  if (entries.length === 0) { msgEl.innerHTML = '<div class="msg error">Nothing to save — type a grade first.</div>'; return; }
+  if (entries.length === 0) { msgEl.innerHTML = '<div class="msg error">Nothing to save - type a grade first.</div>'; return; }
+  var isMapeh = state.currentSubject && state.currentSubject.components.length > 0;
   call('clientSaveManualGrades_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm, entries], function (data) {
-    msgEl.innerHTML = '<div class="msg success">Saved ' + data.saved + ' grade(s). They stay unpublished (Draft) until you publish them.</div>';
+    msgEl.innerHTML = '<div class="msg success">Saved ' + data.saved + ' grade(s). ' +
+      (isMapeh ? 'The MAPEH grade is worked out from both components. ' : '') + 'They stay unpublished (Draft) until you publish them.</div>';
     loadReview(true);
   }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; },
   { button: document.getElementById('saveGradesBtn') });
 };
 
-// Per-learner Publish / Unpublish (event delegation: the rows are re-rendered after every load)
+
 document.getElementById('reviewTableBody').addEventListener('click', function (e) {
   var btn = e.target.closest && e.target.closest('button[data-act]');
   if (!btn) return;
   var publish = btn.getAttribute('data-act') === 'publish';
   call(publish ? 'clientPublishLearner_' : 'clientUnpublishLearner_',
     [state.sessionToken, state.currentClassSubjectId, state.currentTerm, btn.getAttribute('data-enr')],
-    function () { loadReview(true); showToast(publish ? 'Published — this grade is now locked.' : 'Unpublished — you can edit this grade again.', 'success'); },
+    function () { loadReview(true); showToast(publish ? 'Published - this grade is now locked.' : 'Unpublished - you can edit this grade again.', 'success'); },
     function (err) { showToast(err, 'error'); },
     { button: btn });
 });
@@ -1260,7 +1668,6 @@ document.getElementById('unpublishBtn').onclick = function () {
   });
 };
 
-// ---------- Import an E-CR: the file sets up the class, subject and learners; the teacher picks the terms ----------
 
 var importState = { previewId: null, file: null };
 
@@ -1270,11 +1677,15 @@ function showImportScreen() {
   importState = { previewId: null, file: null };
 }
 
-document.getElementById('goImportBtn').onclick = function () {
-  setActiveNav('import');
-  show('screen-import');
+function openEcrModal_() {
   showImportScreen();
-};
+  document.getElementById('ecrModal').hidden = false;
+  document.getElementById('ecrFileInput').focus();
+}
+
+function closeEcrModal_() { document.getElementById('ecrModal').hidden = true; }
+
+document.getElementById('ecrCloseBtn').onclick = closeEcrModal_;
 
 document.getElementById('ecrUploadBtn').onclick = function () {
   var fileInput = document.getElementById('ecrFileInput');
@@ -1298,12 +1709,12 @@ document.getElementById('ecrUploadBtn').onclick = function () {
 
 function termChoiceHtml_(t) {
   var label = 'Term ' + t.term;
-  if (t.gradedCount === 0) return '<div class="term-choice" style="color:var(--text-muted)">' + label + ' — no grades in this file</div>';
+  if (t.gradedCount === 0) return '<div class="term-choice" style="color:var(--text-muted)">' + label + ' - no grades in this file</div>';
   var notes = [];
-  if (t.lockedCount > 0) notes.push(t.lockedCount + ' already published and locked — will be skipped');
+  if (t.lockedCount > 0) notes.push(t.lockedCount + ' already published and locked - will be skipped');
   if (t.skippedInvalid > 0) notes.push(t.skippedInvalid + ' cell(s) had no usable grade');
   return '<label class="term-choice"><input type="checkbox" data-term-check="' + t.term + '"' + (t.importable ? ' checked' : ' disabled') + '>' +
-    '<span>' + label + ' — ' + t.gradedCount + ' grade(s)' + (t.importable ? '' : ' (all locked)') + (notes.length ? '<br><span style="color:var(--text-muted); font-size:0.85rem">' + escapeHtml(notes.join(' · ')) + '</span>' : '') + '</span></label>';
+    '<span>' + label + ' - ' + t.gradedCount + ' grade(s)' + (t.importable ? '' : ' (all locked)') + (notes.length ? '<br><span style="color:var(--text-muted); font-size:0.85rem">' + escapeHtml(notes.join(' · ')) + '</span>' : '') + '</span></label>';
 }
 
 function renderImportPreview(preview) {
@@ -1317,18 +1728,18 @@ function renderImportPreview(preview) {
   importState.file = preview.file;
   var f = preview.file;
 
-  var html = '<div class="import-title">' + escapeHtml(f.subject) + ' — Grade ' + escapeHtml(f.gradeLevel) + ' · ' + escapeHtml(f.section) + '</div>' +
+  var html = '<div class="import-title">' + escapeHtml(f.subject) + ' - Grade ' + escapeHtml(f.gradeLevel) + ' · ' + escapeHtml(f.section) + '</div>' +
     '<div style="color:var(--text-muted); margin-bottom:6px">' + (f.schoolName ? escapeHtml(f.schoolName) + ' · ' : '') + 'School year ' + escapeHtml(f.schoolYear) + '</div>' +
     '<ul class="import-facts">' +
-    '<li>Class: <b>' + (preview.classExists ? 'already in your classes' : 'new — will be created') + '</b>' + (preview.schoolNameWillChange ? ' (school name will be updated)' : '') + '</li>' +
-    '<li>Subject: <b>' + (preview.classSubjectExists ? 'already in this class' : 'new — will be added') + '</b></li>' +
+    '<li>Class: <b>' + (preview.classExists ? 'already in your classes' : 'new - will be created') + '</b>' + (preview.schoolNameWillChange ? ' (school name will be updated)' : '') + '</li>' +
+    '<li>Subject: <b>' + (preview.classSubjectExists ? 'already in this class' : 'new - will be added') + '</b></li>' +
     '<li>Learners: <b>' + preview.learnerCount + '</b> in the file · ' + preview.matchedCount + ' already in the class · <b>' + preview.newCount + '</b> will be added</li></ul>';
 
   if (preview.classExists && preview.newCount > 0) {
     var options = '<option value="">Add as new</option>' + preview.existingRoster.map(function (r) {
       return '<option value="' + escapeHtml(r.enrollmentId) + '">Same as: ' + escapeHtml(r.fullName) + '</option>';
     }).join('');
-    html += '<div class="issue-block info"><h4>' + preview.newCount + ' learner(s) are not in this class yet — they will be added as new</h4>' +
+    html += '<div class="issue-block info"><h4>' + preview.newCount + ' learner(s) are not in this class yet - they will be added as new</h4>' +
       '<p style="margin:0 0 10px; font-size:0.88rem">If a name is only spelled differently from your list, match it to the existing learner instead.</p>' +
       preview.newLearners.map(function (name) {
         return '<div class="issue-row"><span>' + escapeHtml(name) + '</span><span class="actions-inline"><select data-match-name="' + escapeHtml(name) + '">' + options + '</select></span></div>';
@@ -1379,9 +1790,10 @@ function renderImportPreview(preview) {
   if (cancelBtn) cancelBtn.onclick = function () { showImportScreen(); };
 }
 
+
 function renderImportDone(result) {
   var area = document.getElementById('ecrImportArea');
-  state.currentWorkspaceId = result.workspaceId;
+  setActiveClass_(result.workspaceId);
   state.workspaces = [];
   var lines = [];
   if (result.createdClass) lines.push('Class created.');
@@ -1390,85 +1802,279 @@ function renderImportDone(result) {
   result.terms.forEach(function (t) {
     lines.push('Term ' + t.term + ': ' + t.imported + ' grade(s) imported' + (t.skippedLocked > 0 ? ', ' + t.skippedLocked + ' locked grade(s) skipped' : '') + '.');
   });
+  
+  var openId = result.openClassSubjectId || result.classSubjectId;
+  var openName = openId !== result.classSubjectId ? 'MAPEH' : (importState.file ? importState.file.subject : 'subject');
   area.innerHTML = '<div class="msg success">Import complete.</div><ul class="import-facts">' +
     lines.map(function (l) { return '<li>' + escapeHtml(l) + '</li>'; }).join('') + '</ul>' +
-    '<button class="btn" id="ecrOpenSubjectBtn">Open ' + escapeHtml(importState.file ? importState.file.subject : 'subject') + '</button> ' +
-    (result.addedLearners > 0 ? '<button class="btn secondary" id="ecrGoStudentsBtn">Add LRNs in Students</button>' : '');
+    (result.addedLearners > 0 ? '<p class="hint" style="margin:0 0 12px">An E-CR has no LRNs. Import your student .CSV under Students to add them - learners are matched by name.</p>' : '') +
+    '<button class="btn" id="ecrOpenSubjectBtn">Open ' + escapeHtml(openName) + '</button> ' +
+    (result.addedLearners > 0 ? '<button class="btn secondary" id="ecrGoStudentsBtn">Go to Students</button>' : '');
   showToast('Import complete.', 'success');
-  var subjectName = importState.file ? importState.file.subject : '';
-  document.getElementById('ecrOpenSubjectBtn').onclick = function () { setActiveNav('subjects'); openSubjectDetail(result.classSubjectId, subjectName); };
+  document.getElementById('ecrOpenSubjectBtn').onclick = function () {
+    closeEcrModal_();
+    setActiveNav('subjects');
+    openSubjectDetail(openId, openName);
+  };
   var studentsBtn = document.getElementById('ecrGoStudentsBtn');
-  if (studentsBtn) studentsBtn.onclick = function () { setActiveNav('students'); loadStudentsScreen(); show('screen-students'); };
+  if (studentsBtn) studentsBtn.onclick = function () {
+    closeEcrModal_();
+    setActiveNav('students'); loadStudentsScreen(); show('screen-students');
+  };
 }
+
 
 function loadStudentsScreen() {
   loadWorkspacesIntoState(function () {
     var hasClass = !!state.currentWorkspaceId;
     document.getElementById('studentsNoClassMsg').style.display = hasClass ? 'none' : 'block';
     document.getElementById('studentsContent').style.display = hasClass ? 'block' : 'none';
+    document.getElementById('studentActions').hidden = !hasClass;
     if (!hasClass) return;
-    populateClassSelector(document.getElementById('studentsClassSelect'), renderRosterTable);
-    renderRosterTable();
+    populateClassSelector(document.getElementById('studentsClassSelect'), renderRoster);
+    renderRoster();
   });
 }
 
-function renderRosterTable() {
+function rosterColumnHtml_(learners, label, cls) {
+  var rows = learners.length === 0
+    ? '<tr><td colspan="4" class="empty-row">No ' + label.toLowerCase() + ' students.</td></tr>'
+    : learners.map(function (r, i) {
+        var name = escapeHtml(r.fullName);
+        return '<tr><td class="num-cell">' + (i + 1) + '</td>' +
+          '<td class="lrn">' + (r.lrn ? escapeHtml(r.lrn) : '<span class="pill-missing">Missing LRN</span>') + '</td>' +
+          '<td>' + name + '</td>' +
+          '<td style="white-space:nowrap"><button class="btn small secondary" data-edit-student="' + escapeHtml(r.enrollmentId) + '" aria-label="Edit ' + name + '">' + iconHtml_('edit', '') + '<span>Edit</span></button></td></tr>';
+      }).join('');
+  return '<div class="gender-col ' + cls + '"><div class="gender-head">' + label + '</div>' +
+    '<table><thead><tr><th>#</th><th>LRN</th><th>Student Name</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
+
+function renderRoster() {
   var latest = latest_('roster');
-  var tbody = document.querySelector('#rosterTable tbody');
-  setLoading(tbody, 'Loading students…');
+  var area = document.getElementById('rosterArea');
+  setLoading(area, 'Loading students…');
   call('clientListRoster_', [state.sessionToken, state.currentWorkspaceId], function (roster) {
     if (!latest()) return;
     state.roster = roster;
-    tbody.innerHTML = roster.length === 0
-      ? '<tr><td colspan="4" class="empty-state">No students yet.</td></tr>'
-      : roster.map(function (r) {
-          return '<tr><td style="font-family:\'IBM Plex Mono\',monospace; font-size:0.95rem">' + escapeHtml(r.studentCode) + '</td><td>' + escapeHtml(r.fullName) + '</td><td>' + escapeHtml(r.sex) + '</td>' +
-            '<td style="white-space:nowrap"><input class="lrn-input" inputmode="numeric" maxlength="12" placeholder="12-digit LRN" value="' + escapeHtml(r.lrn) + '" data-lrn-enr="' + escapeHtml(r.enrollmentId) + '" aria-label="LRN for ' + escapeHtml(r.fullName) + '"> ' +
-            '<button class="btn small secondary" data-save-lrn="' + escapeHtml(r.enrollmentId) + '">' + (r.lrn ? 'Change' : 'Save') + '</button></td></tr>';
-        }).join('');
+    if (roster.length === 0) {
+      area.innerHTML = '<div class="empty-state"><div class="display">No students yet</div><p>Click <b>Add Student</b>, or import a .CSV file with LRN, Student Name and Gender.</p></div>';
+      return;
+    }
+    var male = roster.filter(function (r) { return r.sex === 'M'; }).sort(byName_);
+    var female = roster.filter(function (r) { return r.sex === 'F'; }).sort(byName_);
+    area.innerHTML = '<div class="gender-cols">' + rosterColumnHtml_(male, 'Male', 'male') + rosterColumnHtml_(female, 'Female', 'female') + '</div>';
   }, function (err) {
     if (!latest()) return;
-    setErrorState(tbody, err, renderRosterTable);
+    setErrorState(area, err, renderRoster);
   });
 }
 
-document.querySelector('#rosterTable tbody').addEventListener('click', function (e) {
-  var btn = e.target.closest && e.target.closest('button[data-save-lrn]');
+document.getElementById('rosterArea').addEventListener('click', function (e) {
+  var btn = e.target.closest('[data-edit-student]');
   if (!btn) return;
-  var enrollmentId = btn.getAttribute('data-save-lrn');
-  var input = document.querySelector('input[data-lrn-enr="' + enrollmentId + '"]');
-  var lrn = input ? input.value.trim() : '';
-  if (!/^\d{12}$/.test(lrn)) { showToast('The LRN must be exactly 12 digits.', 'error'); return; }
-  call('clientUpdateStudentLrn_', [state.sessionToken, enrollmentId, lrn], function (data) {
-    showToast(data.merged ? 'LRN saved — linked to the same learner in another class.' : 'LRN saved.', 'success');
-    renderRosterTable();
-  }, function (err) { showToast(err, 'error'); }, { button: btn });
+  var learner = state.roster.filter(function (r) { return r.enrollmentId === btn.getAttribute('data-edit-student'); })[0];
+  if (learner) openStudentModal_(learner);
 });
 
-document.getElementById('addStudentForm').onsubmit = function (e) {
-  e.preventDefault();
-  var name = document.getElementById('newStudentName').value.trim();
-  var sex = document.getElementById('newStudentSex').value;
-  var lrn = document.getElementById('newStudentLrn').value.trim();
-  if (!name) return;
-  call('clientAddStudent_', [state.sessionToken, state.currentWorkspaceId, lrn, name, sex], function (data) {
-    document.getElementById('newStudentName').value = '';
-    document.getElementById('newStudentLrn').value = '';
-    renderRosterTable();
-    showToast('Added as ' + data.studentCode + '.', 'success');
-  }, function (err) { showToast(err, 'error'); });
+document.getElementById('addStudentBtn').onclick = function () { openStudentModal_(null); };
+
+
+function openStudentModal_(learner) {
+  var editing = !!learner;
+  var v = learner || { lrn: '', fullName: '', sex: '' };
+  formModal_({
+    title: editing ? 'Edit student' : 'Add student',
+    submitLabel: editing ? 'Save changes' : 'Add Student',
+    fieldsHtml:
+      '<div class="field"><label for="sfLrn">LRN</label><input id="sfLrn" inputmode="numeric" maxlength="12" placeholder="12 digits" autocomplete="off" data-autofocus value="' + escapeHtml(v.lrn) + '"></div>' +
+      '<div class="field"><label for="sfName">Student name</label><input id="sfName" maxlength="120" placeholder="Dela Cruz, Juan" autocomplete="off" value="' + escapeHtml(v.fullName) + '">' +
+        '<div class="hint">Surname, Given Name - students log in with their surname.</div></div>' +
+      '<div class="field"><label for="sfSex">Gender</label><select id="sfSex"><option value="">Choose…</option>' +
+        '<option value="M"' + (v.sex === 'M' ? ' selected' : '') + '>Male</option><option value="F"' + (v.sex === 'F' ? ' selected' : '') + '>Female</option></select></div>',
+    onSubmit: function (setError, submitBtn) {
+      var lrn = valueOf_('sfLrn'), name = valueOf_('sfName'), sex = valueOf_('sfSex');
+      if (!/^\d{12}$/.test(lrn)) { setError('The LRN must be exactly 12 digits.'); return; }
+      if (!name) { setError('Enter the student name.'); return; }
+      if (name.indexOf(',') === -1) { setError('Write the name as "Surname, Given Name" (with a comma).'); return; }
+      if (!sex) { setError('Choose Male or Female.'); return; }
+      if (editing) {
+        call('clientUpdateStudent_', [state.sessionToken, learner.enrollmentId, lrn, name, sex], function () {
+          closeModal_(); renderRoster(); showToast('Student updated.', 'success');
+        }, setError, { button: submitBtn });
+      } else {
+        call('clientAddStudent_', [state.sessionToken, state.currentWorkspaceId, lrn, name, sex], function () {
+          closeModal_(); renderRoster(); showToast('Student added.', 'success');
+        }, setError, { button: submitBtn });
+      }
+    },
+  });
+}
+
+
+
+document.getElementById('downloadCsvBtn').onclick = function () {
+  var blob = new Blob(['\uFEFFLRN,Student Name,Gender\r\n'], { type: 'text/csv;charset=utf-8' });
+  var link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'markado-students-template.csv';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(function () { URL.revokeObjectURL(link.href); }, 1000);
+  showToast('Template downloaded. Fill in one student per row.', 'success');
 };
+
+document.getElementById('importCsvBtn').onclick = function () {
+  var input = document.getElementById('csvFileInput');
+  input.value = '';
+  input.click();
+};
+
+document.getElementById('csvFileInput').onchange = function () {
+  var file = this.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { showToast('That file is larger than 2 MB. Please check you chose the right file.', 'error'); return; }
+  var reader = new FileReader();
+  reader.onload = function () { openCsvPreviewModal_(file.name, parseStudentCsv_(decodeCsvBuffer_(reader.result))); };
+  reader.onerror = function () { showToast('Could not read that file. Please try choosing it again.', 'error'); };
+  reader.readAsArrayBuffer(file);
+};
+
+
+function decodeCsvBuffer_(buffer) {
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(buffer); }
+  catch (e) { return new TextDecoder('windows-1252').decode(buffer); }
+}
+
+
+function csvRecords_(text) {
+  text = text.replace(/^\uFEFF/, '');
+  var firstLine = text.split(/\r?\n/)[0] || '';
+  var delimiter = [',', ';', '\t'].map(function (d) { return [d, firstLine.split(d).length]; })
+    .sort(function (a, b) { return b[1] - a[1]; })[0][0];
+  var records = [], cells = [], field = '', quoted = false, line = 1, startLine = 1;
+  function endRecord() {
+    cells.push(field);
+    if (cells.some(function (c) { return c.trim() !== ''; })) records.push({ line: startLine, cells: cells });
+    cells = []; field = '';
+  }
+  for (var i = 0; i < text.length; i++) {
+    var ch = text.charAt(i);
+    if (quoted) {
+      if (ch === '"') { if (text.charAt(i + 1) === '"') { field += '"'; i++; } else quoted = false; }
+      else { if (ch === '\n') line++; field += ch; }
+    } else if (ch === '"') quoted = true;
+    else if (ch === delimiter) { cells.push(field); field = ''; }
+    else if (ch === '\n' || ch === '\r') {
+      if (ch === '\r' && text.charAt(i + 1) === '\n') i++;
+      endRecord(); line++; startLine = line;
+    } else field += ch;
+  }
+  if (field !== '' || cells.length > 0) endRecord();
+  return records;
+}
+
+function parseStudentCsv_(text) {
+  var records = csvRecords_(text);
+  var result = { rows: [], problems: [], fatal: '' };
+  if (records.length === 0) { result.fatal = 'The file is empty.'; return result; }
+
+  var col = { lrn: 0, name: 1, sex: 2 };
+  var head = records[0].cells.map(function (c) { return c.trim().toLowerCase(); });
+  if (head.some(function (c) { return c === 'lrn'; })) {
+    col = {
+      lrn: head.findIndex(function (c) { return c === 'lrn'; }),
+      name: head.findIndex(function (c) { return /name/.test(c); }),
+      sex: head.findIndex(function (c) { return /gender|sex/.test(c); }),
+    };
+    if (col.name === -1 || col.sex === -1) { result.fatal = 'The first row must have the columns LRN, Student Name and Gender.'; return result; }
+    records = records.slice(1);
+  }
+
+  var seen = {};
+  records.forEach(function (rec) {
+    var lrn = (rec.cells[col.lrn] || '').trim();
+    var name = (rec.cells[col.name] || '').replace(/\s+/g, ' ').trim();
+    var sexText = (rec.cells[col.sex] || '').trim().toLowerCase();
+    var problem = '';
+    if (/^\d(\.\d+)?e\+?\d+$/i.test(lrn)) problem = 'The LRN (' + lrn + ') was changed by Excel. Format the LRN column as Text and enter it again.';
+    else if (!/^\d{12}$/.test(lrn)) problem = lrn ? 'The LRN must be exactly 12 digits.' : 'The LRN is missing.';
+    else if (!name) problem = 'The student name is missing.';
+    else if (name.indexOf(',') === -1) problem = 'Write the name as Surname, Given Name.';
+    else if (['male', 'm'].indexOf(sexText) === -1 && ['female', 'f'].indexOf(sexText) === -1) problem = 'Gender must be Male or Female.';
+    else if (seen[lrn]) problem = 'This LRN is repeated (first on line ' + seen[lrn] + ').';
+    if (problem) { result.problems.push({ line: rec.line, message: problem }); return; }
+    seen[lrn] = rec.line;
+    result.rows.push({ line: rec.line, lrn: lrn, fullName: name, sex: sexText.charAt(0) === 'f' ? 'F' : 'M' });
+  });
+  return result;
+}
+
+function problemListHtml_(problems) {
+  if (problems.length === 0) return '';
+  return '<ul class="csv-problems">' + problems.slice(0, 8).map(function (p) { return '<li>Line ' + p.line + ': ' + escapeHtml(p.message) + '</li>'; }).join('') +
+    (problems.length > 8 ? '<li>…and ' + (problems.length - 8) + ' more.</li>' : '') + '</ul>';
+}
+
+var CSV_MAX_ROWS_ = 300;
+
+function openCsvPreviewModal_(fileName, parsed) {
+  var ws = workspaceById_(state.currentWorkspaceId);
+  var tooMany = parsed.rows.length > CSV_MAX_ROWS_;
+  var ready = tooMany || parsed.fatal ? 0 : parsed.rows.length;
+  var body = '<div class="modal-head"><h3>Import students</h3></div>' +
+    '<p class="modal-intro">' + escapeHtml(fileName) + (ws ? ' → ' + escapeHtml(classLabel_(ws)) : '') + '</p><div id="csvBody">';
+  if (parsed.fatal) {
+    body += '<div class="msg error">' + escapeHtml(parsed.fatal) + '</div>';
+  } else {
+    body += '<ul class="import-facts"><li><b>' + parsed.rows.length + '</b> student(s) ready to import</li>' +
+      (parsed.problems.length ? '<li><b>' + parsed.problems.length + '</b> row(s) have a problem and will be skipped</li>' : '') + '</ul>' +
+      problemListHtml_(parsed.problems) +
+      (tooMany ? '<div class="msg error">A file can have at most ' + CSV_MAX_ROWS_ + ' students. Split it into smaller files.</div>' : '') +
+      '<p class="hint">Students already in this class without an LRN - for example from an E-CR - are matched by name and get their LRN. Nobody is added twice.</p>';
+  }
+  body += '</div><div class="actions" id="csvActions"><button class="btn secondary" id="csvCancel" type="button">' + (ready ? 'Cancel' : 'Close') + '</button>' +
+    (ready ? '<button class="btn" id="csvImport" type="button">Import ' + ready + ' student(s)</button>' : '') + '</div>';
+  openModal_(body, { wide: true });
+  document.getElementById('csvCancel').onclick = closeModal_;
+  var importBtn = document.getElementById('csvImport');
+  if (importBtn) importBtn.onclick = function () {
+    var rows = parsed.rows.map(function (r) { return { row: r.line, lrn: r.lrn, fullName: r.fullName, sex: r.sex }; });
+    call('clientImportStudents_', [state.sessionToken, state.currentWorkspaceId, rows], function (summary) {
+      renderRoster();
+      showCsvResult_(summary, parsed.problems);
+    }, function (err) {
+      document.getElementById('csvBody').insertAdjacentHTML('afterbegin', '<div class="msg error">' + escapeHtml(err) + '</div>');
+    }, { button: importBtn });
+  };
+}
+
+function showCsvResult_(summary, clientProblems) {
+  var skipped = clientProblems.concat(summary.skipped.map(function (s) { return { line: s.row, message: s.message }; }));
+  var lines = [];
+  if (summary.added) lines.push(summary.added + ' new student(s) added.');
+  if (summary.lrnSet) lines.push(summary.lrnSet + ' student(s) already in the class matched by name - LRN saved.');
+  if (summary.enrolled) lines.push(summary.enrolled + ' student(s) from your other classes added to this class.');
+  if (lines.length === 0) lines.push('No students were added.');
+  document.getElementById('csvBody').innerHTML = '<div class="msg success">Import complete.</div><ul class="import-facts">' +
+    lines.map(function (l) { return '<li>' + escapeHtml(l) + '</li>'; }).join('') + '</ul>' +
+    (skipped.length ? '<p style="margin:12px 0 0"><b>' + skipped.length + ' row(s) skipped:</b></p>' + problemListHtml_(skipped) : '');
+  document.getElementById('csvActions').innerHTML = '<button class="btn" id="csvDone" type="button">Done</button>';
+  document.getElementById('csvDone').onclick = closeModal_;
+  showToast('Students imported.', 'success');
+}
 
 function renderAccountLicense_(status, info) {
   var html;
-  if (status.status === 'TRIAL') html = '<p>Trial — ' + status.daysRemaining + ' day(s) remaining.</p>';
-  else if (status.status === 'ACTIVE') html = '<p>Active ' + planLabel_(status.licenseType) + 'license' + (status.expirationDate ? (' until ' + escapeHtml(fmtDate_(status.expirationDate))) : '') + '.</p>';
+  if (status.status === 'TRIAL') html = '<p>Free trial' + (status.expirationDate ? ' - expires on ' + escapeHtml(fmtLongDate_(status.expirationDate)) : '') + '.</p>';
+  else if (status.status === 'ACTIVE') html = '<p>Active ' + planLabel_(status.licenseType) + 'license' + (status.expirationDate ? (' until ' + escapeHtml(fmtLongDate_(status.expirationDate))) : '') + '.</p>';
   else if (status.status === 'SUSPENDED') html = '<p>Your account is suspended. Contact support for details.</p>';
   else html = '<p>Your trial or license has expired.</p>';
 
   if (info) {
     if (info.pending) {
-      html += '<div class="msg warn">License request sent on ' + escapeHtml(fmtDate_(info.pending.requestedAt)) + ' — waiting for approval.</div>' +
+      html += '<div class="msg warn">License request sent on ' + escapeHtml(fmtDate_(info.pending.requestedAt)) + ' - waiting for approval.</div>' +
         '<button class="btn small secondary" id="acctRequestBtn">View request</button>';
     } else {
       if (info.lastDecision && info.lastDecision.status === 'DECLINED') {
@@ -1516,6 +2122,7 @@ document.getElementById('changePasswordBtn').onclick = function () {
     document.getElementById('newPasswordField').value = '';
   }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; });
 };
+
 
 startApp_();
 </script>

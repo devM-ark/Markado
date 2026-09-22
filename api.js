@@ -62,6 +62,7 @@ var API_TIMEOUTS_MS_ = {
   clientPreviewEcrUpload_: 180000, clientConfirmEcrUpload_: 180000, clientSaveManualGrades_: 90000,
   clientGetDashboardStats_: 90000, clientListTeachersForAdmin_: 90000, clientBulkApplyAdminAction_: 120000,
   clientWipeAllDataForTesting_: 120000,
+  clientListClassSubjects_: 60000, clientImportStudents_: 90000, clientDeleteWorkspace_: 90000,
 };
 
 
@@ -70,7 +71,7 @@ var API_READ_TTL_MS_ = {
   clientListRoster_: 60000, clientGetClassRecordGrades_: 30000, clientGetMyGrades_: 60000,
   clientGetDashboardStats_: 30000, clientListTeachersForAdmin_: 30000, clientGetTeacherDetailForAdmin_: 15000,
   clientListAuditLogs_: 0, clientGetSystemSettings_: 60000,
-  clientGetLicenseRequestInfo_: 15000, clientListLicenseRequests_: 0,
+  clientGetLicenseRequestInfo_: 15000, clientListLicenseRequests_: 0, clientGetMyProfile_: 60000,
 };
 
 var API_NON_MUTATING_ = { clientPing_: true };
