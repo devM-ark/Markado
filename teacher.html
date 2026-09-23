@@ -399,53 +399,13 @@
 	justify-content: flex-end;
   }
 
-  .status-pill.NONE {
-	background: var(--border);
-	color: var(--text-muted);
-  }
-  
-  .grade-input {
-	width: 84px;
-	padding: 6px 8px;
-	font: inherit;
-	border: 1px solid var(--border);
-	border-radius: 3px;
-	background: var(--white);
-	color: var(--black);
-  }
-  
-  .lock-tag {
-	display: inline-block;
-	margin-left: 6px;
-	padding: 1px 8px;
-	border-radius: 20px;
-	font-size: 0.72rem;
-	background: var(--border);
-	color: var(--text-muted);
-  }
-  
-  .term-choice {
-	display: flex;
-	gap: 8px;
-	align-items: flex-start;
-	padding: 6px 0;
-  }
-  
-  .term-choice input {
-	margin-top: 4px;
-  }
-  
-  .import-facts {
-	margin: 8px 0 12px;
-	padding-left: 18px;
-	line-height: 1.7;
-  }
-  
-  .import-title {
-	font-size: 1.15rem;
-	font-weight: 600;
-  }
-  
+  .status-pill.NONE { background: var(--border); color: var(--text-muted); }
+  .grade-input { width: 84px; padding: 6px 8px; font: inherit; border: 1px solid var(--border); border-radius: 3px; background: var(--white); color: var(--black); }
+  .lock-tag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 20px; font-size: 0.72rem; background: var(--border); color: var(--text-muted); }
+  .term-choice { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; }
+  .term-choice input { margin-top: 4px; }
+  .import-facts { margin: 8px 0 12px; padding-left: 18px; line-height: 1.7; }
+  .import-title { font-size: 1.15rem; font-weight: 600; }
   .issue-block {
 	border-radius: 4px;
 	padding: 14px 16px;
@@ -588,57 +548,35 @@
   .settings-row:last-child {
 	border-bottom: none;
   }
-
-  [hidden] {
-	display: none !important;
-  }
   
+
+
+  [hidden] { display: none !important; }
   main .screen > h2 { margin-top: 0; }
 
   :root {
-    --male: #2F6FAE;
-	--male-bg: #E3EEF9;
-    --female: #B8457A;
-	--female-bg: #FAE6EF;
+    --male: #2F6FAE;    --male-bg: #E3EEF9;
+    --female: #B8457A;  --female-bg: #FAE6EF;
   }
-  
   [data-theme="dark"] {
-    --male: #7DB2E8;
-	--male-bg: #1B2F45;
-    --female: #EE8DB4;
-	--female-bg: #42222F;
+    --male: #7DB2E8;    --male-bg: #1B2F45;
+    --female: #EE8DB4;  --female-bg: #42222F;
   }
 
-  .ico {
-	width: 16px;
-	height: 16px;
-	flex-shrink: 0;
-	filter: brightness(0);
-	opacity: 0.7;
-  }
-  
-  [data-theme="dark"] .ico {
-	filter: brightness(0) invert(1);
-	opacity: 0.85;
-  }
-  
+  /* ---------- Icons ----------
+     Icons are flattened to one colour so any SVG works: dark on light surfaces, white on the blue ones. */
+  .ico { width: 16px; height: 16px; flex-shrink: 0; filter: brightness(0); opacity: 0.7; }
+  [data-theme="dark"] .ico { filter: brightness(0) invert(1); opacity: 0.85; }
   .btn:not(.secondary) .ico,
   .profile .ico { filter: brightness(0) invert(1); opacity: 1; }
   .ico-fallback { font-size: 0.85rem; line-height: 1; }
 
   .icon-btn {
-    width: 32px;
-	height: 32px;
-	padding: 0;
-    display: inline-flex;
-	align-items: center;
-	justify-content: center;
-    background: var(--white);
-	color: var(--text-muted);
-    border: 1px solid var(--border);
-	border-radius: 4px;
+    width: 32px; height: 32px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--white); color: var(--text-muted);
+    border: 1px solid var(--border); border-radius: 4px;
   }
-  
   .icon-btn:hover { background: var(--complement); }
   .icon-btn.danger:hover { background: #F7E4E0; border-color: #E3B5A8; }
   [data-theme="dark"] .icon-btn.danger:hover { background: #3A1F1A; border-color: #6B3328; }
@@ -646,6 +584,7 @@
 
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+  /* ---------- Header profile ---------- */
   .profile {
     display: flex; align-items: center; gap: 10px;
     background: none; border: none; color: #fff;
@@ -657,12 +596,12 @@
   .profile-name { font-weight: 700; font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .profile-license { font-size: 0.76rem; opacity: 0.9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-
+  /* ---------- Sidebar: Import ECR is a sub-item that only shows while Subjects is open ---------- */
   .nav-item.nav-sub { display: none; padding: 9px 20px 9px 52px; font-size: 0.86rem; }
   body[data-nav="subjects"] .nav-item.nav-sub { display: flex; }
   .nav-item.nav-sub .nav-icon { width: 16px; height: 16px; }
 
-
+  /* ---------- Page header with actions ---------- */
   .page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
   .page-head h2 { margin: 0; }
   .page-actions { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -672,7 +611,7 @@
   .panel.flush table th:first-child, .panel.flush table td:first-child { padding-left: 16px; }
   .muted { color: var(--text-muted); }
 
-
+  /* ---------- Classes ---------- */
   .active-pill {
     display: inline-block; margin-left: 8px; padding: 2px 9px; border-radius: 20px;
     font-size: 0.72rem; font-weight: 600; background: #375534; color: #fff; vertical-align: middle;
@@ -680,7 +619,7 @@
   tr.is-active td { background: rgba(77,106,146,0.08); }
   .row-actions { display: flex; gap: 6px; align-items: center; justify-content: flex-end; }
 
-
+  /* ---------- Subjects ---------- */
   .subject-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
   .subject-grid > .api-state { grid-column: 1 / -1; }
   .subject-card {
@@ -704,7 +643,7 @@
   .back-btn .ico { filter: brightness(0); opacity: 0.6; }
   [data-theme="dark"] .back-btn .ico { filter: brightness(0) invert(1); }
 
-
+  /* ---------- Grade sheet and roster: Male / Female ---------- */
   tr.group-row td { text-align: center; font-weight: 600; padding: 8px 12px; }
   tr.group-row.male td { background: var(--male-bg); color: var(--male); }
   tr.group-row.female td { background: var(--female-bg); color: var(--female); }
@@ -724,7 +663,7 @@
   .pill-missing { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 0.74rem; font-weight: 500; background: #F7E4E0; color: var(--danger); }
   [data-theme="dark"] .pill-missing { background: #3A1F1A; color: #E8A090; }
 
-
+  /* ---------- Modals ---------- */
   .modal.wide { max-width: 640px; }
   .modal > form > h3, .modal-head h3 { margin: 0 0 4px; }
   .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
@@ -734,7 +673,7 @@
   .hint { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; line-height: 1.4; }
   .csv-problems { margin: 8px 0 0; padding-left: 18px; font-size: 0.86rem; line-height: 1.6; color: var(--danger); }
 
-
+  /* ---------- Small screens ---------- */
   @media (max-width: 768px) {
     header { position: static; height: 68px; }
     .header-logo { height: 34px; }
@@ -866,9 +805,10 @@
       </div>
       <div id="subjectsNoClassMsg" class="empty-state" style="display:none"><div class="display">No Class Selected</div><p>Add or Select a class first, under "Classes."</p></div>
       <div id="subjectsContent">
-        <p class="instruction">Click the subject you want to encode or import grades. You can also Publish and Unpublish the grades here.</p>
+        <p class="instruction" id="subjectsInstruction">Click the subject you want to encode or import grades. You can also Publish and Unpublish the grades here.</p>
         <div class="class-selector"><label for="subjectsClassSelect">Class:</label><select id="subjectsClassSelect"></select></div>
         <div class="subject-grid" id="subjectGrid"></div>
+        <div id="subjectsEmptyMsg" class="empty-state" style="display:none"><div class="display">No Subjects Yet</div><p>This grade level doesn't have a fixed subject list. Add each subject with "Add Subject," or import its E-CR — importing adds the subject for you.</p></div>
       </div>
     </section>
 
@@ -884,11 +824,11 @@
 
       <div class="panel">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px">
-          <h3 style="margin:0">Term <span id="reviewTermLabel">1</span> Grades</h3>
+          <h3 style="margin:0">Term <span id="reviewTermLabel">1</span> grades</h3>
           <div class="page-actions">
-            <button class="btn secondary" id="saveGradesBtn">Save Grades</button>
-            <button class="btn secondary" id="unpublishBtn">Unpublish All</button>
-            <button class="btn" id="publishBtn">Publish All</button>
+            <button class="btn secondary" id="unpublishBtn">Unpublish all</button>
+            <button class="btn secondary" id="saveGradesBtn">Save grades</button>
+            <button class="btn" id="publishBtn">Publish all</button>
           </div>
         </div>
         <p id="gradeHint" style="color:var(--text-muted); font-size:0.85rem; margin:8px 0 0"></p>
@@ -925,16 +865,17 @@
   </main>
 </div>
 
-
+<!-- Import ECR: opened from the sidebar (under Subjects) -->
 <div class="modal-overlay" id="ecrModal" hidden>
   <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="ecrTitle">
     <div class="modal-head">
       <h3 id="ecrTitle">Import an E-CR</h3>
       <button class="icon-btn" id="ecrCloseBtn" type="button" aria-label="Close">&#10005;</button>
     </div>
-    <p style="margin-top:0">Upload the standard DepEd E-CR file.</p>
+    <p style="margin-top:0">Upload the standard DepEd E-CR (.xlsx). The class, subject and learners are set up from the file, and you choose which terms to import.</p>
+    <p class="muted" style="font-size:0.85rem">Only names, class details, term grades and descriptions are saved — never raw scores. The MAPEH E-CR is read in one go: both components are imported and the MAPEH grade is worked out from them.</p>
     <input type="file" id="ecrFileInput" accept=".xlsx">
-    <button class="btn" id="ecrUploadBtn" style="margin-top:12px">Check File</button>
+    <button class="btn" id="ecrUploadBtn" style="margin-top:12px">Check file</button>
     <div id="ecrImportArea" style="margin-top:16px"></div>
   </div>
 </div>
@@ -949,13 +890,14 @@ var state = {
   workspaces: [],
   currentWorkspaceId: localStorage.getItem(ACTIVE_CLASS_KEY),
   currentClassSubjectId: null,
-  currentSubject: null,
+  currentSubject: null,   // what the open subject's grade sheet last returned (name, components, rows)
   currentTerm: 1,
   roster: [],
   profile: null,
 };
 
-
+// ---------- Icons ----------
+// Every icon the page uses, in one place. If your file names differ, change them here.
 var ICONS = {
   user: 'assets/icons/user.svg',
   edit: 'assets/icons/edit.svg',
@@ -972,7 +914,7 @@ function iconHtml_(name, fallbackText) {
 
 document.querySelectorAll('img[data-icon]').forEach(function (img) { img.src = ICONS[img.getAttribute('data-icon')]; });
 
-
+// A missing icon file must never leave a blank button: show its text stand-in, or nothing when the button has a label.
 document.addEventListener('error', function (e) {
   var el = e.target;
   if (!el || el.tagName !== 'IMG' || !el.classList.contains('ico')) return;
@@ -987,6 +929,7 @@ document.addEventListener('error', function (e) {
   }
 }, true);
 
+// ---------- Small helpers ----------
 
 function show(screenId) {
   document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('active'); });
@@ -997,7 +940,7 @@ function setActiveNav(screenName) {
   document.querySelectorAll('.nav-item[data-screen]').forEach(function (btn) {
     btn.classList.toggle('active', btn.getAttribute('data-screen') === screenName);
   });
-  document.body.setAttribute('data-nav', screenName);
+  document.body.setAttribute('data-nav', screenName); // the Import ECR sub-item only shows while this is "subjects"
 }
 
 function byName_(a, b) { return String(a.fullName).localeCompare(String(b.fullName)); }
@@ -1013,7 +956,7 @@ function classLabel_(ws) { return 'Grade ' + ws.gradeLevel + ' – ' + ws.sectio
 
 function defaultSchoolYear_() {
   var now = new Date();
-  var start = now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1;
+  var start = now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1; // the school year starts in June
   return start + '-' + (start + 1);
 }
 
@@ -1022,7 +965,7 @@ function setActiveClass_(workspaceId) {
   if (workspaceId) localStorage.setItem(ACTIVE_CLASS_KEY, workspaceId); else localStorage.removeItem(ACTIVE_CLASS_KEY);
 }
 
-
+/** Keeps the active class pointing at a class that exists (the first one when it doesn't). */
 function ensureActiveClass_() {
   var ids = state.workspaces.map(function (w) { return w.workspaceId; });
   if (ids.indexOf(state.currentWorkspaceId) === -1) setActiveClass_(ids.length > 0 ? ids[0] : null);
@@ -1042,6 +985,7 @@ function confirmModal(title, bodyHtml, confirmLabel, onConfirm, danger) {
   document.getElementById('modalCancel').focus();
 }
 
+/** Puts HTML in a dialog and returns the dialog element. Focuses [data-autofocus], else the first field. */
 function openModal_(innerHtml, opts) {
   var root = document.getElementById('modalRoot');
   root.innerHTML = '<div class="modal-overlay"><div class="modal' + (opts && opts.wide ? ' wide' : '') + '" role="dialog" aria-modal="true">' + innerHtml + '</div></div>';
@@ -1051,7 +995,10 @@ function openModal_(innerHtml, opts) {
   return modal;
 }
 
-
+/**
+ * A dialog with a form. o = { title, intro, fieldsHtml, submitLabel, wide,
+ *   onSubmit(setError, submitButton) }. Enter submits; Esc or Cancel closes.
+ */
 function formModal_(o) {
   openModal_(
     '<form id="formModal" novalidate><h3>' + escapeHtml(o.title) + '</h3>' +
@@ -1074,6 +1021,8 @@ document.addEventListener('keydown', function (e) {
   if (!document.getElementById('ecrModal').hidden) closeEcrModal_();
 });
 
+// ---------- Navigation ----------
+
 document.querySelectorAll('.nav-item[data-screen]').forEach(function (btn) {
   btn.onclick = function () {
     var screenName = btn.getAttribute('data-screen');
@@ -1093,6 +1042,8 @@ document.getElementById('profileBtn').onclick = function () { document.querySele
 
 var ONBOARD_FLAG = 'markado_onboarded_token';
 
+// "Latest request wins": a slow response for something the user has already navigated away from
+// must not overwrite what is on screen now (e.g. rapid Term 1 -> Term 2 tab clicks).
 var requestSeq_ = {};
 function latest_(name) {
   var id = (requestSeq_[name] || 0) + 1;
@@ -1107,10 +1058,13 @@ function endSession_() {
   window.location.href = 'teacher-login.html';
   return true;
 }
-window.onApiSessionExpired = endSession_;
+window.onApiSessionExpired = endSession_; // any call that finds the session gone sends the user to log in
 
 document.getElementById('logoutBtn').onclick = endSession_;
 
+// Onboarding is idempotent and only matters the first time a session opens the dashboard, so it is
+// skipped on later page loads of the same session. If the data call then reports a missing
+// spreadsheet, we fall back to onboarding and retry once.
 function startApp_() {
   if (sessionStorage.getItem(ONBOARD_FLAG) === state.sessionToken) {
     bootstrapData_(true);
@@ -1120,13 +1074,13 @@ function startApp_() {
     sessionStorage.setItem(ONBOARD_FLAG, state.sessionToken);
     bootstrapData_(false);
   }, function () {
-    bootstrapData_(false);
+    bootstrapData_(false); // as before: a failed onboarding doesn't block trying to load data
   });
 }
 
 function bootstrapData_(mayNeedOnboarding) {
   setLoading(document.querySelector('#dashboardClassTable tbody'), 'Loading your classes…');
-  loadProfile_();
+  loadProfile_(); // fetched alongside the classes
   loadWorkspacesIntoState(function () { loadDashboard(); }, function (err) {
     if (mayNeedOnboarding) {
       sessionStorage.removeItem(ONBOARD_FLAG);
@@ -1148,6 +1102,7 @@ function loadWorkspacesIntoState(then, onErr) {
   }, onErr || function (err) { showToast(err, 'error'); });
 }
 
+// ---------- Profile in the header ----------
 
 function licenseLabel_(license) {
   if (!license) return '';
@@ -1171,22 +1126,22 @@ function licenseLine_(license) {
 
 function renderProfile_(profile) {
   var line = profile ? licenseLine_(profile.license) : '';
-  document.getElementById('profileName').textContent = profile ? profile.fullName : 'My Account';
+  document.getElementById('profileName').textContent = profile ? profile.fullName : 'My account';
   document.getElementById('profileLicense').textContent = line;
-  document.getElementById('profileBtn').title = line ? line + ' - open Settings' : 'Open Settings';
+  document.getElementById('profileBtn').title = line ? line + ' — open Settings' : 'Open Settings';
 }
 
 function loadProfile_() {
   call('clientGetMyProfile_', [state.sessionToken], function (profile) {
     state.profile = profile;
     renderProfile_(profile);
-    renderLicenseBanner_(profile.license); 
+    renderLicenseBanner_(profile.license); // warnings about an expiring or expired license
   }, function () { renderProfile_(null); }, { silent: true });
 }
 
-function fmtDate_(iso) { return iso ? String(iso).slice(0, 10) : ''; }  
+function fmtDate_(iso) { return iso ? String(iso).slice(0, 10) : ''; }  // still used for the request dates below
 
-
+/** Days before expiry when a renewal can be requested: 7 for a monthly license, 30 otherwise (mirrors the server). */
 function renewalWindowDays_(licenseType) { return licenseType === 'monthly' ? 7 : 30; }
 
 function planLabel_(licenseType) { return licenseType === 'monthly' ? 'monthly ' : (licenseType === 'yearly' ? 'yearly ' : ''); }
@@ -1197,7 +1152,7 @@ function renderLicenseBanner_(status) {
   if (status.status === 'TRIAL' && status.daysRemaining !== null && status.daysRemaining <= 7 && status.daysRemaining > 0) {
     text = 'Trial ends in ' + status.daysRemaining + ' day(s).'; cls = 'trial'; action = 'Request a license';
   } else if (status.status === 'EXPIRED') {
-    text = 'Your trial or license has expired. Importing, entering, and publishing grades is paused - your students can still see anything already published.'; cls = 'expired'; action = 'Request a license';
+    text = 'Your trial or license has expired. Importing, entering, and publishing grades is paused — your students can still see anything already published.'; cls = 'expired'; action = 'Request a license';
   } else if (status.status === 'SUSPENDED') {
     text = 'Your account has been suspended. Contact support for details. Your students can still see anything already published.'; cls = 'expired';
   } else if (status.status === 'ACTIVE' && status.daysRemaining !== null && status.daysRemaining <= renewalWindowDays_(status.licenseType) && status.daysRemaining > 0) {
@@ -1210,6 +1165,7 @@ function renderLicenseBanner_(status) {
   if (btn) btn.onclick = function () { openLicenseRequestModal(refreshLicenseViews_); };
 }
 
+// ---------- License request (teacher applies; payment is by GCash, verified by the admin) ----------
 
 function closeModal_() { document.getElementById('modalRoot').innerHTML = ''; }
 
@@ -1242,7 +1198,7 @@ function renderLicenseRequestModal_(info, onDone) {
       '<p style="font-size:0.88rem">Pay with GCash first, then choose the plan you paid for and enter the reference number from your receipt so the payment can be verified.</p>' +
       '<div class="field"><label>Plan</label><select id="lrPlan"><option value="">Choose a plan…</option>' +
         (info.plans || []).map(function (p) {
-          return '<option value="' + escapeHtml(p.id) + '">' + escapeHtml(p.name + ' (' + (p.durationLabel || (p.days ? p.days + ' days' : p.months + ' months')) + ')' + (p.price ? ' - ' + p.price : '')) + '</option>';
+          return '<option value="' + escapeHtml(p.id) + '">' + escapeHtml(p.name + ' (' + (p.durationLabel || (p.days ? p.days + ' days' : p.months + ' months')) + ')' + (p.price ? ' — ' + p.price : '')) + '</option>';
         }).join('') + '</select></div>' +
       '<div class="field"><label>GCash reference number</label><input id="lrRef" maxlength="40" autocomplete="off"></div>' +
       '<div class="field"><label>Note (optional)</label><input id="lrNote" maxlength="300" autocomplete="off"></div>' +
@@ -1273,6 +1229,8 @@ function renderLicenseRequestModal_(info, onDone) {
 }
 
 
+// ---------- Dashboard ----------
+
 function loadDashboard() {
   var latest = latest_('dashboard');
   var tbody = document.querySelector('#dashboardClassTable tbody');
@@ -1282,7 +1240,7 @@ function loadDashboard() {
     state.workspaces = workspaces;
     ensureActiveClass_();
     tbody.innerHTML = workspaces.length === 0
-      ? '<tr><td colspan="5" class="empty-state">No classes yet - add one under "Classes", or import an E-CR under "Subjects".</td></tr>'
+      ? '<tr><td colspan="5" class="empty-state">No classes yet — add one under "Classes", or import an E-CR under "Subjects".</td></tr>'
       : workspaces.map(function (ws) {
           return '<tr><td>' + escapeHtml(ws.schoolName) + '</td><td>' + escapeHtml(ws.schoolYearLabel) + '</td><td>' + escapeHtml(ws.gradeLevel) + '</td><td>' + escapeHtml(ws.section) + '</td><td>' + escapeHtml(ws.adviserName) + '</td></tr>';
         }).join('');
@@ -1292,6 +1250,7 @@ function loadDashboard() {
   });
 }
 
+// ---------- Classes ----------
 
 function loadClassesScreen() {
   var latest = latest_('classes');
@@ -1322,8 +1281,8 @@ function renderClassesTable_() {
       '<td>' + escapeHtml(ws.schoolYearLabel) + '</td>' +
       '<td><b>' + label + '</b>' + (active ? '<span class="active-pill">Active Class</span>' : '') + '</td>' +
       '<td>' + escapeHtml(ws.schoolName) + '</td>' +
-      '<td>' + (ws.adviserName ? escapeHtml(ws.adviserName) : '<span class="muted">-</span>') + '</td>' +
-      '<td>' + (ws.adviserDesignation ? escapeHtml(ws.adviserDesignation) : '<span class="muted">-</span>') + '</td>' +
+      '<td>' + (ws.adviserName ? escapeHtml(ws.adviserName) : '<span class="muted">—</span>') + '</td>' +
+      '<td>' + (ws.adviserDesignation ? escapeHtml(ws.adviserDesignation) : '<span class="muted">—</span>') + '</td>' +
       '<td><div class="row-actions">' +
         (active ? '' : '<button class="btn secondary small" data-set-active="' + id + '">Set active</button>') +
         '<button class="icon-btn" data-edit-class="' + id + '" title="Edit class" aria-label="Edit ' + label + '">' + iconHtml_('edit', 'Edit') + '</button>' +
@@ -1358,19 +1317,21 @@ document.getElementById('addClassBtn').onclick = function () { openClassModal_(n
 var DESIGNATIONS_ = ['Teacher I', 'Teacher II', 'Teacher III', 'Master Teacher I', 'Master Teacher II', 'Master Teacher III', 'Master Teacher IV'];
 
 function gradeOptionsHtml_(selected) {
-  var grades = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+  var grades = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+  var shsGrades = { '11': true, '12': true };
   var current = selected === undefined || selected === null ? '' : String(selected);
   if (current && grades.indexOf(current) === -1) grades.push(current); // a grade written some other way in an older class
   return '<option value="">Choose…</option>' + grades.map(function (g) {
-    return '<option value="' + escapeHtml(g) + '"' + (g === current ? ' selected' : '') + '>Grade ' + escapeHtml(g) + '</option>';
+    var label = 'Grade ' + g + (shsGrades[g] ? ' (SHS)' : '');
+    return '<option value="' + escapeHtml(g) + '"' + (g === current ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
   }).join('');
 }
 
-
+/** Add Class (ws = null) and Edit Class (ws = the class) share one dialog. */
 function openClassModal_(ws) {
   var editing = !!ws;
   var v = editing ? ws : {
-    schoolName: state.workspaces[0] ? state.workspaces[0].schoolName : '', 
+    schoolName: state.workspaces[0] ? state.workspaces[0].schoolName : '', // most teachers stay at one school
     schoolYearLabel: defaultSchoolYear_(), gradeLevel: '', section: '', adviserName: '', adviserDesignation: '',
   };
   formModal_({
@@ -1410,7 +1371,7 @@ function openClassModal_(ws) {
 
 function confirmDeleteClass_(ws) {
   confirmModal('Delete ' + escapeHtml(classLabel_(ws)) + '?',
-    'This permanently removes the class (' + escapeHtml(ws.schoolYearLabel) + ') with its students, subjects and grades - including grades already published to students. This can\'t be undone.',
+    'This permanently removes the class (' + escapeHtml(ws.schoolYearLabel) + ') with its students, subjects and grades — including grades already published to students. This can\'t be undone.',
     'Delete class', function () {
       call('clientDeleteWorkspace_', [state.sessionToken, ws.workspaceId], function () {
         if (state.currentWorkspaceId === ws.workspaceId) setActiveClass_(null);
@@ -1434,18 +1395,26 @@ function populateClassSelector(selectEl, onChange) {
   };
 }
 
+// ---------- Subjects ----------
 
 function loadSubjectsScreen() {
-  setLoading(document.getElementById('subjectGrid'), 'Loading subjects…'); 
+  setLoading(document.getElementById('subjectGrid'), 'Loading subjects…'); // never show the last visit's cards and term chips while reloading
   loadWorkspacesIntoState(function () {
     var hasClass = !!state.currentWorkspaceId;
     document.getElementById('subjectsNoClassMsg').style.display = hasClass ? 'none' : 'block';
     document.getElementById('subjectsContent').style.display = hasClass ? 'block' : 'none';
     document.getElementById('addSubjectBtn').hidden = !hasClass;
     if (!hasClass) return;
+    // Changing the class only needs that class's subjects -- not a reload of the workspace list.
     populateClassSelector(document.getElementById('subjectsClassSelect'), renderSubjectGrid);
     renderSubjectGrid();
   });
+}
+
+/** Grades 2-10 get the eight default subjects automatically; Kinder, Grade 1 and SHS (11-12) start with none. */
+function isDefaultSubjectGrade_(gradeLevel) {
+  var n = parseInt(String(gradeLevel === undefined || gradeLevel === null ? '' : gradeLevel).replace(/[^0-9]/g, ''), 10);
+  return isFinite(n) && n >= 2 && n <= 10;
 }
 
 var TERM_STATUS_TEXT_ = { PUBLISHED: 'Published', DRAFT: 'Draft', EMPTY: 'No grades yet' };
@@ -1464,6 +1433,10 @@ function termChipsHtml_(cs) {
 function renderSubjectGrid() {
   var latest = latest_('subjects');
   var grid = document.getElementById('subjectGrid');
+  var emptyMsg = document.getElementById('subjectsEmptyMsg');
+  var ws = workspaceById_(state.currentWorkspaceId);
+  var hasDefaults = !ws || isDefaultSubjectGrade_(ws.gradeLevel); // no class loaded yet: assume the common case
+  emptyMsg.style.display = 'none';
   setLoading(grid, 'Loading subjects…');
   call('clientListClassSubjects_', [state.sessionToken, state.currentWorkspaceId], function (classSubjects) {
     if (!latest()) return;
@@ -1476,6 +1449,7 @@ function renderSubjectGrid() {
         (sub ? '<span class="sub">' + sub + '</span>' : '') +
         termChipsHtml_(cs) + '</button>';
     }).join('');
+    emptyMsg.style.display = classSubjects.length === 0 && !hasDefaults ? 'block' : 'none';
   }, function (err) {
     if (!latest()) return;
     setErrorState(grid, err, renderSubjectGrid);
@@ -1488,9 +1462,13 @@ document.getElementById('subjectGrid').addEventListener('click', function (e) {
 });
 
 document.getElementById('addSubjectBtn').onclick = function () {
+  var ws = workspaceById_(state.currentWorkspaceId);
+  var hasDefaults = !ws || isDefaultSubjectGrade_(ws.gradeLevel);
   formModal_({
     title: 'Add subject',
-    intro: 'For a subject that is not in the list, such as Religion. The regular subjects are already there.',
+    intro: hasDefaults
+      ? 'For a subject that is not in the list, such as Religion. The regular subjects are already there.'
+      : 'This grade level has no fixed subject list — add each one it needs.',
     submitLabel: 'Add Subject',
     fieldsHtml: '<div class="field"><label for="asName">Subject name</label><input id="asName" maxlength="80" placeholder="Religion" data-autofocus></div>',
     onSubmit: function (setError, submitBtn) {
@@ -1503,13 +1481,19 @@ document.getElementById('addSubjectBtn').onclick = function () {
   });
 };
 
+// ---------- One subject's grades ----------
 
+/**
+ * Opens a subject's grade sheet. The sheet's response carries the subject's real name and (for MAPEH) its
+ * components, so all that is needed here is the id.
+ */
 function openSubjectDetail(classSubjectId, nameHint) {
   state.currentClassSubjectId = classSubjectId;
   state.currentSubject = null;
   state.currentTerm = 1;
   document.getElementById('subjectTitle').textContent = nameHint || '';
   document.querySelectorAll('#termTabs button').forEach(function (b) { b.classList.toggle('active', b.dataset.term === '1'); });
+  // Clear whatever the previous subject left on screen so it can't be mistaken for this one.
   document.getElementById('gradeMsg').innerHTML = '';
   document.getElementById('lockNote').innerHTML = '';
   document.getElementById('gradeHint').textContent = '';
@@ -1540,6 +1524,10 @@ function renderGradeHead_(components) {
   document.querySelector('#gradesTable thead').innerHTML = '<tr>' + cols.map(function (c) { return '<th>' + escapeHtml(c) + '</th>'; }).join('') + '</tr>';
 }
 
+/**
+ * One row of the grade sheet. A published grade is LOCKED: shown, not editable, until it is unpublished.
+ * For MAPEH the row has an input per component and the Grade is worked out from them.
+ */
 function gradeRowHtml_(g, number, components) {
   var name = escapeHtml(g.fullName);
   var enr = escapeHtml(g.enrollmentId);
@@ -1553,7 +1541,7 @@ function gradeRowHtml_(g, number, components) {
         : '<td><input class="grade-input comp" type="number" min="60" max="100" step="1" inputmode="numeric" data-enr="' + enr + '" data-comp="' + escapeHtml(c.classSubjectId) +
           '" data-original="' + escapeHtml(value) + '" value="' + escapeHtml(value) + '" aria-label="' + escapeHtml(c.subjectName) + ' grade for ' + name + '"></td>';
     });
-    cells += '<td><strong class="calc-grade" data-saved="' + escapeHtml(g.termGrade) + '">' + (g.termGrade !== '' ? escapeHtml(g.termGrade) : '-') + '</strong>' +
+    cells += '<td><strong class="calc-grade" data-saved="' + escapeHtml(g.termGrade) + '">' + (g.termGrade !== '' ? escapeHtml(g.termGrade) : '—') + '</strong>' +
       (g.locked ? '<span class="lock-tag">Locked</span>' : '') + '</td>';
   } else {
     cells += g.locked
@@ -1570,7 +1558,7 @@ function gradeRowHtml_(g, number, components) {
   return '<tr>' + cells + '<td>' + escapeHtml(g.descriptor) + '</td><td>' + pill + '</td><td style="white-space:nowrap">' + action + '</td></tr>';
 }
 
-
+/** Male learners first, then Female, each numbered from 1 and in alphabetical order. */
 function gradeSheetHtml_(data) {
   var components = data.components;
   var columns = 6 + components.length;
@@ -1596,8 +1584,8 @@ function loadReview(keepRows) {
     state.currentSubject = data;
     document.getElementById('subjectTitle').textContent = data.subjectName;
     document.getElementById('gradeHint').textContent = data.components.length > 0
-      ? 'Type each learner\'s grade for both components. The MAPEH grade is their average and appears once both have a grade; the description fills in automatically. Published grades are locked - unpublish one to edit it.'
-      : 'Type each learner\'s transmuted grade; the description fills in automatically. Published grades are locked - unpublish one to edit it.';
+      ? 'Type each learner\'s grade (60–100) for both components. The MAPEH grade is their average and appears once both have a grade; the description fills in automatically. Published grades are locked — unpublish one to edit it.'
+      : 'Type each learner\'s transmuted grade (60–100); the description fills in automatically. Published grades are locked — unpublish one to edit it.';
     renderGradeHead_(data.components);
     tbody.innerHTML = gradeSheetHtml_(data);
     var lockedCount = data.rows.filter(function (r) { return r.locked; }).length;
@@ -1609,7 +1597,7 @@ function loadReview(keepRows) {
   });
 }
 
-
+// MAPEH: show the average as the teacher types, so they see the grade before saving. Same rounding as the server.
 document.getElementById('reviewTableBody').addEventListener('input', function (e) {
   if (!e.target.matches || !e.target.matches('input[data-comp]')) return;
   var tr = e.target.closest('tr');
@@ -1621,7 +1609,7 @@ document.getElementById('reviewTableBody').addEventListener('input', function (e
     if (input.value.trim() === '' || !isFinite(n) || Math.floor(n) !== n || n < 60 || n > 100) complete = false; else total += n;
   });
   if (complete) { out.textContent = Math.round(total / inputs.length); out.classList.add('preview'); }
-  else { out.textContent = out.getAttribute('data-saved') || '-'; out.classList.remove('preview'); }
+  else { out.textContent = out.getAttribute('data-saved') || '—'; out.classList.remove('preview'); }
 });
 
 document.getElementById('saveGradesBtn').onclick = function () {
@@ -1634,7 +1622,7 @@ document.getElementById('saveGradesBtn').onclick = function () {
     if (input.hasAttribute('data-comp')) entry.componentId = input.getAttribute('data-comp');
     entries.push(entry);
   });
-  if (entries.length === 0) { msgEl.innerHTML = '<div class="msg error">Nothing to save - type a grade first.</div>'; return; }
+  if (entries.length === 0) { msgEl.innerHTML = '<div class="msg error">Nothing to save — type a grade first.</div>'; return; }
   var isMapeh = state.currentSubject && state.currentSubject.components.length > 0;
   call('clientSaveManualGrades_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm, entries], function (data) {
     msgEl.innerHTML = '<div class="msg success">Saved ' + data.saved + ' grade(s). ' +
@@ -1644,14 +1632,14 @@ document.getElementById('saveGradesBtn').onclick = function () {
   { button: document.getElementById('saveGradesBtn') });
 };
 
-
+// Per-learner Publish / Unpublish (event delegation: the rows are re-rendered after every load)
 document.getElementById('reviewTableBody').addEventListener('click', function (e) {
   var btn = e.target.closest && e.target.closest('button[data-act]');
   if (!btn) return;
   var publish = btn.getAttribute('data-act') === 'publish';
   call(publish ? 'clientPublishLearner_' : 'clientUnpublishLearner_',
     [state.sessionToken, state.currentClassSubjectId, state.currentTerm, btn.getAttribute('data-enr')],
-    function () { loadReview(true); showToast(publish ? 'Published - this grade is now locked.' : 'Unpublished - you can edit this grade again.', 'success'); },
+    function () { loadReview(true); showToast(publish ? 'Published — this grade is now locked.' : 'Unpublished — you can edit this grade again.', 'success'); },
     function (err) { showToast(err, 'error'); },
     { button: btn });
 });
@@ -1668,6 +1656,7 @@ document.getElementById('unpublishBtn').onclick = function () {
   });
 };
 
+// ---------- Import an E-CR: the file sets up the class, subject and learners; the teacher picks the terms ----------
 
 var importState = { previewId: null, file: null };
 
@@ -1709,12 +1698,13 @@ document.getElementById('ecrUploadBtn').onclick = function () {
 
 function termChoiceHtml_(t) {
   var label = 'Term ' + t.term;
-  if (t.gradedCount === 0) return '<div class="term-choice" style="color:var(--text-muted)">' + label + ' - no grades in this file</div>';
+  if (t.gradedCount === 0) return '<div class="term-choice" style="color:var(--text-muted)">' + label + ' — no grades in this file</div>';
   var notes = [];
-  if (t.lockedCount > 0) notes.push(t.lockedCount + ' already published and locked - will be skipped');
+  if (t.detail) notes.push(t.detail); // MAPEH: how many grades each component has
+  if (t.lockedCount > 0) notes.push(t.lockedCount + ' already published and locked — will be skipped');
   if (t.skippedInvalid > 0) notes.push(t.skippedInvalid + ' cell(s) had no usable grade');
   return '<label class="term-choice"><input type="checkbox" data-term-check="' + t.term + '"' + (t.importable ? ' checked' : ' disabled') + '>' +
-    '<span>' + label + ' - ' + t.gradedCount + ' grade(s)' + (t.importable ? '' : ' (all locked)') + (notes.length ? '<br><span style="color:var(--text-muted); font-size:0.85rem">' + escapeHtml(notes.join(' · ')) + '</span>' : '') + '</span></label>';
+    '<span>' + label + ' — ' + t.gradedCount + (t.detail ? ' learner(s)' : ' grade(s)') + (t.importable ? '' : ' (all locked)') + (notes.length ? '<br><span style="color:var(--text-muted); font-size:0.85rem">' + escapeHtml(notes.join(' · ')) + '</span>' : '') + '</span></label>';
 }
 
 function renderImportPreview(preview) {
@@ -1728,18 +1718,18 @@ function renderImportPreview(preview) {
   importState.file = preview.file;
   var f = preview.file;
 
-  var html = '<div class="import-title">' + escapeHtml(f.subject) + ' - Grade ' + escapeHtml(f.gradeLevel) + ' · ' + escapeHtml(f.section) + '</div>' +
+  var html = '<div class="import-title">' + escapeHtml(f.subject) + ' — Grade ' + escapeHtml(f.gradeLevel) + ' · ' + escapeHtml(f.section) + '</div>' +
     '<div style="color:var(--text-muted); margin-bottom:6px">' + (f.schoolName ? escapeHtml(f.schoolName) + ' · ' : '') + 'School year ' + escapeHtml(f.schoolYear) + '</div>' +
     '<ul class="import-facts">' +
-    '<li>Class: <b>' + (preview.classExists ? 'already in your classes' : 'new - will be created') + '</b>' + (preview.schoolNameWillChange ? ' (school name will be updated)' : '') + '</li>' +
-    '<li>Subject: <b>' + (preview.classSubjectExists ? 'already in this class' : 'new - will be added') + '</b></li>' +
+    '<li>Class: <b>' + (preview.classExists ? 'already in your classes' : 'new — will be created') + '</b>' + (preview.schoolNameWillChange ? ' (school name will be updated)' : '') + '</li>' +
+    '<li>Subject: <b>' + (preview.classSubjectExists ? 'already in this class' : 'new — will be added') + '</b></li>' +
     '<li>Learners: <b>' + preview.learnerCount + '</b> in the file · ' + preview.matchedCount + ' already in the class · <b>' + preview.newCount + '</b> will be added</li></ul>';
 
   if (preview.classExists && preview.newCount > 0) {
     var options = '<option value="">Add as new</option>' + preview.existingRoster.map(function (r) {
       return '<option value="' + escapeHtml(r.enrollmentId) + '">Same as: ' + escapeHtml(r.fullName) + '</option>';
     }).join('');
-    html += '<div class="issue-block info"><h4>' + preview.newCount + ' learner(s) are not in this class yet - they will be added as new</h4>' +
+    html += '<div class="issue-block info"><h4>' + preview.newCount + ' learner(s) are not in this class yet — they will be added as new</h4>' +
       '<p style="margin:0 0 10px; font-size:0.88rem">If a name is only spelled differently from your list, match it to the existing learner instead.</p>' +
       preview.newLearners.map(function (name) {
         return '<div class="issue-row"><span>' + escapeHtml(name) + '</span><span class="actions-inline"><select data-match-name="' + escapeHtml(name) + '">' + options + '</select></span></div>';
@@ -1800,14 +1790,15 @@ function renderImportDone(result) {
   if (result.createdSubject) lines.push('Subject added.');
   if (result.addedLearners > 0) lines.push(result.addedLearners + ' learner(s) added.');
   result.terms.forEach(function (t) {
-    lines.push('Term ' + t.term + ': ' + t.imported + ' grade(s) imported' + (t.skippedLocked > 0 ? ', ' + t.skippedLocked + ' locked grade(s) skipped' : '') + '.');
+    lines.push('Term ' + t.term + ': ' + t.imported + (t.note ? ' learner(s) imported' : ' grade(s) imported') + (t.note ? ' — ' + t.note : '') +
+      (t.skippedLocked > 0 ? ', ' + t.skippedLocked + ' locked learner(s) skipped' : '') + '.');
   });
-  
+  // Music and Arts / PE and Health belong to MAPEH, which is the sheet that opens.
   var openId = result.openClassSubjectId || result.classSubjectId;
   var openName = openId !== result.classSubjectId ? 'MAPEH' : (importState.file ? importState.file.subject : 'subject');
   area.innerHTML = '<div class="msg success">Import complete.</div><ul class="import-facts">' +
     lines.map(function (l) { return '<li>' + escapeHtml(l) + '</li>'; }).join('') + '</ul>' +
-    (result.addedLearners > 0 ? '<p class="hint" style="margin:0 0 12px">An E-CR has no LRNs. Import your student .CSV under Students to add them - learners are matched by name.</p>' : '') +
+    (result.addedLearners > 0 ? '<p class="hint" style="margin:0 0 12px">An E-CR has no LRNs. Import your student .CSV under Students to add them — learners are matched by name.</p>' : '') +
     '<button class="btn" id="ecrOpenSubjectBtn">Open ' + escapeHtml(openName) + '</button> ' +
     (result.addedLearners > 0 ? '<button class="btn secondary" id="ecrGoStudentsBtn">Go to Students</button>' : '');
   showToast('Import complete.', 'success');
@@ -1823,6 +1814,7 @@ function renderImportDone(result) {
   };
 }
 
+// ---------- Students ----------
 
 function loadStudentsScreen() {
   loadWorkspacesIntoState(function () {
@@ -1879,7 +1871,7 @@ document.getElementById('rosterArea').addEventListener('click', function (e) {
 
 document.getElementById('addStudentBtn').onclick = function () { openStudentModal_(null); };
 
-
+/** Add Student (learner = null) and Edit Student share one dialog. */
 function openStudentModal_(learner) {
   var editing = !!learner;
   var v = learner || { lrn: '', fullName: '', sex: '' };
@@ -1889,7 +1881,7 @@ function openStudentModal_(learner) {
     fieldsHtml:
       '<div class="field"><label for="sfLrn">LRN</label><input id="sfLrn" inputmode="numeric" maxlength="12" placeholder="12 digits" autocomplete="off" data-autofocus value="' + escapeHtml(v.lrn) + '"></div>' +
       '<div class="field"><label for="sfName">Student name</label><input id="sfName" maxlength="120" placeholder="Dela Cruz, Juan" autocomplete="off" value="' + escapeHtml(v.fullName) + '">' +
-        '<div class="hint">Surname, Given Name - students log in with their surname.</div></div>' +
+        '<div class="hint">Surname, Given Name — students log in with their surname.</div></div>' +
       '<div class="field"><label for="sfSex">Gender</label><select id="sfSex"><option value="">Choose…</option>' +
         '<option value="M"' + (v.sex === 'M' ? ' selected' : '') + '>Male</option><option value="F"' + (v.sex === 'F' ? ' selected' : '') + '>Female</option></select></div>',
     onSubmit: function (setError, submitBtn) {
@@ -1911,9 +1903,10 @@ function openStudentModal_(learner) {
   });
 }
 
-
+// ---------- Students: .CSV template and import ----------
 
 document.getElementById('downloadCsvBtn').onclick = function () {
+  // The BOM makes Excel open the file as UTF-8, so names with ñ stay intact.
   var blob = new Blob(['\uFEFFLRN,Student Name,Gender\r\n'], { type: 'text/csv;charset=utf-8' });
   var link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
@@ -1941,13 +1934,13 @@ document.getElementById('csvFileInput').onchange = function () {
   reader.readAsArrayBuffer(file);
 };
 
-
+/** Excel's "CSV UTF-8" is UTF-8; its plain "CSV" is Windows-1252. Try UTF-8 first and fall back. */
 function decodeCsvBuffer_(buffer) {
   try { return new TextDecoder('utf-8', { fatal: true }).decode(buffer); }
   catch (e) { return new TextDecoder('windows-1252').decode(buffer); }
 }
 
-
+/** Splits CSV text into { line, cells } records. Handles quotes, doubled quotes, and , ; or tab as the separator. */
 function csvRecords_(text) {
   text = text.replace(/^\uFEFF/, '');
   var firstLine = text.split(/\r?\n/)[0] || '';
@@ -1975,6 +1968,7 @@ function csvRecords_(text) {
   return records;
 }
 
+/** Reads the file into { rows: [{line, lrn, fullName, sex}], problems: [{line, message}], fatal }. */
 function parseStudentCsv_(text) {
   var records = csvRecords_(text);
   var result = { rows: [], problems: [], fatal: '' };
@@ -2032,7 +2026,7 @@ function openCsvPreviewModal_(fileName, parsed) {
       (parsed.problems.length ? '<li><b>' + parsed.problems.length + '</b> row(s) have a problem and will be skipped</li>' : '') + '</ul>' +
       problemListHtml_(parsed.problems) +
       (tooMany ? '<div class="msg error">A file can have at most ' + CSV_MAX_ROWS_ + ' students. Split it into smaller files.</div>' : '') +
-      '<p class="hint">Students already in this class without an LRN - for example from an E-CR - are matched by name and get their LRN. Nobody is added twice.</p>';
+      '<p class="hint">Students already in this class without an LRN — for example from an E-CR — are matched by name and get their LRN. Nobody is added twice.</p>';
   }
   body += '</div><div class="actions" id="csvActions"><button class="btn secondary" id="csvCancel" type="button">' + (ready ? 'Cancel' : 'Close') + '</button>' +
     (ready ? '<button class="btn" id="csvImport" type="button">Import ' + ready + ' student(s)</button>' : '') + '</div>';
@@ -2054,7 +2048,7 @@ function showCsvResult_(summary, clientProblems) {
   var skipped = clientProblems.concat(summary.skipped.map(function (s) { return { line: s.row, message: s.message }; }));
   var lines = [];
   if (summary.added) lines.push(summary.added + ' new student(s) added.');
-  if (summary.lrnSet) lines.push(summary.lrnSet + ' student(s) already in the class matched by name - LRN saved.');
+  if (summary.lrnSet) lines.push(summary.lrnSet + ' student(s) already in the class matched by name — LRN saved.');
   if (summary.enrolled) lines.push(summary.enrolled + ' student(s) from your other classes added to this class.');
   if (lines.length === 0) lines.push('No students were added.');
   document.getElementById('csvBody').innerHTML = '<div class="msg success">Import complete.</div><ul class="import-facts">' +
@@ -2067,14 +2061,14 @@ function showCsvResult_(summary, clientProblems) {
 
 function renderAccountLicense_(status, info) {
   var html;
-  if (status.status === 'TRIAL') html = '<p>Free trial' + (status.expirationDate ? ' - expires on ' + escapeHtml(fmtLongDate_(status.expirationDate)) : '') + '.</p>';
+  if (status.status === 'TRIAL') html = '<p>Free trial' + (status.expirationDate ? ' — expires on ' + escapeHtml(fmtLongDate_(status.expirationDate)) : '') + '.</p>';
   else if (status.status === 'ACTIVE') html = '<p>Active ' + planLabel_(status.licenseType) + 'license' + (status.expirationDate ? (' until ' + escapeHtml(fmtLongDate_(status.expirationDate))) : '') + '.</p>';
   else if (status.status === 'SUSPENDED') html = '<p>Your account is suspended. Contact support for details.</p>';
   else html = '<p>Your trial or license has expired.</p>';
 
   if (info) {
     if (info.pending) {
-      html += '<div class="msg warn">License request sent on ' + escapeHtml(fmtDate_(info.pending.requestedAt)) + ' - waiting for approval.</div>' +
+      html += '<div class="msg warn">License request sent on ' + escapeHtml(fmtDate_(info.pending.requestedAt)) + ' — waiting for approval.</div>' +
         '<button class="btn small secondary" id="acctRequestBtn">View request</button>';
     } else {
       if (info.lastDecision && info.lastDecision.status === 'DECLINED') {
