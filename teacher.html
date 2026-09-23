@@ -241,11 +241,40 @@
   .btn.danger {
 	background: var(--danger);
   }
-  
+
+  .btn.upgrade {
+	background: #E08A2B;
+  }
+
+  .btn.upgrade:hover {
+	background: #C6771F;
+  }
+
   .btn:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
   }
+
+  .theme-toggle-group { display: flex; gap: 8px; }
+
+  .theme-opt {
+	flex: 1;
+	padding: 10px 12px;
+	border: 1px solid var(--border);
+	border-radius: 3px;
+	background: var(--white);
+	color: var(--black);
+	font-size: 0.9rem;
+	cursor: pointer;
+  }
+
+  .theme-opt.active {
+	background: var(--primary);
+	color: #fff;
+	border-color: var(--primary);
+  }
+
+  .field-static > div { font-weight: 600; }
 
   .msg {
 	padding: 10px 14px;
@@ -399,13 +428,64 @@
 	justify-content: flex-end;
   }
 
-  .status-pill.NONE { background: var(--border); color: var(--text-muted); }
-  .grade-input { width: 84px; padding: 6px 8px; font: inherit; border: 1px solid var(--border); border-radius: 3px; background: var(--white); color: var(--black); }
-  .lock-tag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 20px; font-size: 0.72rem; background: var(--border); color: var(--text-muted); }
-  .term-choice { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; }
-  .term-choice input { margin-top: 4px; }
-  .import-facts { margin: 8px 0 12px; padding-left: 18px; line-height: 1.7; }
-  .import-title { font-size: 1.15rem; font-weight: 600; }
+  .status-pill.NONE {
+	background: var(--border);
+	color: var(--text-muted);
+  }
+  
+  .grade-input {
+	width: 84px;
+	padding: 6px 8px;
+	font: inherit;
+	text-align: center;
+	border: 1px solid var(--border);
+	border-radius: 3px;
+	background: var(--white);
+	color: var(--black);
+	-moz-appearance: textfield;
+	appearance: textfield;
+  }
+
+  .grade-input::-webkit-outer-spin-button,
+  .grade-input::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+  }
+
+  .col-desc, .col-status { display: none; }
+  
+  .lock-tag {
+	display: inline-block;
+	margin-left: 6px;
+	padding: 1px 8px;
+	border-radius: 20px;
+	font-size: 0.72rem;
+	background: var(--border);
+	color: var(--text-muted);
+  }
+  
+  .term-choice {
+	display: flex;
+	gap: 8px;
+	align-items: flex-start;
+	padding: 6px 0;
+  }
+  
+  .term-choice input {
+	margin-top: 4px;
+  }
+  
+  .import-facts {
+	margin: 8px 0 12px;
+	padding-left: 18px;
+	line-height: 1.7;
+  }
+  
+  .import-title {
+	font-size: 1.15rem;
+	font-weight: 600;
+  }
+  
   .issue-block {
 	border-radius: 4px;
 	padding: 14px 16px;
@@ -549,93 +629,213 @@
 	border-bottom: none;
   }
   
-
-
   [hidden] { display: none !important; }
   main .screen > h2 { margin-top: 0; }
 
   :root {
-    --male: #2F6FAE;    --male-bg: #E3EEF9;
-    --female: #B8457A;  --female-bg: #FAE6EF;
+    --male: #2F6FAE;
+	--male-bg: #E3EEF9;
+    --female: #B8457A;
+	--female-bg: #FAE6EF;
   }
+  
   [data-theme="dark"] {
-    --male: #7DB2E8;    --male-bg: #1B2F45;
-    --female: #EE8DB4;  --female-bg: #42222F;
+    --male: #7DB2E8;
+	--male-bg: #1B2F45;
+    --female: #EE8DB4; 
+	--female-bg: #42222F;
   }
 
-  /* ---------- Icons ----------
-     Icons are flattened to one colour so any SVG works: dark on light surfaces, white on the blue ones. */
-  .ico { width: 16px; height: 16px; flex-shrink: 0; filter: brightness(0); opacity: 0.7; }
+  .ico {
+	width: 16px;
+	height: 16px;
+	flex-shrink: 0;
+	filter: brightness(0);
+	opacity: 0.7;
+  }
+  
   [data-theme="dark"] .ico { filter: brightness(0) invert(1); opacity: 0.85; }
+  
   .btn:not(.secondary) .ico,
   .profile .ico { filter: brightness(0) invert(1); opacity: 1; }
   .ico-fallback { font-size: 0.85rem; line-height: 1; }
 
   .icon-btn {
-    width: 32px; height: 32px; padding: 0;
-    display: inline-flex; align-items: center; justify-content: center;
-    background: var(--white); color: var(--text-muted);
-    border: 1px solid var(--border); border-radius: 4px;
+    width: 32px;
+	height: 32px;
+	padding: 0;
+    display: inline-flex;
+	align-items: center;
+	justify-content: center;
+    background: var(--white);
+	color: var(--text-muted);
+    border: 1px solid var(--border);
+	border-radius: 4px;
   }
-  .icon-btn:hover { background: var(--complement); }
-  .icon-btn.danger:hover { background: #F7E4E0; border-color: #E3B5A8; }
-  [data-theme="dark"] .icon-btn.danger:hover { background: #3A1F1A; border-color: #6B3328; }
-  .icon-btn .ico { width: 16px; height: 16px; }
+  
+  .icon-btn:hover {
+	background: var(--complement);
+  }
+  
+  .icon-btn.danger:hover {
+	background: #F7E4E0;
+	border-color: #E3B5A8;
+  }
+  
+  [data-theme="dark"] .icon-btn.danger:hover {
+	background: #3A1F1A;
+	border-color: #6B3328;
+  }
+  
+  .icon-btn .ico {
+	width: 16px;
+	height: 16px;
+  }
 
-  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  :focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+  }
 
-  /* ---------- Header profile ---------- */
+
   .profile {
-    display: flex; align-items: center; gap: 10px;
-    background: none; border: none; color: #fff;
-    padding: 6px 10px; border-radius: 6px; min-width: 0; text-align: left;
+    display: flex;
+	align-items: center;
+	gap: 10px;
+    background: none;
+	border: none;
+	color: #fff;
+    padding: 6px 10px;
+	border-radius: 6px;
+	min-width: 0;
+	text-align: left;
   }
-  .profile:hover { background: rgba(255,255,255,0.12); }
-  .profile .ico { width: 32px; height: 32px; }
-  .profile-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
-  .profile-name { font-weight: 700; font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .profile-license { font-size: 0.76rem; opacity: 0.9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  
+  .profile:hover {
+	background: rgba(255,255,255,0.12);
+  }
+  
+  .profile .ico {
+	width: 32px;
+	height: 32px;
+  }
+  
+  .profile-text {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	line-height: 1.3;
+  }
+  
+  .profile-name {
+	font-weight: 700;
+	font-size: 0.95rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+  }
+  
+  .profile-license {
+	font-size: 0.76rem;
+	opacity: 0.9;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+  }
 
-  /* ---------- Sidebar: Import ECR is a sub-item that only shows while Subjects is open ---------- */
-  .nav-item.nav-sub { display: none; padding: 9px 20px 9px 52px; font-size: 0.86rem; }
+  .nav-item.nav-sub {
+	display: none;
+	padding: 9px 20px 9px 52px;
+	font-size: 0.86rem;
+  }
+  
   body[data-nav="subjects"] .nav-item.nav-sub { display: flex; }
   .nav-item.nav-sub .nav-icon { width: 16px; height: 16px; }
 
-  /* ---------- Page header with actions ---------- */
-  .page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .page-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	flex-wrap: wrap;
+	margin-bottom: 16px;
+  }
+  
   .page-head h2 { margin: 0; }
-  .page-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-  .instruction { margin: 0 0 16px; color: var(--text-muted); font-size: 0.92rem; line-height: 1.5; max-width: 72ch; }
+  
+  .page-actions {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+  }
+  
+  .instruction {
+	margin: 0 0 16px;
+	color: var(--text-muted);
+	font-size: 0.92rem;
+	line-height: 1.5;
+	max-width: 72ch;
+  }
+  
   .only-mobile { display: none; }
+  
   .panel.flush { padding: 0; overflow-x: auto; }
-  .panel.flush table th:first-child, .panel.flush table td:first-child { padding-left: 16px; }
+  
+  .panel.flush table th:first-child,
+  .panel.flush table td:first-child { padding-left: 16px; }
   .muted { color: var(--text-muted); }
 
-  /* ---------- Classes ---------- */
   .active-pill {
-    display: inline-block; margin-left: 8px; padding: 2px 9px; border-radius: 20px;
-    font-size: 0.72rem; font-weight: 600; background: #375534; color: #fff; vertical-align: middle;
+    display: inline-block;
+	margin-left: 8px;
+	padding: 2px 9px;
+	border-radius: 20px;
+    font-size: 0.72rem;
+	font-weight: 600;
+	background: #375534;
+	color: #fff;
+	vertical-align: middle;
   }
+  
   tr.is-active td { background: rgba(77,106,146,0.08); }
-  .row-actions { display: flex; gap: 6px; align-items: center; justify-content: flex-end; }
-
-  /* ---------- Subjects ---------- */
-  .subject-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
-  .subject-grid > .api-state { grid-column: 1 / -1; }
-  .subject-card {
-    text-align: left; font: inherit; color: inherit;
-    display: flex; flex-direction: column; gap: 6px;
-    min-height: 108px; padding: 16px;
-    background: var(--white); border: 1px solid var(--border); border-radius: 6px;
+  
+  .row-actions {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+	justify-content: flex-end;
   }
+
+  .subject-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 14px;
+  }
+  
+  .subject-grid > .api-state { grid-column: 1 / -1; }
+  
+  .subject-card {
+    text-align: left;
+	font: inherit;
+	color: inherit;
+    display: flex;
+	flex-direction: column;
+	gap: 6px;
+    min-height: 108px;
+	padding: 16px;
+    background: var(--white);
+	border: 1px solid var(--border);
+	border-radius: 6px;
+  }
+  
   .subject-card:hover { border-color: var(--primary); background: var(--complement); }
   .subject-card .name { font-weight: 600; font-size: 1rem; }
   .subject-card .sub { font-size: 0.8rem; color: var(--text-muted); line-height: 1.35; }
-  .subject-card .terms { margin-top: auto; padding-top: 8px; display: flex; gap: 6px; }
+  .subject-card .terms { margin-top: auto; padding-top: 8px; display: flex; gap: 6px; justify-content: center; }
   .subject-card.special { border-style: dashed; }
-  .term-chip { font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
-  .term-chip.PUBLISHED { background: #375534; color: #fff; }
-  .term-chip.DRAFT { background: var(--complement); color: var(--primary); }
+  .term-chip { font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; text-align: center; }
+  .term-chip.PUBLISHED { background: #2E7D32; color: #fff; }
+  .term-chip.DRAFT { background: var(--danger); color: #fff; }
   .term-chip.EMPTY { background: var(--border); color: var(--text-muted); }
 
   .back-btn { display: inline-flex; align-items: center; gap: 6px; background: none; border: none; padding: 4px 0; color: var(--primary); font-size: 0.9rem; }
@@ -643,7 +843,6 @@
   .back-btn .ico { filter: brightness(0); opacity: 0.6; }
   [data-theme="dark"] .back-btn .ico { filter: brightness(0) invert(1); }
 
-  /* ---------- Grade sheet and roster: Male / Female ---------- */
   tr.group-row td { text-align: center; font-weight: 600; padding: 8px 12px; }
   tr.group-row.male td { background: var(--male-bg); color: var(--male); }
   tr.group-row.female td { background: var(--female-bg); color: var(--female); }
@@ -663,7 +862,6 @@
   .pill-missing { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 0.74rem; font-weight: 500; background: #F7E4E0; color: var(--danger); }
   [data-theme="dark"] .pill-missing { background: #3A1F1A; color: #E8A090; }
 
-  /* ---------- Modals ---------- */
   .modal.wide { max-width: 640px; }
   .modal > form > h3, .modal-head h3 { margin: 0 0 4px; }
   .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
@@ -673,7 +871,6 @@
   .hint { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; line-height: 1.4; }
   .csv-problems { margin: 8px 0 0; padding-left: 18px; font-size: 0.86rem; line-height: 1.6; color: var(--danger); }
 
-  /* ---------- Small screens ---------- */
   @media (max-width: 768px) {
     header { position: static; height: 68px; }
     .header-logo { height: 34px; }
@@ -835,7 +1032,7 @@
         <div id="gradeMsg" style="margin-top:12px"></div>
         <div id="lockNote"></div>
         <table id="gradesTable" style="margin-top:8px">
-          <thead><tr><th>#</th><th>Student Name</th><th>Grade</th><th>Description</th><th>Status</th><th></th></tr></thead>
+          <thead><tr><th>#</th><th>Student Name</th><th>Grade</th><th class="col-desc">Description</th><th class="col-status">Status</th><th></th></tr></thead>
           <tbody id="reviewTableBody"></tbody>
         </table>
       </div>
@@ -844,20 +1041,14 @@
     <section id="screen-settings" class="screen">
       <h2>Settings</h2>
       <div class="panel" style="max-width:420px">
-        <div class="settings-row">
-          <span>Dark Mode</span>
-          <label class="toggle-switch"><input type="checkbox" id="darkModeToggle"><span class="toggle-slider"></span></label>
+        <h3 style="margin-top:0">Personalization</h3>
+        <div class="theme-toggle-group" role="group" aria-label="Theme">
+          <button type="button" class="theme-opt" id="lightModeBtn" data-theme-choice="light">Light Mode</button>
+          <button type="button" class="theme-opt" id="darkModeBtn" data-theme-choice="dark">Dark Mode</button>
         </div>
       </div>
       <div class="panel" style="max-width:420px">
-        <h3 style="margin-top:0">Change Password</h3>
-        <div id="changePasswordMsg"></div>
-        <div class="field"><label>Current Password</label><input id="currentPassword" type="password"></div>
-        <div class="field"><label>New Password</label><input id="newPasswordField" type="password"></div>
-        <button class="btn secondary" id="changePasswordBtn">Update Password</button>
-      </div>
-      <div class="panel" style="max-width:420px">
-        <h3 style="margin-top:0">License</h3>
+        <h3 style="margin-top:0">Subscription</h3>
         <div id="accountLicenseInfo"></div>
       </div>
     </section>
@@ -888,12 +1079,14 @@ var ACTIVE_CLASS_KEY = 'markado_active_class';
 var state = {
   sessionToken: localStorage.getItem('ogv_teacher_session'),
   workspaces: [],
+  workspacesLoaded: false,   // set true once clientListWorkspaces_ has answered; cleared by any class create/update/delete
   currentWorkspaceId: localStorage.getItem(ACTIVE_CLASS_KEY),
   currentClassSubjectId: null,
   currentSubject: null,   // what the open subject's grade sheet last returned (name, components, rows)
   currentTerm: 1,
   roster: [],
   profile: null,
+  cache: { roster: {}, subjects: {} }, // workspaceId -> last-loaded data; cleared on the mutations that could change it
 };
 
 // ---------- Icons ----------
@@ -1038,7 +1231,7 @@ document.querySelectorAll('.nav-item[data-screen]').forEach(function (btn) {
 
 document.getElementById('navImportEcr').onclick = function () { openEcrModal_(); };
 document.getElementById('importEcrMobileBtn').onclick = function () { openEcrModal_(); };
-document.getElementById('profileBtn').onclick = function () { document.querySelector('.nav-item[data-screen="settings"]').click(); };
+document.getElementById('profileBtn').onclick = function () { openProfileModal_(); };
 
 var ONBOARD_FLAG = 'markado_onboarded_token';
 
@@ -1094,13 +1287,18 @@ function bootstrapData_(mayNeedOnboarding) {
   });
 }
 
-function loadWorkspacesIntoState(then, onErr) {
+function loadWorkspacesIntoState(then, onErr, forceReload) {
+  if (state.workspacesLoaded && !forceReload) { ensureActiveClass_(); if (then) then(); return; }
   call('clientListWorkspaces_', [state.sessionToken], function (workspaces) {
     state.workspaces = workspaces;
+    state.workspacesLoaded = true;
     ensureActiveClass_();
     if (then) then();
   }, onErr || function (err) { showToast(err, 'error'); });
 }
+
+/** Call after any create/update/delete that could change the class list, so the next screen refetches it. */
+function invalidateWorkspaces_() { state.workspacesLoaded = false; }
 
 // ---------- Profile in the header ----------
 
@@ -1128,7 +1326,43 @@ function renderProfile_(profile) {
   var line = profile ? licenseLine_(profile.license) : '';
   document.getElementById('profileName').textContent = profile ? profile.fullName : 'My account';
   document.getElementById('profileLicense').textContent = line;
-  document.getElementById('profileBtn').title = line ? line + ' — open Settings' : 'Open Settings';
+  document.getElementById('profileBtn').title = line ? line + ' — Account' : 'Account';
+}
+
+/** Header profile button: My Account (read-only) + Change Password, reusing the same clientChangePassword_ backend call as before. */
+function openProfileModal_() {
+  var profile = state.profile;
+  var license = profile ? profile.license : null;
+  var html =
+    '<h3 style="margin-top:0">My Account</h3>' +
+    '<div class="field-static"><label>Name</label><div>' + escapeHtml(profile ? profile.fullName : '—') + '</div></div>' +
+    '<div class="field-static"><label>Subscription Type</label><div>' + escapeHtml(license ? licenseLabel_(license) : '—') + '</div></div>' +
+    '<div class="field-static"><label>Expiry Date</label><div>' + escapeHtml(license && license.expirationDate ? fmtLongDate_(license.expirationDate) : '—') + '</div></div>' +
+    '<div class="actions" style="justify-content:flex-start; margin:4px 0 24px"><button class="btn upgrade" id="pmUpgradeBtn" type="button">Upgrade Subscription</button></div>' +
+    '<hr style="border:none; border-top:1px solid var(--border); margin:0 0 20px">' +
+    '<h3 style="margin-top:0">Change Password</h3>' +
+    '<div id="pmPasswordMsg"></div>' +
+    '<div class="field"><label for="pmOldPassword">Old Password</label><input id="pmOldPassword" type="password" autocomplete="current-password"></div>' +
+    '<div class="field"><label for="pmNewPassword">New Password</label><input id="pmNewPassword" type="password" autocomplete="new-password"></div>' +
+    '<div class="field"><label for="pmConfirmPassword">Confirm New Password</label><input id="pmConfirmPassword" type="password" autocomplete="new-password"></div>' +
+    '<div class="actions"><button class="btn secondary" id="pmCancelBtn" type="button">Cancel</button>' +
+    '<button class="btn" id="pmUpdatePasswordBtn" type="button">Update Password</button></div>';
+  openModal_(html);
+  document.getElementById('pmCancelBtn').onclick = closeModal_;
+  document.getElementById('pmUpgradeBtn').onclick = function () { closeModal_(); openLicenseRequestModal(refreshLicenseViews_); };
+  var updateBtn = document.getElementById('pmUpdatePasswordBtn');
+  updateBtn.onclick = function () {
+    var oldPw = document.getElementById('pmOldPassword').value;
+    var newPw = document.getElementById('pmNewPassword').value;
+    var confirmPw = document.getElementById('pmConfirmPassword').value;
+    var msgEl = document.getElementById('pmPasswordMsg');
+    if (!oldPw || !newPw) { msgEl.innerHTML = '<div class="msg error">Enter your old and new password.</div>'; return; }
+    if (newPw !== confirmPw) { msgEl.innerHTML = '<div class="msg error">The new passwords don\'t match.</div>'; return; }
+    call('clientChangePassword_', [state.sessionToken, oldPw, newPw], function () {
+      closeModal_();
+      showToast('Password updated.', 'success');
+    }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; }, { button: updateBtn });
+  };
 }
 
 function loadProfile_() {
@@ -1150,19 +1384,20 @@ function renderLicenseBanner_(status) {
   var el = document.getElementById('licenseBanner');
   var text = '', cls = '', action = '';
   if (status.status === 'TRIAL' && status.daysRemaining !== null && status.daysRemaining <= 7 && status.daysRemaining > 0) {
-    text = 'Trial ends in ' + status.daysRemaining + ' day(s).'; cls = 'trial'; action = 'Request a license';
+    text = 'Trial ends in ' + status.daysRemaining + ' day(s).'; cls = 'trial'; action = 'Upgrade Subscription';
   } else if (status.status === 'EXPIRED') {
-    text = 'Your trial or license has expired. Importing, entering, and publishing grades is paused — your students can still see anything already published.'; cls = 'expired'; action = 'Request a license';
+    text = 'Your trial or license has expired. Importing, entering, and publishing grades is paused — your students can still see anything already published.'; cls = 'expired'; action = 'Upgrade Subscription';
   } else if (status.status === 'SUSPENDED') {
     text = 'Your account has been suspended. Contact support for details. Your students can still see anything already published.'; cls = 'expired';
   } else if (status.status === 'ACTIVE' && status.daysRemaining !== null && status.daysRemaining <= renewalWindowDays_(status.licenseType) && status.daysRemaining > 0) {
-    text = 'Your license expires in ' + status.daysRemaining + ' day(s).'; cls = 'trial'; action = 'Request renewal';
+    text = 'Your license expires in ' + status.daysRemaining + ' day(s).'; cls = 'trial'; action = 'Upgrade Subscription';
   }
   if (!text) { el.innerHTML = ''; return; }
+  // The request flow itself lives in Settings > Subscription only -- this just routes there instead of opening it inline.
   el.innerHTML = '<div class="license-banner ' + cls + (action ? ' has-action' : '') + '"><span>' + escapeHtml(text) + '</span>' +
-    (action ? '<button class="btn small" id="bannerRequestLicenseBtn">' + action + '</button>' : '') + '</div>';
+    (action ? '<button class="btn small upgrade" id="bannerRequestLicenseBtn">' + action + '</button>' : '') + '</div>';
   var btn = document.getElementById('bannerRequestLicenseBtn');
-  if (btn) btn.onclick = function () { openLicenseRequestModal(refreshLicenseViews_); };
+  if (btn) btn.onclick = function () { document.querySelector('.nav-item[data-screen="settings"]').click(); };
 }
 
 // ---------- License request (teacher applies; payment is by GCash, verified by the admin) ----------
@@ -1234,11 +1469,10 @@ function renderLicenseRequestModal_(info, onDone) {
 function loadDashboard() {
   var latest = latest_('dashboard');
   var tbody = document.querySelector('#dashboardClassTable tbody');
-  if (state.workspaces.length === 0) setLoading(tbody, 'Loading your classes…');
-  call('clientListWorkspaces_', [state.sessionToken], function (workspaces) {
+  if (!state.workspacesLoaded) setLoading(tbody, 'Loading your classes…');
+  loadWorkspacesIntoState(function () {
     if (!latest()) return;
-    state.workspaces = workspaces;
-    ensureActiveClass_();
+    var workspaces = state.workspaces;
     tbody.innerHTML = workspaces.length === 0
       ? '<tr><td colspan="5" class="empty-state">No classes yet — add one under "Classes", or import an E-CR under "Subjects".</td></tr>'
       : workspaces.map(function (ws) {
@@ -1255,11 +1489,9 @@ function loadDashboard() {
 function loadClassesScreen() {
   var latest = latest_('classes');
   var tbody = document.querySelector('#workspaceTable tbody');
-  if (state.workspaces.length === 0) setLoading(tbody, 'Loading your classes…');
-  call('clientListWorkspaces_', [state.sessionToken], function (workspaces) {
+  if (!state.workspacesLoaded) setLoading(tbody, 'Loading your classes…');
+  loadWorkspacesIntoState(function () {
     if (!latest()) return;
-    state.workspaces = workspaces;
-    ensureActiveClass_();
     renderClassesTable_();
   }, function (err) {
     if (!latest()) return;
@@ -1357,11 +1589,14 @@ function openClassModal_(ws) {
       if (!year || !grade || !section) { setError('Enter the school year, grade level and section.'); return; }
       if (editing) {
         call('clientUpdateWorkspace_', [state.sessionToken, ws.workspaceId, year, grade, section, school, adviser, designation], function () {
+          invalidateWorkspaces_();
+          invalidateSubjectsCache_(ws.workspaceId); // grade level may have changed, which changes the default-subjects rule
           closeModal_(); loadClassesScreen(); showToast('Class updated.', 'success');
         }, setError, { button: submitBtn });
       } else {
         call('clientCreateWorkspace_', [state.sessionToken, year, grade, section, school, adviser, designation], function (data) {
           setActiveClass_(data.workspaceId); // a new class becomes the active one
+          invalidateWorkspaces_();
           closeModal_(); loadClassesScreen(); showToast('Class added.', 'success');
         }, setError, { button: submitBtn });
       }
@@ -1376,6 +1611,8 @@ function confirmDeleteClass_(ws) {
       call('clientDeleteWorkspace_', [state.sessionToken, ws.workspaceId], function () {
         if (state.currentWorkspaceId === ws.workspaceId) setActiveClass_(null);
         state.workspaces = state.workspaces.filter(function (w) { return w.workspaceId !== ws.workspaceId; });
+        delete state.cache.roster[ws.workspaceId];
+        delete state.cache.subjects[ws.workspaceId];
         ensureActiveClass_();
         renderClassesTable_();
         showToast('Class deleted.', 'success');
@@ -1398,12 +1635,10 @@ function populateClassSelector(selectEl, onChange) {
 // ---------- Subjects ----------
 
 function loadSubjectsScreen() {
-  setLoading(document.getElementById('subjectGrid'), 'Loading subjects…'); // never show the last visit's cards and term chips while reloading
   loadWorkspacesIntoState(function () {
     var hasClass = !!state.currentWorkspaceId;
     document.getElementById('subjectsNoClassMsg').style.display = hasClass ? 'none' : 'block';
     document.getElementById('subjectsContent').style.display = hasClass ? 'block' : 'none';
-    document.getElementById('addSubjectBtn').hidden = !hasClass;
     if (!hasClass) return;
     // Changing the class only needs that class's subjects -- not a reload of the workspace list.
     populateClassSelector(document.getElementById('subjectsClassSelect'), renderSubjectGrid);
@@ -1430,26 +1665,38 @@ function termChipsHtml_(cs) {
   return '<span class="terms" title="' + escapeHtml(label.join(' · ')) + '">' + chips + '</span>';
 }
 
-function renderSubjectGrid() {
-  var latest = latest_('subjects');
+function paintSubjectGrid_(classSubjects) {
   var grid = document.getElementById('subjectGrid');
   var emptyMsg = document.getElementById('subjectsEmptyMsg');
   var ws = workspaceById_(state.currentWorkspaceId);
   var hasDefaults = !ws || isDefaultSubjectGrade_(ws.gradeLevel); // no class loaded yet: assume the common case
+  grid.innerHTML = classSubjects.map(function (cs) {
+    var sub = cs.components.length > 0
+      ? cs.components.map(function (c) { return escapeHtml(c.subjectName); }).join(' · ')
+      : (cs.isCustom ? 'Special subject' : '');
+    return '<button type="button" class="subject-card' + (cs.isCustom ? ' special' : '') + '" data-open-subject="' + escapeHtml(cs.classSubjectId) + '" data-subject-name="' + escapeHtml(cs.subjectName) + '">' +
+      '<span class="name">' + escapeHtml(cs.subjectName) + '</span>' +
+      (sub ? '<span class="sub">' + sub + '</span>' : '') +
+      termChipsHtml_(cs) + '</button>';
+  }).join('');
+  emptyMsg.style.display = classSubjects.length === 0 && !hasDefaults ? 'block' : 'none';
+}
+
+/** Call after anything that could change a class's subjects or term statuses (add/import/publish/unpublish subject). */
+function invalidateSubjectsCache_(workspaceId) { delete state.cache.subjects[workspaceId || state.currentWorkspaceId]; }
+
+function renderSubjectGrid(forceReload) {
+  var wsId = state.currentWorkspaceId;
+  var grid = document.getElementById('subjectGrid');
+  var emptyMsg = document.getElementById('subjectsEmptyMsg');
+  if (!forceReload && state.cache.subjects[wsId]) { paintSubjectGrid_(state.cache.subjects[wsId]); return; }
+  var latest = latest_('subjects');
   emptyMsg.style.display = 'none';
   setLoading(grid, 'Loading subjects…');
-  call('clientListClassSubjects_', [state.sessionToken, state.currentWorkspaceId], function (classSubjects) {
+  call('clientListClassSubjects_', [state.sessionToken, wsId], function (classSubjects) {
     if (!latest()) return;
-    grid.innerHTML = classSubjects.map(function (cs) {
-      var sub = cs.components.length > 0
-        ? cs.components.map(function (c) { return escapeHtml(c.subjectName); }).join(' · ')
-        : (cs.isCustom ? 'Special subject' : '');
-      return '<button type="button" class="subject-card' + (cs.isCustom ? ' special' : '') + '" data-open-subject="' + escapeHtml(cs.classSubjectId) + '" data-subject-name="' + escapeHtml(cs.subjectName) + '">' +
-        '<span class="name">' + escapeHtml(cs.subjectName) + '</span>' +
-        (sub ? '<span class="sub">' + sub + '</span>' : '') +
-        termChipsHtml_(cs) + '</button>';
-    }).join('');
-    emptyMsg.style.display = classSubjects.length === 0 && !hasDefaults ? 'block' : 'none';
+    state.cache.subjects[wsId] = classSubjects;
+    paintSubjectGrid_(classSubjects);
   }, function (err) {
     if (!latest()) return;
     setErrorState(grid, err, renderSubjectGrid);
@@ -1475,7 +1722,8 @@ document.getElementById('addSubjectBtn').onclick = function () {
       var name = valueOf_('asName');
       if (!name) { setError('Enter the subject name.'); return; }
       call('clientCreateClassSubject_', [state.sessionToken, state.currentWorkspaceId, null, name], function () {
-        closeModal_(); renderSubjectGrid(); showToast('Subject added.', 'success');
+        invalidateSubjectsCache_();
+        closeModal_(); renderSubjectGrid(true); showToast('Subject added.', 'success');
       }, setError, { button: submitBtn });
     },
   });
@@ -1521,7 +1769,11 @@ document.querySelectorAll('#termTabs button').forEach(function (btn) {
 
 function renderGradeHead_(components) {
   var cols = ['#', 'Student Name'].concat(components.map(function (c) { return c.subjectName; })).concat(['Grade', 'Description', 'Status', '']);
-  document.querySelector('#gradesTable thead').innerHTML = '<tr>' + cols.map(function (c) { return '<th>' + escapeHtml(c) + '</th>'; }).join('') + '</tr>';
+  var descIdx = cols.length - 3, statusIdx = cols.length - 2;
+  document.querySelector('#gradesTable thead').innerHTML = '<tr>' + cols.map(function (c, i) {
+    var cls = i === descIdx ? ' class="col-desc"' : (i === statusIdx ? ' class="col-status"' : '');
+    return '<th' + cls + '>' + escapeHtml(c) + '</th>';
+  }).join('') + '</tr>';
 }
 
 /**
@@ -1555,7 +1807,7 @@ function gradeRowHtml_(g, number, components) {
   var action = g.publicationState === 'PUBLISHED'
     ? '<button class="btn small secondary" data-act="unpublish" data-enr="' + enr + '">Unpublish</button>'
     : (g.publicationState === 'DRAFT' ? '<button class="btn small secondary" data-act="publish" data-enr="' + enr + '">Publish</button>' : '');
-  return '<tr>' + cells + '<td>' + escapeHtml(g.descriptor) + '</td><td>' + pill + '</td><td style="white-space:nowrap">' + action + '</td></tr>';
+  return '<tr>' + cells + '<td class="col-desc">' + escapeHtml(g.descriptor) + '</td><td class="col-status">' + pill + '</td><td style="white-space:nowrap">' + action + '</td></tr>';
 }
 
 /** Male learners first, then Female, each numbered from 1 and in alphabetical order. */
@@ -1639,20 +1891,20 @@ document.getElementById('reviewTableBody').addEventListener('click', function (e
   var publish = btn.getAttribute('data-act') === 'publish';
   call(publish ? 'clientPublishLearner_' : 'clientUnpublishLearner_',
     [state.sessionToken, state.currentClassSubjectId, state.currentTerm, btn.getAttribute('data-enr')],
-    function () { loadReview(true); showToast(publish ? 'Published — this grade is now locked.' : 'Unpublished — you can edit this grade again.', 'success'); },
+    function () { invalidateSubjectsCache_(); loadReview(true); showToast(publish ? 'Published — this grade is now locked.' : 'Unpublished — you can edit this grade again.', 'success'); },
     function (err) { showToast(err, 'error'); },
     { button: btn });
 });
 
 document.getElementById('publishBtn').onclick = function () {
   confirmModal('Publish Term ' + state.currentTerm + ' grades?', 'These grades will become visible to students immediately, and will be locked: they can\'t be edited or overwritten by an import until you unpublish them.', 'Publish', function () {
-    call('clientPublish_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function () { loadReview(true); showToast('Published and locked.', 'success'); }, function (err) { showToast(err, 'error'); }, { button: document.getElementById('publishBtn') });
+    call('clientPublish_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function () { invalidateSubjectsCache_(); loadReview(true); showToast('Published and locked.', 'success'); }, function (err) { showToast(err, 'error'); }, { button: document.getElementById('publishBtn') });
   });
 };
 
 document.getElementById('unpublishBtn').onclick = function () {
   confirmModal('Unpublish Term ' + state.currentTerm + ' grades?', 'Students will no longer be able to see these grades, and they become editable again. Nothing is deleted.', 'Unpublish', function () {
-    call('clientUnpublish_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function () { loadReview(true); showToast('Unpublished.', 'success'); }, function (err) { showToast(err, 'error'); }, { button: document.getElementById('unpublishBtn') });
+    call('clientUnpublish_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function () { invalidateSubjectsCache_(); loadReview(true); showToast('Unpublished.', 'success'); }, function (err) { showToast(err, 'error'); }, { button: document.getElementById('unpublishBtn') });
   });
 };
 
@@ -1784,7 +2036,9 @@ function renderImportPreview(preview) {
 function renderImportDone(result) {
   var area = document.getElementById('ecrImportArea');
   setActiveClass_(result.workspaceId);
-  state.workspaces = [];
+  invalidateWorkspaces_();
+  invalidateSubjectsCache_(result.workspaceId);
+  invalidateRosterCache_(result.workspaceId);
   var lines = [];
   if (result.createdClass) lines.push('Class created.');
   if (result.createdSubject) lines.push('Subject added.');
@@ -1842,20 +2096,31 @@ function rosterColumnHtml_(learners, label, cls) {
     '<table><thead><tr><th>#</th><th>LRN</th><th>Student Name</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 
-function renderRoster() {
-  var latest = latest_('roster');
+function paintRoster_(roster) {
   var area = document.getElementById('rosterArea');
+  if (roster.length === 0) {
+    area.innerHTML = '<div class="empty-state"><div class="display">No students yet</div><p>Click <b>Add Student</b>, or import a .CSV file with LRN, Student Name and Gender.</p></div>';
+    return;
+  }
+  var male = roster.filter(function (r) { return r.sex === 'M'; }).sort(byName_);
+  var female = roster.filter(function (r) { return r.sex === 'F'; }).sort(byName_);
+  area.innerHTML = '<div class="gender-cols">' + rosterColumnHtml_(male, 'Male', 'male') + rosterColumnHtml_(female, 'Female', 'female') + '</div>';
+}
+
+/** Call after any add/edit/import that could change this class's roster. */
+function invalidateRosterCache_(workspaceId) { delete state.cache.roster[workspaceId || state.currentWorkspaceId]; }
+
+function renderRoster(forceReload) {
+  var wsId = state.currentWorkspaceId;
+  var area = document.getElementById('rosterArea');
+  if (!forceReload && state.cache.roster[wsId]) { state.roster = state.cache.roster[wsId]; paintRoster_(state.roster); return; }
+  var latest = latest_('roster');
   setLoading(area, 'Loading students…');
-  call('clientListRoster_', [state.sessionToken, state.currentWorkspaceId], function (roster) {
+  call('clientListRoster_', [state.sessionToken, wsId], function (roster) {
     if (!latest()) return;
     state.roster = roster;
-    if (roster.length === 0) {
-      area.innerHTML = '<div class="empty-state"><div class="display">No students yet</div><p>Click <b>Add Student</b>, or import a .CSV file with LRN, Student Name and Gender.</p></div>';
-      return;
-    }
-    var male = roster.filter(function (r) { return r.sex === 'M'; }).sort(byName_);
-    var female = roster.filter(function (r) { return r.sex === 'F'; }).sort(byName_);
-    area.innerHTML = '<div class="gender-cols">' + rosterColumnHtml_(male, 'Male', 'male') + rosterColumnHtml_(female, 'Female', 'female') + '</div>';
+    state.cache.roster[wsId] = roster;
+    paintRoster_(roster);
   }, function (err) {
     if (!latest()) return;
     setErrorState(area, err, renderRoster);
@@ -1892,11 +2157,11 @@ function openStudentModal_(learner) {
       if (!sex) { setError('Choose Male or Female.'); return; }
       if (editing) {
         call('clientUpdateStudent_', [state.sessionToken, learner.enrollmentId, lrn, name, sex], function () {
-          closeModal_(); renderRoster(); showToast('Student updated.', 'success');
+          invalidateRosterCache_(); closeModal_(); renderRoster(true); showToast('Student updated.', 'success');
         }, setError, { button: submitBtn });
       } else {
         call('clientAddStudent_', [state.sessionToken, state.currentWorkspaceId, lrn, name, sex], function () {
-          closeModal_(); renderRoster(); showToast('Student added.', 'success');
+          invalidateRosterCache_(); closeModal_(); renderRoster(true); showToast('Student added.', 'success');
         }, setError, { button: submitBtn });
       }
     },
@@ -1905,17 +2170,33 @@ function openStudentModal_(learner) {
 
 // ---------- Students: .CSV template and import ----------
 
+/** Wraps a CSV field in quotes if it contains a comma, quote or newline. */
+function csvField_(value) {
+  var s = value === null || value === undefined ? '' : String(value);
+  return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
 document.getElementById('downloadCsvBtn').onclick = function () {
-  // The BOM makes Excel open the file as UTF-8, so names with ñ stay intact.
-  var blob = new Blob(['\uFEFFLRN,Student Name,Gender\r\n'], { type: 'text/csv;charset=utf-8' });
-  var link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = 'markado-students-template.csv';
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(function () { URL.revokeObjectURL(link.href); }, 1000);
-  showToast('Template downloaded. Fill in one student per row.', 'success');
+  var btn = document.getElementById('downloadCsvBtn');
+  call('clientListRoster_', [state.sessionToken, state.currentWorkspaceId], function (roster) {
+    state.roster = roster;
+    var rows = roster.slice().sort(byName_).map(function (r) {
+      return [csvField_(r.lrn || ''), csvField_(r.fullName || ''), csvField_(r.sex === 'M' ? 'Male' : (r.sex === 'F' ? 'Female' : ''))].join(',');
+    });
+    // The BOM makes Excel open the file as UTF-8, so names with ñ stay intact.
+    var csv = 'LRN,Student Name,Gender\r\n' + rows.map(function (r) { return r + '\r\n'; }).join('');
+    var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+    var link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = rows.length ? 'markado-students.csv' : 'markado-students-template.csv';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(function () { URL.revokeObjectURL(link.href); }, 1000);
+    showToast(rows.length
+      ? rows.length + ' student(s) downloaded. Fill in any missing LRNs, then import the file to update them.'
+      : 'Template downloaded. Fill in one student per row.', 'success');
+  }, function (err) { showToast(err, 'error'); }, { button: btn });
 };
 
 document.getElementById('importCsvBtn').onclick = function () {
@@ -2036,7 +2317,8 @@ function openCsvPreviewModal_(fileName, parsed) {
   if (importBtn) importBtn.onclick = function () {
     var rows = parsed.rows.map(function (r) { return { row: r.line, lrn: r.lrn, fullName: r.fullName, sex: r.sex }; });
     call('clientImportStudents_', [state.sessionToken, state.currentWorkspaceId, rows], function (summary) {
-      renderRoster();
+      invalidateRosterCache_();
+      renderRoster(true);
       showCsvResult_(summary, parsed.problems);
     }, function (err) {
       document.getElementById('csvBody').insertAdjacentHTML('afterbegin', '<div class="msg error">' + escapeHtml(err) + '</div>');
@@ -2069,12 +2351,12 @@ function renderAccountLicense_(status, info) {
   if (info) {
     if (info.pending) {
       html += '<div class="msg warn">License request sent on ' + escapeHtml(fmtDate_(info.pending.requestedAt)) + ' — waiting for approval.</div>' +
-        '<button class="btn small secondary" id="acctRequestBtn">View request</button>';
+        '<button class="btn upgrade" id="acctRequestBtn">View request</button>';
     } else {
       if (info.lastDecision && info.lastDecision.status === 'DECLINED') {
         html += '<div class="msg error">Your last request was declined: ' + escapeHtml(info.lastDecision.adminNote) + '</div>';
       }
-      if (info.canRequest) html += '<button class="btn small" id="acctRequestBtn">' + (status.status === 'ACTIVE' ? 'Request renewal' : 'Request a license') + '</button>';
+      if (info.canRequest) html += '<button class="btn upgrade" id="acctRequestBtn">Upgrade Subscription</button>';
       else if (info.reason && status.status !== 'SUSPENDED') html += '<p style="font-size:0.85rem; opacity:0.8">' + escapeHtml(info.reason) + '</p>';
     }
   }
@@ -2083,8 +2365,14 @@ function renderAccountLicense_(status, info) {
   if (btn) btn.onclick = function () { openLicenseRequestModal(refreshLicenseViews_); };
 }
 
+function setThemeButtonsActive_() {
+  var isDark = localStorage.getItem('markado_theme') === 'dark';
+  document.getElementById('darkModeBtn').classList.toggle('active', isDark);
+  document.getElementById('lightModeBtn').classList.toggle('active', !isDark);
+}
+
 function loadSettingsScreen() {
-  document.getElementById('darkModeToggle').checked = localStorage.getItem('markado_theme') === 'dark';
+  setThemeButtonsActive_();
   call('clientGetLicenseStatus_', [state.sessionToken], function (status) {
     renderAccountLicense_(status, null); // show the status immediately; the request state follows
     call('clientGetLicenseRequestInfo_', [state.sessionToken], function (info) {
@@ -2095,27 +2383,19 @@ function loadSettingsScreen() {
   });
 }
 
-document.getElementById('darkModeToggle').onchange = function (e) {
-  if (e.target.checked) {
+function applyTheme_(theme) {
+  if (theme === 'dark') {
     document.documentElement.setAttribute('data-theme', 'dark');
     localStorage.setItem('markado_theme', 'dark');
   } else {
     document.documentElement.removeAttribute('data-theme');
     localStorage.setItem('markado_theme', 'light');
   }
-};
+  setThemeButtonsActive_();
+}
 
-document.getElementById('changePasswordBtn').onclick = function () {
-  var current = document.getElementById('currentPassword').value;
-  var next = document.getElementById('newPasswordField').value;
-  var msgEl = document.getElementById('changePasswordMsg');
-  if (!current || !next) return;
-  call('clientChangePassword_', [state.sessionToken, current, next], function () {
-    msgEl.innerHTML = '<div class="msg success">Password updated.</div>';
-    document.getElementById('currentPassword').value = '';
-    document.getElementById('newPasswordField').value = '';
-  }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; });
-};
+document.getElementById('lightModeBtn').onclick = function () { applyTheme_('light'); };
+document.getElementById('darkModeBtn').onclick = function () { applyTheme_('dark'); };
 
 
 startApp_();
