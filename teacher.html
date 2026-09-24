@@ -908,7 +908,7 @@
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 </head>
 
-<body data-nav="dashboard">
+<body data-nav="classes">
 <header>
   <img src="assets/logo-banner.svg" alt="Markado" class="header-logo">
   <button class="profile" id="profileBtn" type="button" title="Account and license">
@@ -933,8 +933,7 @@
   <aside class="sidebar">
     <div class="sidebar-brand"><img src="assets/logo-header.png" alt="Markado" onerror="this.style.display='none'"></div>
     <nav>
-      <button class="nav-item active" data-screen="dashboard"><img class="nav-icon" src="assets/icons/dashboard.svg" alt=""><span>Dashboard</span></button>
-      <button class="nav-item" data-screen="classes"><img class="nav-icon" src="assets/icons/classes.svg" alt=""><span>Classes</span></button>
+      <button class="nav-item active" data-screen="classes"><img class="nav-icon" src="assets/icons/classes.svg" alt=""><span>Classes</span></button>
       <button class="nav-item" data-screen="students"><img class="nav-icon" src="assets/icons/students.svg" alt=""><span>Students</span></button>
       <button class="nav-item" data-screen="subjects"><img class="nav-icon" src="assets/icons/subjects.svg" alt=""><span>Subjects</span></button>
       <button class="nav-item nav-sub" id="navImportEcr" type="button"><img class="nav-icon" src="assets/icons/add.svg" alt=""><span>Import ECR</span></button>
@@ -948,18 +947,7 @@
   <main>
     <div id="licenseBanner"></div>
 
-    <section id="screen-dashboard" class="screen active">
-      <h2>Dashboard</h2>
-      <div class="panel">
-        <h3 style="margin-top:0">Your Classes</h3>
-        <table id="dashboardClassTable">
-          <thead><tr><th>School</th><th>School Year</th><th>Grade</th><th>Section</th><th>Adviser</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-
-    <section id="screen-classes" class="screen">
+    <section id="screen-classes" class="screen active">
       <div class="page-head">
         <h2>Classes</h2>
         <div class="page-actions">
@@ -1021,7 +1009,7 @@
 
       <div class="panel">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px">
-          <h3 style="margin:0">Term <span id="reviewTermLabel">1</span> grades</h3>
+          <h3 style="margin:0">Term <span id="reviewTermLabel">1</span> Grades</h3>
           <div class="page-actions">
             <button class="btn secondary" id="unpublishBtn">Unpublish all</button>
             <button class="btn secondary" id="saveGradesBtn">Save grades</button>
@@ -1221,7 +1209,6 @@ document.querySelectorAll('.nav-item[data-screen]').forEach(function (btn) {
     var screenName = btn.getAttribute('data-screen');
     setActiveNav(screenName);
     show('screen-' + screenName);
-    if (screenName === 'dashboard') loadDashboard();
     if (screenName === 'classes') loadClassesScreen();
     if (screenName === 'students') loadStudentsScreen();
     if (screenName === 'subjects') loadSubjectsScreen();
@@ -1272,17 +1259,17 @@ function startApp_() {
 }
 
 function bootstrapData_(mayNeedOnboarding) {
-  setLoading(document.querySelector('#dashboardClassTable tbody'), 'Loading your classes…');
+  setLoading(document.querySelector('#workspaceTable tbody'), 'Loading your classes…');
   loadProfile_(); // fetched alongside the classes
-  loadWorkspacesIntoState(function () { loadDashboard(); }, function (err) {
+  loadWorkspacesIntoState(function () { loadClassesScreen(); }, function (err) {
     if (mayNeedOnboarding) {
       sessionStorage.removeItem(ONBOARD_FLAG);
       call('clientOnboard_', [state.sessionToken], function () {
         sessionStorage.setItem(ONBOARD_FLAG, state.sessionToken);
         bootstrapData_(false);
-      }, function (e2) { setErrorState(document.querySelector('#dashboardClassTable tbody'), e2, function () { bootstrapData_(false); }); });
+      }, function (e2) { setErrorState(document.querySelector('#workspaceTable tbody'), e2, function () { bootstrapData_(false); }); });
     } else {
-      setErrorState(document.querySelector('#dashboardClassTable tbody'), err, function () { bootstrapData_(false); });
+      setErrorState(document.querySelector('#workspaceTable tbody'), err, function () { bootstrapData_(false); });
     }
   });
 }
@@ -1463,26 +1450,6 @@ function renderLicenseRequestModal_(info, onDone) {
   };
 }
 
-
-// ---------- Dashboard ----------
-
-function loadDashboard() {
-  var latest = latest_('dashboard');
-  var tbody = document.querySelector('#dashboardClassTable tbody');
-  if (!state.workspacesLoaded) setLoading(tbody, 'Loading your classes…');
-  loadWorkspacesIntoState(function () {
-    if (!latest()) return;
-    var workspaces = state.workspaces;
-    tbody.innerHTML = workspaces.length === 0
-      ? '<tr><td colspan="5" class="empty-state">No classes yet — add one under "Classes", or import an E-CR under "Subjects".</td></tr>'
-      : workspaces.map(function (ws) {
-          return '<tr><td>' + escapeHtml(ws.schoolName) + '</td><td>' + escapeHtml(ws.schoolYearLabel) + '</td><td>' + escapeHtml(ws.gradeLevel) + '</td><td>' + escapeHtml(ws.section) + '</td><td>' + escapeHtml(ws.adviserName) + '</td></tr>';
-        }).join('');
-  }, function (err) {
-    if (!latest()) return;
-    setErrorState(tbody, err, loadDashboard);
-  });
-}
 
 // ---------- Classes ----------
 
@@ -2414,14 +2381,15 @@ function setThemeButtonsActive_() {
 
 function loadSettingsScreen() {
   setThemeButtonsActive_();
-  call('clientGetLicenseStatus_', [state.sessionToken], function (status) {
-    renderAccountLicense_(status, null); // show the status immediately; the request state follows
-    call('clientGetLicenseRequestInfo_', [state.sessionToken], function (info) {
-      renderAccountLicense_(status, info);
-    }, function () { /* status alone is still useful */ });
-  }, function () {
-    document.getElementById('accountLicenseInfo').innerHTML = '<p>Could not load license status.</p>';
-  });
+  var status = null, info = null, remaining = 2;
+  var settle = function () {
+    remaining--;
+    if (remaining > 0) return; // fired in parallel below -- render once both have answered, not one-after-the-other
+    if (!status) { document.getElementById('accountLicenseInfo').innerHTML = '<p>Could not load license status.</p>'; return; }
+    renderAccountLicense_(status, info);
+  };
+  call('clientGetLicenseStatus_', [state.sessionToken], function (s) { status = s; settle(); }, settle);
+  call('clientGetLicenseRequestInfo_', [state.sessionToken], function (i) { info = i; settle(); }, settle);
 }
 
 function applyTheme_(theme) {

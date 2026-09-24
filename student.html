@@ -261,6 +261,62 @@
 	color: #444;
   }
 
+  .grades-table .component-row .comp-name {
+	padding-left: 22px;
+	font-style: italic;
+	font-weight: 400;
+	color: #555;
+	font-size: 0.88rem;
+  }
+
+  .grades-table .component-row td {
+	padding-top: 6px;
+	padding-bottom: 6px;
+  }
+
+  .report-header {
+	text-align: center;
+	margin-bottom: 14px;
+  }
+
+  .report-school {
+	font-weight: 700;
+	font-size: 1.1rem;
+	text-transform: uppercase;
+	color: var(--darkest);
+	letter-spacing: 0.02em;
+  }
+
+  .report-year {
+	font-size: 0.92rem;
+	color: #555;
+	margin-top: 2px;
+  }
+
+  .report-info {
+	margin-top: 4px;
+  }
+
+  .report-info-row {
+	display: flex;
+	font-size: 0.92rem;
+	padding: 3px 0;
+  }
+
+  .report-info-label {
+	width: 130px;
+	flex: none;
+	color: #555;
+  }
+
+  .report-info-value {
+	flex: 1;
+  }
+
+  #saveReportPdfBtn {
+	margin-top: 18px;
+  }
+
   .empty-state {
 	text-align: center;
 	padding: 48px 20px;
@@ -271,6 +327,13 @@
 	font-size: 1.2rem;
 	color: var(--black);
 	margin-bottom: 8px;
+  }
+
+  @media print {
+	header, .view-tabs, .term-pick, #saveReportPdfBtn, #logoutBtn { display: none !important; }
+	body { background: #fff; }
+	main { max-width: 100%; padding: 0; }
+	.card { box-shadow: none; border: none; padding: 0; margin-bottom: 24px; }
   }
   
 </style>
@@ -292,12 +355,12 @@
   <!-- LOGIN -->
   <section id="screen-login" class="screen active">
     <div class="card" style="margin-top:20px">
-      <h2 style="margin-top:0">Check Your Grades</h2>
+      <h2 style="margin-top:0">Student Verification</h2>
       <p style="color:#555; font-size:0.9rem; margin-top:-8px">Enter your LRN and Surname.</p>
       <div id="loginMsg"></div>
       <div class="field"><label>LRN</label><input id="lrnInput" inputmode="numeric" placeholder=""></div>
       <div class="field"><label>Surname</label><input id="surnameInput" placeholder=""></div>
-      <button class="btn" id="loginBtn">View my Grades</button>
+      <button class="btn" id="loginBtn">Verify to Log In</button>
     </div>
   </section>
 
@@ -379,21 +442,57 @@ function gradeCell_(value) {
   return value === null || value === undefined ? '<td class="dash">—</td>' : '<td class="num">' + escapeHtml(value) + '</td>';
 }
 
+/** "Dela Cruz, Juan M." -> surname bolded, rest normal -- the format asked for on the report. */
+function studentNameHtml_(fullName) {
+  var parts = String(fullName || '').split(',');
+  if (parts.length < 2) return escapeHtml(fullName || '');
+  var surname = parts[0].trim();
+  var rest = parts.slice(1).join(',').trim();
+  return '<b>' + escapeHtml(surname) + '</b>' + (rest ? ', ' + escapeHtml(rest) : '');
+}
+
+function reportHeaderHtml_(e) {
+  var gradeSection = [e.gradeLevel ? 'Grade ' + e.gradeLevel : '', e.section || ''].filter(Boolean).join(' – ');
+  return '<div class="report-header">' +
+      (e.schoolName ? '<div class="report-school">' + escapeHtml(e.schoolName) + '</div>' : '') +
+      (e.schoolYearLabel ? '<div class="report-year">School Year ' + escapeHtml(e.schoolYearLabel) + '</div>' : '') +
+    '</div>' +
+    '<div class="report-info">' +
+      '<div class="report-info-row"><span class="report-info-label">Student Name</span><span class="report-info-value">' + studentNameHtml_(e.studentName) + '</span></div>' +
+      '<div class="report-info-row"><span class="report-info-label">LRN</span><span class="report-info-value">' + escapeHtml(e.lrn || '') + '</span></div>' +
+      '<div class="report-info-row"><span class="report-info-label">Grade & Section</span><span class="report-info-value">' + escapeHtml(gradeSection) + '</span></div>' +
+    '</div>' +
+    '<div class="report-info" style="margin-top:12px">' +
+      '<div class="report-info-row"><span class="report-info-label">Adviser</span><span class="report-info-value">' + escapeHtml(e.adviserName || '') + '</span></div>' +
+    '</div>';
+}
+
 
 function allTermsTable_(e) {
   var rows = e.subjects.map(function (s) {
     var cells = [1, 2, 3].map(function (n) { var t = termGrade_(s, n); return gradeCell_(t ? t.termGrade : null); }).join('');
     var final = s.finalGrade === null || s.finalGrade === undefined ? '<td class="dash">—</td>' : '<td class="num final">' + escapeHtml(s.finalGrade) + '</td>';
-    return '<tr><td class="subj">' + escapeHtml(s.subjectName) + '</td>' + cells + final + '</tr>';
+    var mainRow = '<tr><td class="subj">' + escapeHtml(s.subjectName) + '</td>' + cells + final + '</tr>';
+    var componentRows = (s.components || []).map(function (c) {
+      var ccells = [1, 2, 3].map(function (n) { var t = termGrade_(c, n); return gradeCell_(t ? t.termGrade : null); }).join('');
+      var cfinal = c.finalGrade === null || c.finalGrade === undefined ? '<td class="dash">—</td>' : '<td class="num">' + escapeHtml(c.finalGrade) + '</td>';
+      return '<tr class="component-row"><td class="subj comp-name">' + escapeHtml(c.subjectName) + '</td>' + ccells + cfinal + '</tr>';
+    }).join('');
+    return mainRow + componentRows;
   }).join('');
-  return '<table class="grades-table"><thead><tr><th>Subjects</th><th>Term 1</th><th>Term 2</th><th>Term 3</th><th>Final Gr</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  return '<table class="grades-table report-table"><thead><tr><th>Subjects</th><th>Term 1</th><th>Term 2</th><th>Term 3</th><th>Final Grade</th></tr></thead><tbody>' + rows + '</tbody></table>';
 }
 
 
 function byTermTable_(e, term) {
   var rows = e.subjects.map(function (s) {
     var t = termGrade_(s, term);
-    return t ? '<tr><td class="subj">' + escapeHtml(s.subjectName) + '</td><td class="num">' + escapeHtml(t.termGrade) + '</td><td class="desc">' + escapeHtml(t.descriptor) + '</td></tr>' : '';
+    var mainRow = t ? '<tr><td class="subj">' + escapeHtml(s.subjectName) + '</td><td class="num">' + escapeHtml(t.termGrade) + '</td><td class="desc">' + escapeHtml(t.descriptor) + '</td></tr>' : '';
+    var componentRows = (s.components || []).map(function (c) {
+      var ct = termGrade_(c, term);
+      return ct ? '<tr class="component-row"><td class="subj comp-name">' + escapeHtml(c.subjectName) + '</td><td class="num">' + escapeHtml(ct.termGrade) + '</td><td class="desc"></td></tr>' : '';
+    }).join('');
+    return mainRow + componentRows;
   }).join('');
   if (!rows) return '<p style="margin:0; color:#667; text-align:center">No Term ' + term + ' grades have been published yet.</p>';
   return '<table class="grades-table"><thead><tr><th>Subjects</th><th>Term ' + term + '</th><th style="text-align:left">Description</th></tr></thead><tbody>' + rows + '</tbody></table>';
@@ -405,22 +504,24 @@ function renderGrades_() {
   gradesData.forEach(function (e) {
     if (e.subjects.length === 0) return;
     var header = document.createElement('div');
-    header.className = 'card student-card';
-
-    var lines = [['student-school', e.schoolName], ['student-meta', 'School Year ' + e.schoolYearLabel], ['student-name', e.studentName], ['student-class', 'Grade ' + e.gradeLevel + ' – ' + e.section]];
-    lines.forEach(function (l) {
-      if (!l[1] || /^School Year\s*$/.test(l[1])) return;
-      var div = document.createElement('div');
-      div.className = l[0];
-      div.textContent = l[1];
-      header.appendChild(div);
-    });
+    header.className = 'card';
+    header.innerHTML = reportHeaderHtml_(e);
     container.appendChild(header);
 
     var card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = viewMode === 'all' ? allTermsTable_(e) : byTermTable_(e, selectedTerm);
     container.appendChild(card);
+
+    if (viewMode === 'all') {
+      var pdfBtn = document.createElement('button');
+      pdfBtn.className = 'btn';
+      pdfBtn.id = 'saveReportPdfBtn';
+      pdfBtn.type = 'button';
+      pdfBtn.textContent = 'Save As PDF';
+      pdfBtn.onclick = function () { window.print(); };
+      container.appendChild(pdfBtn);
+    }
   });
 }
 
