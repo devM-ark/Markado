@@ -1807,7 +1807,7 @@ function gradeRowHtml_(g, number, components) {
   var action = g.publicationState === 'PUBLISHED'
     ? '<button class="btn small secondary" data-act="unpublish" data-enr="' + enr + '">Unpublish</button>'
     : (g.publicationState === 'DRAFT' ? '<button class="btn small secondary" data-act="publish" data-enr="' + enr + '">Publish</button>' : '');
-  return '<tr>' + cells + '<td class="col-desc">' + escapeHtml(g.descriptor) + '</td><td class="col-status">' + pill + '</td><td style="white-space:nowrap">' + action + '</td></tr>';
+  return '<tr data-row-enr="' + enr + '">' + cells + '<td class="col-desc">' + escapeHtml(g.descriptor) + '</td><td class="col-status">' + pill + '</td><td style="white-space:nowrap">' + action + '</td></tr>';
 }
 
 /** Male learners first, then Female, each numbered from 1 and in alphabetical order. */
@@ -1867,19 +1867,36 @@ document.getElementById('reviewTableBody').addEventListener('input', function (e
 document.getElementById('saveGradesBtn').onclick = function () {
   var msgEl = document.getElementById('gradeMsg');
   var entries = [];
+  var touchedInputs = [];
   document.querySelectorAll('#reviewTableBody input.grade-input').forEach(function (input) {
     var value = input.value.trim();
     if (value === '' || value === input.getAttribute('data-original')) return;
     var entry = { enrollmentId: input.getAttribute('data-enr'), grade: Number(value) };
     if (input.hasAttribute('data-comp')) entry.componentId = input.getAttribute('data-comp');
     entries.push(entry);
+    touchedInputs.push(input);
   });
   if (entries.length === 0) { msgEl.innerHTML = '<div class="msg error">Nothing to save — type a grade first.</div>'; return; }
   var isMapeh = state.currentSubject && state.currentSubject.components.length > 0;
   call('clientSaveManualGrades_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm, entries], function (data) {
     msgEl.innerHTML = '<div class="msg success">Saved ' + data.saved + ' grade(s). ' +
       (isMapeh ? 'The MAPEH grade is worked out from both components. ' : '') + 'They stay unpublished (Draft) until you publish them.</div>';
-    loadReview(true);
+    // Patch the sheet from what the save just returned instead of re-fetching the whole grade sheet --
+    // that round trip was what made entering one student, then the next, feel like it "loaded" every time.
+    touchedInputs.forEach(function (input) { input.setAttribute('data-original', input.value.trim()); });
+    (data.results || []).forEach(function (r) {
+      var tr = document.querySelector('#reviewTableBody tr[data-row-enr="' + r.enrollmentId + '"]');
+      if (!tr) return;
+      var descCell = tr.querySelector('.col-desc');
+      if (descCell) descCell.textContent = r.descriptor;
+      var calc = tr.querySelector('.calc-grade'); // MAPEH only: the computed average shown next to the two component inputs
+      if (calc) { calc.textContent = r.termGrade !== '' ? r.termGrade : '—'; calc.setAttribute('data-saved', r.termGrade); }
+      var statusCell = tr.querySelector('.col-status');
+      if (statusCell) statusCell.innerHTML = '<span class="status-pill DRAFT">DRAFT</span>';
+      var actionCell = tr.querySelector('td:last-child');
+      if (actionCell) actionCell.innerHTML = '<button class="btn small secondary" data-act="publish" data-enr="' + escapeHtml(r.enrollmentId) + '">Publish</button>';
+    });
+    invalidateSubjectsCache_(); // the term's chip on the Subjects grid may now read Draft instead of Empty -- refetch next time that screen is opened, not now
   }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; },
   { button: document.getElementById('saveGradesBtn') });
 };
@@ -2107,8 +2124,24 @@ function paintRoster_(roster) {
   area.innerHTML = '<div class="gender-cols">' + rosterColumnHtml_(male, 'Male', 'male') + rosterColumnHtml_(female, 'Female', 'female') + '</div>';
 }
 
-/** Call after any add/edit/import that could change this class's roster. */
+/** Call after any bulk change (import) that could change this class's roster in ways too broad to patch in place. */
 function invalidateRosterCache_(workspaceId) { delete state.cache.roster[workspaceId || state.currentWorkspaceId]; }
+
+/** Adds one learner to the roster in memory and repaints -- no round trip, since we already have every field we just submitted. */
+function addRosterEntry_(entry) {
+  var wsId = state.currentWorkspaceId;
+  state.roster = state.roster.concat([entry]);
+  state.cache.roster[wsId] = state.roster;
+  paintRoster_(state.roster);
+}
+
+/** Updates one learner in the roster in memory and repaints -- same reasoning as addRosterEntry_. */
+function patchRosterEntry_(enrollmentId, fields) {
+  var wsId = state.currentWorkspaceId;
+  state.roster = state.roster.map(function (r) { return r.enrollmentId === enrollmentId ? Object.assign({}, r, fields) : r; });
+  state.cache.roster[wsId] = state.roster;
+  paintRoster_(state.roster);
+}
 
 function renderRoster(forceReload) {
   var wsId = state.currentWorkspaceId;
@@ -2156,12 +2189,20 @@ function openStudentModal_(learner) {
       if (name.indexOf(',') === -1) { setError('Write the name as "Surname, Given Name" (with a comma).'); return; }
       if (!sex) { setError('Choose Male or Female.'); return; }
       if (editing) {
-        call('clientUpdateStudent_', [state.sessionToken, learner.enrollmentId, lrn, name, sex], function () {
-          invalidateRosterCache_(); closeModal_(); renderRoster(true); showToast('Student updated.', 'success');
+        call('clientUpdateStudent_', [state.sessionToken, learner.enrollmentId, lrn, name, sex], function (data) {
+          closeModal_(); showToast('Student updated.', 'success');
+          if (data.merged) {
+            // Rare: the LRN now matches a learner already known elsewhere, and identities were merged --
+            // that can touch more than this one row, so it's the one case worth a real refetch.
+            invalidateRosterCache_(); renderRoster(true);
+          } else {
+            patchRosterEntry_(learner.enrollmentId, { lrn: lrn, fullName: name, sex: sex });
+          }
         }, setError, { button: submitBtn });
       } else {
-        call('clientAddStudent_', [state.sessionToken, state.currentWorkspaceId, lrn, name, sex], function () {
-          invalidateRosterCache_(); closeModal_(); renderRoster(true); showToast('Student added.', 'success');
+        call('clientAddStudent_', [state.sessionToken, state.currentWorkspaceId, lrn, name, sex], function (data) {
+          closeModal_(); showToast('Student added.', 'success');
+          addRosterEntry_({ enrollmentId: data.enrollmentId, studentId: data.studentId, lrn: lrn, fullName: name, sex: sex });
         }, setError, { button: submitBtn });
       }
     },
