@@ -824,12 +824,7 @@
   .subject-grid > .api-state { grid-column: 1 / -1; }
   
   .subject-card {
-    text-align: left;
-	font: inherit;
-	color: inherit;
-    display: flex;
-	flex-direction: column;
-	gap: 6px;
+    position: relative;
     min-height: 108px;
 	padding: 16px;
     background: var(--white);
@@ -838,10 +833,49 @@
   }
   
   .subject-card:hover { border-color: var(--primary); background: var(--complement); }
-  .subject-card .name { font-weight: 600; font-size: 1rem; }
+  .subject-card.special { border-style: dashed; }
+
+  /* The clickable area that opens the subject -- a sibling of subject-delete, not a wrapper around it,
+     since a button can't be nested inside another button. */
+  .subject-card .subject-open {
+    width: 100%;
+	height: 100%;
+    text-align: left;
+	font: inherit;
+	color: inherit;
+    background: none;
+	border: none;
+	padding: 0;
+	cursor: pointer;
+    display: flex;
+	flex-direction: column;
+	gap: 6px;
+  }
+  .subject-card .name { font-weight: 600; font-size: 1rem; padding-right: 20px; }
   .subject-card .sub { font-size: 0.8rem; color: var(--text-muted); line-height: 1.35; }
   .subject-card .terms { margin-top: auto; padding-top: 8px; display: flex; gap: 6px; justify-content: center; }
-  .subject-card.special { border-style: dashed; }
+
+  /* Only special (teacher-added) subjects can be removed -- default subjects belong to the grade's fixed list. */
+  .subject-delete {
+    position: absolute;
+    top: 8px;
+	right: 8px;
+    width: 22px;
+	height: 22px;
+	padding: 0;
+    display: inline-flex;
+	align-items: center;
+	justify-content: center;
+    background: none;
+	border: none;
+	border-radius: 4px;
+	color: var(--text-muted);
+	opacity: 0.6;
+	cursor: pointer;
+  }
+  .subject-delete:hover { opacity: 1; background: #F7E4E0; color: #A3402F; }
+  .subject-delete .ico { width: 11px; height: 11px; }
+  .subject-delete.api-btn-loading .ico { display: none; } /* 22px is too tight for the spinner + icon together */
   .term-chip { font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; text-align: center; }
   .term-chip.PUBLISHED { background: #2E7D32; color: #fff; }
   .term-chip.DRAFT { background: var(--danger); color: #fff; }
@@ -1069,7 +1103,7 @@
     <p style="margin-top:0">Upload the standard DepEd E-CR (.xlsx). The class, subject and learners are set up from the file, and you choose which terms to import.</p>
     <p class="muted" style="font-size:0.85rem">Only names, class details, term grades and descriptions are saved - never raw scores. The MAPEH E-CR is read in one go: both components are imported and the MAPEH grade is worked out from them.</p>
     <input type="file" id="ecrFileInput" accept=".xlsx">
-    <button class="btn" id="ecrUploadBtn" style="margin-top:12px">Check File</button>
+    <button class="btn" id="ecrUploadBtn" style="margin-top:12px">Check file</button>
     <div id="ecrImportArea" style="margin-top:16px"></div>
   </div>
 </div>
@@ -1102,6 +1136,7 @@ var ICONS = {
   back: 'assets/icons/back.svg',
   download: 'assets/icons/download.svg',
   import: 'assets/icons/import.svg',
+  cross: 'assets/icons/cross.svg',
 };
 
 function iconHtml_(name, fallbackText) {
@@ -1522,13 +1557,22 @@ document.querySelector('#workspaceTable tbody').addEventListener('click', functi
     if (ws) openClassModal_(ws);
   } else if (delBtn) {
     var doomed = workspaceById_(delBtn.getAttribute('data-delete-class'));
-    if (doomed) confirmDeleteClass_(doomed);
+    if (doomed) confirmDeleteClass_(doomed, delBtn);
   }
 });
+
+/** Disables the table's row actions and Add Class while a delete is in flight, so a second click (on this row
+ *  or another) can't land mid-delete. exceptBtn is left alone -- call()'s own button handling covers it. */
+function setClassesTableBusy_(busy, exceptBtn) {
+  document.querySelectorAll('#workspaceTable [data-set-active], #workspaceTable [data-edit-class], #workspaceTable [data-delete-class]')
+    .forEach(function (btn) { if (btn !== exceptBtn) btn.disabled = busy; });
+  document.getElementById('addClassBtn').disabled = busy;
+}
 
 document.getElementById('addClassBtn').onclick = function () { openClassModal_(null); };
 
 var DESIGNATIONS_ = ['Teacher I', 'Teacher II', 'Teacher III', 'Master Teacher I', 'Master Teacher II', 'Master Teacher III', 'Master Teacher IV'];
+var SHS_TRACKS_ = ['Academic', 'TechPro']; // must match AppsScript/ManualEntry.gs's SHS_TRACKS_
 
 function gradeOptionsHtml_(selected) {
   var grades = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
@@ -1600,11 +1644,13 @@ function openClassModal_(ws) {
   toggleShsRow();
 }
 
-function confirmDeleteClass_(ws) {
+function confirmDeleteClass_(ws, btn) {
   confirmModal('Delete ' + escapeHtml(classLabel_(ws)) + '?',
     'This permanently removes the class (' + escapeHtml(ws.schoolYearLabel) + ') with its students, subjects and grades - including grades already published to students. This can\'t be undone.',
     'Delete class', function () {
+      setClassesTableBusy_(true, btn);
       call('clientDeleteWorkspace_', [state.sessionToken, ws.workspaceId], function () {
+        setClassesTableBusy_(false, btn);
         if (state.currentWorkspaceId === ws.workspaceId) setActiveClass_(null);
         state.workspaces = state.workspaces.filter(function (w) { return w.workspaceId !== ws.workspaceId; });
         delete state.cache.roster[ws.workspaceId];
@@ -1612,7 +1658,10 @@ function confirmDeleteClass_(ws) {
         ensureActiveClass_();
         renderClassesTable_();
         showToast('Class deleted.', 'success');
-      }, function (err) { showToast(err, 'error'); });
+      }, function (err) {
+        setClassesTableBusy_(false, btn);
+        showToast(err, 'error');
+      }, { button: btn });
     }, true);
 }
 
@@ -1680,10 +1729,20 @@ function paintSubjectGrid_(classSubjects) {
     var sub = cs.components.length > 0
       ? cs.components.map(function (c) { return escapeHtml(c.subjectName); }).join(' · ')
       : (cs.isCustom ? 'Special subject' : '');
-    return '<button type="button" class="subject-card' + (cs.isCustom ? ' special' : '') + '" data-open-subject="' + escapeHtml(cs.classSubjectId) + '" data-subject-name="' + escapeHtml(cs.subjectName) + '">' +
-      '<span class="name">' + escapeHtml(cs.subjectName) + '</span>' +
-      (sub ? '<span class="sub">' + sub + '</span>' : '') +
-      termChipsHtml_(cs) + '</button>';
+    var name = escapeHtml(cs.subjectName);
+    var id = escapeHtml(cs.classSubjectId);
+    // Only special (teacher-added) subjects get a delete cross -- default subjects belong to the grade's fixed
+    // list and can't be removed this way. A sibling button, not nested inside subject-open (buttons can't nest).
+    var deleteBtn = cs.isCustom
+      ? '<button type="button" class="subject-delete" data-delete-subject="' + id + '" data-subject-name="' + name + '" title="Delete subject" aria-label="Delete ' + name + '">' + iconHtml_('cross', '\u2715') + '</button>'
+      : '';
+    return '<div class="subject-card' + (cs.isCustom ? ' special' : '') + '">' +
+      '<button type="button" class="subject-open" data-open-subject="' + id + '" data-subject-name="' + name + '">' +
+        '<span class="name">' + name + '</span>' +
+        (sub ? '<span class="sub">' + sub + '</span>' : '') +
+        termChipsHtml_(cs) +
+      '</button>' + deleteBtn +
+    '</div>';
   }).join('');
   emptyMsg.style.display = classSubjects.length === 0 && !hasDefaults ? 'block' : 'none';
 }
@@ -1710,9 +1769,23 @@ function renderSubjectGrid(forceReload) {
 }
 
 document.getElementById('subjectGrid').addEventListener('click', function (e) {
+  var delBtn = e.target.closest('[data-delete-subject]');
+  if (delBtn) { confirmDeleteSubject_(delBtn.getAttribute('data-delete-subject'), delBtn.getAttribute('data-subject-name'), delBtn); return; }
   var card = e.target.closest('[data-open-subject]');
   if (card) openSubjectDetail(card.getAttribute('data-open-subject'), card.getAttribute('data-subject-name'));
 });
+
+function confirmDeleteSubject_(classSubjectId, name, btn) {
+  confirmModal('Delete ' + escapeHtml(name) + '?',
+    'This removes the subject and any grades already entered for it, including grades already published to students. This can\'t be undone.',
+    'Delete subject', function () {
+      call('clientDeleteClassSubject_', [state.sessionToken, classSubjectId], function () {
+        invalidateSubjectsCache_();
+        renderSubjectGrid(true);
+        showToast('Subject deleted.', 'success');
+      }, function (err) { showToast(err, 'error'); }, { button: btn });
+    }, true);
+}
 
 document.getElementById('addSubjectBtn').onclick = function () {
   var ws = workspaceById_(state.currentWorkspaceId);
