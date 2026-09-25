@@ -313,10 +313,6 @@
 	flex: 1;
   }
 
-  #saveReportPdfBtn {
-	margin-top: 18px;
-  }
-
   .empty-state {
 	text-align: center;
 	padding: 48px 20px;
@@ -327,13 +323,6 @@
 	font-size: 1.2rem;
 	color: var(--black);
 	margin-bottom: 8px;
-  }
-
-  @media print {
-	header, .view-tabs, .term-pick, #saveReportPdfBtn, #logoutBtn { display: none !important; }
-	body { background: #fff; }
-	main { max-width: 100%; padding: 0; }
-	.card { box-shadow: none; border: none; padding: 0; margin-bottom: 24px; }
   }
   
 </style>
@@ -355,12 +344,12 @@
   <!-- LOGIN -->
   <section id="screen-login" class="screen active">
     <div class="card" style="margin-top:20px">
-      <h2 style="margin-top:0">Student Verification</h2>
+      <h2 style="margin-top:0">Log In</h2>
       <p style="color:#555; font-size:0.9rem; margin-top:-8px">Enter your LRN and Surname.</p>
       <div id="loginMsg"></div>
       <div class="field"><label>LRN</label><input id="lrnInput" inputmode="numeric" placeholder=""></div>
       <div class="field"><label>Surname</label><input id="surnameInput" placeholder=""></div>
-      <button class="btn" id="loginBtn">Verify to Log In</button>
+      <button class="btn" id="loginBtn">Log In</button>
     </div>
   </section>
 
@@ -458,12 +447,12 @@ function reportHeaderHtml_(e) {
       (e.schoolYearLabel ? '<div class="report-year">School Year ' + escapeHtml(e.schoolYearLabel) + '</div>' : '') +
     '</div>' +
     '<div class="report-info">' +
-      '<div class="report-info-row"><span class="report-info-label">Student Name</span><span class="report-info-value">' + studentNameHtml_(e.studentName) + '</span></div>' +
-      '<div class="report-info-row"><span class="report-info-label">LRN</span><span class="report-info-value">' + escapeHtml(e.lrn || '') + '</span></div>' +
-      '<div class="report-info-row"><span class="report-info-label">Grade & Section</span><span class="report-info-value">' + escapeHtml(gradeSection) + '</span></div>' +
+      '<div class="report-info-row"><span class="report-info-label">Student Name:</span><span class="report-info-value">' + studentNameHtml_(e.studentName) + '</span></div>' +
+      '<div class="report-info-row"><span class="report-info-label">LRN:</span><span class="report-info-value">' + escapeHtml(e.lrn || '') + '</span></div>' +
+      '<div class="report-info-row"><span class="report-info-label">Grade & Section:</span><span class="report-info-value">' + escapeHtml(gradeSection) + '</span></div>' +
     '</div>' +
     '<div class="report-info" style="margin-top:12px">' +
-      '<div class="report-info-row"><span class="report-info-label">Adviser</span><span class="report-info-value">' + escapeHtml(e.adviserName || '') + '</span></div>' +
+      '<div class="report-info-row"><span class="report-info-label">Adviser:</span><span class="report-info-value">' + escapeHtml(e.adviserName || '') + '</span></div>' +
     '</div>';
 }
 
@@ -512,16 +501,6 @@ function renderGrades_() {
     card.className = 'card';
     card.innerHTML = viewMode === 'all' ? allTermsTable_(e) : byTermTable_(e, selectedTerm);
     container.appendChild(card);
-
-    if (viewMode === 'all') {
-      var pdfBtn = document.createElement('button');
-      pdfBtn.className = 'btn';
-      pdfBtn.id = 'saveReportPdfBtn';
-      pdfBtn.type = 'button';
-      pdfBtn.textContent = 'Save As PDF';
-      pdfBtn.onclick = function () { window.print(); };
-      container.appendChild(pdfBtn);
-    }
   });
 }
 
