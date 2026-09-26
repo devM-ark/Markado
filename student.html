@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Markado: Online Grades Viewer - Student</title>
+<title>MARKADO: Online Grades Viewer - Student</title>
 <style>
   :root {
     --black: #0B0B0B;
@@ -274,44 +274,90 @@
 	padding-bottom: 6px;
   }
 
+  /* All Terms report only: the shared rules above (.subj/.num/.dash/.final/.desc/.component-row) still apply --
+     these are just what's new here: a two-row header (Term spans 1/2/3), a Remarks column, section dividers for
+     SHS Core/Elective/Special, and a closing General Average row. Table can be wider than the card on a phone,
+     so it scrolls horizontally inside its own wrapper rather than forcing the whole page to. */
+  .report-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .report-table { min-width: 560px; }
+  /* One uniform divider works for both header rows at once: on a rowspan cell it lands at the true bottom of the
+     whole header (the header/body boundary); on the plain "Term" and "1/2/3" cells it lands after their own row
+     (between the two header rows, and between the second row and the body, respectively). */
+  .report-table thead th { background: var(--darkest); color: #fff; border-bottom: 1px solid rgba(255,255,255,0.25); }
+  .report-table .remark { text-align: left; font-size: 0.85rem; color: #444; }
+  .report-table .remark.pass { color: #2E5B3E; font-weight: 600; }
+  .report-table .remark.fail { color: #A3402F; font-weight: 600; }
+  .report-table tr.category-row td {
+	background: var(--lightest);
+	font-weight: 700;
+	font-size: 0.78rem;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	color: var(--primary);
+	text-align: left;
+  }
+  .report-table tr.general-average-row td { font-weight: 700; background: #F2F6EE; }
+  .report-table tr.general-average-row .ga-label { text-align: right; padding-right: 12px; }
+
+  .report-footer { margin-top: 12px; }
+  .report-mark { width: 24px; height: 24px; opacity: 0.85; }
+
   .report-header {
 	text-align: center;
-	margin-bottom: 14px;
+	margin-bottom: 4px;
   }
 
   .report-school {
 	font-weight: 700;
-	font-size: 1.1rem;
+	font-size: 1.05rem;
 	text-transform: uppercase;
 	color: var(--darkest);
 	letter-spacing: 0.02em;
   }
 
   .report-year {
-	font-size: 0.92rem;
+	font-size: 0.85rem;
 	color: #555;
 	margin-top: 2px;
   }
 
-  .report-info {
-	margin-top: 4px;
+  .report-title {
+	font-weight: 700;
+	font-size: 0.95rem;
+	color: var(--darkest);
+	text-transform: uppercase;
+	letter-spacing: 0.01em;
+	margin-top: 14px;
   }
 
-  .report-info-row {
-	display: flex;
-	font-size: 0.92rem;
-	padding: 3px 0;
+  .report-powered {
+	font-size: 0.72rem;
+	color: #888;
+	font-style: italic;
+	margin-top: 6px;
   }
 
-  .report-info-label {
-	width: 130px;
-	flex: none;
-	color: #555;
+  .report-brand {
+	font-size: 0.8rem;
+	font-weight: 700;
+	color: var(--primary);
+	margin-top: 1px;
   }
 
-  .report-info-value {
-	flex: 1;
+  /* Student Name / Grade Level side by side, LRN / Section side by side, Track / Cluster (SHS only) the same
+     way, Class Adviser spanning both columns -- mirrors the printed Learner's Progress Report's layout. */
+  .report-info-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	column-gap: 14px;
+	row-gap: 5px;
+	font-size: 0.84rem;
+	margin-top: 14px;
   }
+
+  .report-info-grid .full { grid-column: 1 / -1; }
+  .report-info-grid .info-label { color: #666; }
+  .report-info-grid .info-value { font-weight: 600; color: var(--darkest); margin-left: 4px; }
 
   .empty-state {
 	text-align: center;
@@ -344,12 +390,14 @@
   <!-- LOGIN -->
   <section id="screen-login" class="screen active">
     <div class="card" style="margin-top:20px">
-      <h2 style="margin-top:0">Log In</h2>
+      <h2 style="margin-top:0">Check Your Grades</h2>
       <p style="color:#555; font-size:0.9rem; margin-top:-8px">Enter your LRN and Surname.</p>
       <div id="loginMsg"></div>
-      <div class="field"><label>LRN</label><input id="lrnInput" inputmode="numeric" placeholder=""></div>
-      <div class="field"><label>Surname</label><input id="surnameInput" placeholder=""></div>
-      <button class="btn" id="loginBtn">Log In</button>
+      <form id="loginForm">
+        <div class="field"><label>LRN</label><input id="lrnInput" inputmode="numeric" placeholder=""></div>
+        <div class="field"><label>Surname</label><input id="surnameInput" placeholder=""></div>
+        <button class="btn" type="submit" id="loginBtn">View my Grades</button>
+      </form>
     </div>
   </section>
 
@@ -394,7 +442,10 @@ window.onApiSessionExpired = backToLogin_;
 
 if (!sessionToken) call('clientPing_', [], function () {}, function () {}, { silent: true });
 
-document.getElementById('loginBtn').onclick = function () {
+// Enter key submits the form (native <form> submit behavior) -- intercepted here so it goes through the same
+// handler as tapping the button, same pattern as teacher-login.html's authForm.
+document.getElementById('loginForm').onsubmit = function (e) {
+  e.preventDefault();
   var lrn = document.getElementById('lrnInput').value.trim();
   var surname = document.getElementById('surnameInput').value.trim();
   var msgEl = document.getElementById('loginMsg');
@@ -440,36 +491,94 @@ function studentNameHtml_(fullName) {
   return '<b>' + escapeHtml(surname) + '</b>' + (rest ? ', ' + escapeHtml(rest) : '');
 }
 
+function isSHSGrade_(gradeLevel) {
+  var n = parseInt(String(gradeLevel === undefined || gradeLevel === null ? '' : gradeLevel).replace(/[^0-9]/g, ''), 10);
+  return n === 11 || n === 12;
+}
+
+var SUBJECT_CATEGORY_LABELS_ = { CORE: 'Core Subjects', ELECTIVE: 'Elective Subjects', SPECIAL: 'Special Subjects' };
+var SUBJECT_CATEGORY_ORDER_ = ['CORE', 'ELECTIVE', 'SPECIAL'];
+
+function infoRow_(label, valueHtml, full) {
+  return '<div' + (full ? ' class="full"' : '') + '><span class="info-label">' + escapeHtml(label) + ':</span><span class="info-value">' + valueHtml + '</span></div>';
+}
+
 function reportHeaderHtml_(e) {
-  var gradeSection = [e.gradeLevel ? 'Grade ' + e.gradeLevel : '', e.section || ''].filter(Boolean).join(' – ');
+  var isSHS = isSHSGrade_(e.gradeLevel);
+  var rows =
+    infoRow_('Student Name', studentNameHtml_(e.studentName)) +
+    infoRow_('Grade Level', escapeHtml(e.gradeLevel || '')) +
+    infoRow_('LRN', escapeHtml(e.lrn || '')) +
+    infoRow_('Section', escapeHtml(e.section || '')) +
+    (isSHS ? infoRow_('Track', escapeHtml(e.track || '')) + infoRow_('Cluster', escapeHtml(e.cluster || '')) : '') +
+    infoRow_('Class Adviser', escapeHtml(e.adviserName || ''), true);
+
   return '<div class="report-header">' +
       (e.schoolName ? '<div class="report-school">' + escapeHtml(e.schoolName) + '</div>' : '') +
       (e.schoolYearLabel ? '<div class="report-year">School Year ' + escapeHtml(e.schoolYearLabel) + '</div>' : '') +
+      '<div class="report-title">Learner&rsquo;s Progress Report</div>' +
+      '<div class="report-powered">powered by</div>' +
+      '<div class="report-brand">MARKADO: Online Grade Viewer</div>' +
     '</div>' +
-    '<div class="report-info">' +
-      '<div class="report-info-row"><span class="report-info-label">Student Name:</span><span class="report-info-value">' + studentNameHtml_(e.studentName) + '</span></div>' +
-      '<div class="report-info-row"><span class="report-info-label">LRN:</span><span class="report-info-value">' + escapeHtml(e.lrn || '') + '</span></div>' +
-      '<div class="report-info-row"><span class="report-info-label">Grade & Section:</span><span class="report-info-value">' + escapeHtml(gradeSection) + '</span></div>' +
-    '</div>' +
-    '<div class="report-info" style="margin-top:12px">' +
-      '<div class="report-info-row"><span class="report-info-label">Adviser:</span><span class="report-info-value">' + escapeHtml(e.adviserName || '') + '</span></div>' +
-    '</div>';
+    '<div class="report-info-grid">' + rows + '</div>';
 }
 
 
-function allTermsTable_(e) {
-  var rows = e.subjects.map(function (s) {
-    var cells = [1, 2, 3].map(function (n) { var t = termGrade_(s, n); return gradeCell_(t ? t.termGrade : null); }).join('');
-    var final = s.finalGrade === null || s.finalGrade === undefined ? '<td class="dash">—</td>' : '<td class="num final">' + escapeHtml(s.finalGrade) + '</td>';
-    var mainRow = '<tr><td class="subj">' + escapeHtml(s.subjectName) + '</td>' + cells + final + '</tr>';
-    var componentRows = (s.components || []).map(function (c) {
-      var ccells = [1, 2, 3].map(function (n) { var t = termGrade_(c, n); return gradeCell_(t ? t.termGrade : null); }).join('');
-      var cfinal = c.finalGrade === null || c.finalGrade === undefined ? '<td class="dash">—</td>' : '<td class="num">' + escapeHtml(c.finalGrade) + '</td>';
-      return '<tr class="component-row"><td class="subj comp-name">' + escapeHtml(c.subjectName) + '</td>' + ccells + cfinal + '</tr>';
-    }).join('');
-    return mainRow + componentRows;
+/** "Passed"/"Promoted" read as good news, "Failed"/"Retained" as a flag -- everything else (blank, still pending) stays neutral. */
+function remarkClass_(remark) {
+  if (remark === 'Passed' || remark === 'Promoted') return 'remark pass';
+  if (remark === 'Failed' || remark === 'Retained') return 'remark fail';
+  return 'remark';
+}
+
+function finalCellHtml_(value) {
+  return value === null || value === undefined ? '<td class="dash final">—</td>' : '<td class="num final">' + escapeHtml(value) + '</td>';
+}
+
+function subjectRowHtml_(s) {
+  var cells = [1, 2, 3].map(function (n) { var t = termGrade_(s, n); return gradeCell_(t ? t.termGrade : null); }).join('');
+  var mainRow = '<tr><td class="subj">' + escapeHtml(s.subjectName) + '</td>' + cells + finalCellHtml_(s.finalGrade) +
+    '<td class="desc">' + escapeHtml(s.finalDescriptor || '') + '</td>' +
+    '<td class="' + remarkClass_(s.remark) + '">' + escapeHtml(s.remark || '') + '</td></tr>';
+  // MAPEH's two components ride along under the combined row, term grades only -- no Final Grade/Description/
+  // Remarks of their own, same as the printed report (only the combined MAPEH row gets those).
+  var componentRows = (s.components || []).map(function (c) {
+    var ccells = [1, 2, 3].map(function (n) { var t = termGrade_(c, n); return gradeCell_(t ? t.termGrade : null); }).join('');
+    return '<tr class="component-row"><td class="subj comp-name">' + escapeHtml(c.subjectName) + '</td>' + ccells + '<td></td><td></td><td></td></tr>';
   }).join('');
-  return '<table class="grades-table report-table"><thead><tr><th>Subjects</th><th>Term 1</th><th>Term 2</th><th>Term 3</th><th>Final Grade</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  return mainRow + componentRows;
+}
+
+function generalAverageRowHtml_(e) {
+  return '<tr class="general-average-row"><td colspan="4" class="ga-label">General Average</td>' +
+    finalCellHtml_(e.generalAverage) +
+    '<td class="desc">' + escapeHtml(e.generalDescriptor || '') + '</td>' +
+    '<td class="' + remarkClass_(e.generalRemark) + '">' + escapeHtml(e.generalRemark || '') + '</td></tr>';
+}
+
+function allTermsTable_(e) {
+  var rows;
+  if (isSHSGrade_(e.gradeLevel)) {
+    // Senior High has no fixed subject list -- group Core ahead of Electives ahead of Special instead of
+    // whatever order they were added in.
+    var groups = { CORE: [], ELECTIVE: [], SPECIAL: [] };
+    e.subjects.forEach(function (s) {
+      var cat = groups[s.subjectCategory] ? s.subjectCategory : 'ELECTIVE'; // untagged (older) subjects default here
+      groups[cat].push(s);
+    });
+    rows = SUBJECT_CATEGORY_ORDER_.filter(function (cat) { return groups[cat].length > 0; }).map(function (cat) {
+      return '<tr class="category-row"><td colspan="7">' + SUBJECT_CATEGORY_LABELS_[cat] + '</td></tr>' +
+        groups[cat].map(subjectRowHtml_).join('');
+    }).join('');
+  } else {
+    rows = e.subjects.map(subjectRowHtml_).join('');
+  }
+  rows += generalAverageRowHtml_(e);
+  return '<div class="report-table-wrap"><table class="grades-table report-table"><thead>' +
+      '<tr><th rowspan="2">Learning Areas</th><th colspan="3">Term</th><th rowspan="2">Final Grade</th><th rowspan="2">Description</th><th rowspan="2">Remarks</th></tr>' +
+      '<tr><th>1</th><th>2</th><th>3</th></tr>' +
+    '</thead><tbody>' + rows + '</tbody></table></div>' +
+    '<div class="report-footer"><img class="report-mark" src="assets/favicon.svg" alt="" onerror="this.style.display=\'none\'"></div>';
 }
 
 

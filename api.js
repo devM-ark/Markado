@@ -343,6 +343,12 @@ function stateContainer_(el, className) {
     tr.appendChild(td);
     return { outer: tr, inner: box };
   }
+  // A CSS Grid parent (the Male/Female grade columns, a card grid, ...) would otherwise lay this out as just its
+  // first cell/track -- a fraction of the width -- which is what made a loading message look off-center instead
+  // of centered in the area as a whole. Span every column so it's centered across the full width instead.
+  if (el && typeof getComputedStyle === 'function' && getComputedStyle(el).display.indexOf('grid') !== -1) {
+    box.style.gridColumn = '1 / -1';
+  }
   return { outer: box, inner: box };
 }
 

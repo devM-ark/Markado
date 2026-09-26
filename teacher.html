@@ -434,8 +434,8 @@
   }
   
   .grade-input {
-	width: 84px;
-	padding: 6px 8px;
+	width: 68px;
+	padding: 6px;
 	font: inherit;
 	text-align: center;
 	border: 1px solid var(--border);
@@ -463,6 +463,20 @@
   .grade-gender-cols table td.num-cell,
   .grade-gender-cols table th:first-child { text-align: left; }
   
+  .radio-row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .radio-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; cursor: pointer; }
+  .radio-pill input { margin: 0; cursor: pointer; }
+
+  .subject-group-title {
+	margin: 22px 0 10px;
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: var(--primary);
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+  }
+  .subject-group-title:first-child { margin-top: 0; }
+
   .lock-tag {
 	display: inline-block;
 	margin-left: 6px;
@@ -893,7 +907,34 @@
   td.num-cell { width: 44px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
   .calc-grade { font-weight: 600; }
   .calc-grade.preview { font-style: italic; color: var(--text-muted); }
-  .grade-input.comp { width: 76px; }
+  /* MAPEH rows carry two of these side by side, on top of Grade/Status/Action -- keep them narrower than a
+     single-subject grade box so the row still has room for the per-learner Publish button. */
+  .grade-input.comp { width: 54px; padding: 6px 4px; }
+
+  /* .gender-col clips to its rounded corners (below); .table-scroll is the one that actually scrolls, so a
+     MAPEH row that's still too wide for the column scrolls into view instead of being silently clipped off --
+     which is what made the individual Publish button look like it had disappeared. */
+  .table-scroll { overflow-x: auto; }
+
+  /* Male and Female are two separate <table>s. Left on table-layout:auto (the default), each one sizes its own
+     columns from its own rows -- so whichever table happens to have the longer names that run squeezes its own
+     Action/Edit column narrower than the other table's, even though both sit in equal-width containers. Fixed
+     layout makes column widths a purely structural (name-independent) decision, so both tables end up identical;
+     the Student Name column is the one column left unconstrained here, so it's the one that absorbs the rest. */
+  /* Fixing every other column forces Student Name (the one column left unconstrained) down to just a few
+     pixels once a MAPEH row's two component columns are added in -- min-width keeps it a sane floor and, below
+     that, the table grows past its container and scrolls (via .table-scroll) rather than crushing the name. */
+  .roster-table { table-layout: fixed; width: 100%; min-width: 340px; }
+  .grade-gender-cols table { table-layout: fixed; width: 100%; min-width: 420px; }
+  .roster-table th:first-child, .roster-table td:first-child { width: 30px; }
+  .roster-table th:nth-child(2), .roster-table td:nth-child(2) { width: 108px; } /* LRN -- Student Name absorbs whatever's left */
+  .roster-table th:last-child, .roster-table td:last-child { width: 92px; }
+  /* table-layout:fixed takes column widths from the header row, so the "#" column needs the width on th here
+     too -- td.num-cell's own width (below) isn't enough by itself once the table stops auto-sizing from rows. */
+  .grade-gender-cols table th:first-child, .grade-gender-cols table td:first-child { width: 44px; }
+  .grade-gender-cols table th.col-comp, .grade-gender-cols table td.col-comp { width: 64px; }
+  .grade-gender-cols table th:nth-last-child(4), .grade-gender-cols table td:nth-last-child(4) { width: 80px; } /* Grade */
+  .grade-gender-cols table th:last-child, .grade-gender-cols table td:last-child { width: 92px; } /* Action */
 
   .gender-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
   .gender-col { background: var(--white); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; min-width: 0; }
@@ -1035,8 +1076,8 @@
       <div id="subjectsContent">
         <p class="instruction" id="subjectsInstruction">Click the subject you want to encode or import grades. You can also Publish and Unpublish the grades here.</p>
         <div class="class-selector"><label for="subjectsClassSelect">Class:</label><select id="subjectsClassSelect"></select></div>
-        <div class="subject-grid" id="subjectGrid"></div>
-        <div id="subjectsEmptyMsg" class="empty-state" style="display:none"><div class="display">No Subjects Yet</div><p>This grade level doesn't have a fixed subject list. Add each subject with "Add Subject," or import its E-CR - importing adds the subject for you.</p></div>
+        <div id="subjectGrid"></div>
+        <div id="subjectsEmptyMsg" class="empty-state" style="display:none"><div class="display">No Subjects Yet</div><p>This grade level doesn't have a fixed subject list. Add each subject with "Add Subject," or import its E-CR — importing adds the subject for you.</p></div>
       </div>
     </section>
 
@@ -1065,11 +1106,11 @@
         <div id="gradesArea" class="gender-cols grade-gender-cols">
           <div class="gender-col male">
             <div class="gender-head">Male</div>
-            <table><thead id="gradesTheadMale"></thead><tbody id="reviewTableBodyMale"></tbody></table>
+            <div class="table-scroll"><table><thead id="gradesTheadMale"></thead><tbody id="reviewTableBodyMale"></tbody></table></div>
           </div>
           <div class="gender-col female">
             <div class="gender-head">Female</div>
-            <table><thead id="gradesTheadFemale"></thead><tbody id="reviewTableBodyFemale"></tbody></table>
+            <div class="table-scroll"><table><thead id="gradesTheadFemale"></thead><tbody id="reviewTableBodyFemale"></tbody></table></div>
           </div>
         </div>
       </div>
@@ -1101,7 +1142,7 @@
       <button class="icon-btn" id="ecrCloseBtn" type="button" aria-label="Close">&#10005;</button>
     </div>
     <p style="margin-top:0">Upload the standard DepEd E-CR (.xlsx). The class, subject and learners are set up from the file, and you choose which terms to import.</p>
-    <p class="muted" style="font-size:0.85rem">Only names, class details, term grades and descriptions are saved - never raw scores. The MAPEH E-CR is read in one go: both components are imported and the MAPEH grade is worked out from them.</p>
+    <p class="muted" style="font-size:0.85rem">Only names, class details, term grades and descriptions are saved — never raw scores. The MAPEH E-CR is read in one go: both components are imported and the MAPEH grade is worked out from them.</p>
     <input type="file" id="ecrFileInput" accept=".xlsx">
     <button class="btn" id="ecrUploadBtn" style="margin-top:12px">Check file</button>
     <div id="ecrImportArea" style="margin-top:16px"></div>
@@ -1363,7 +1404,7 @@ function renderProfile_(profile) {
   var line = profile ? licenseLine_(profile.license) : '';
   document.getElementById('profileName').textContent = profile ? profile.fullName : 'My account';
   document.getElementById('profileLicense').textContent = line;
-  document.getElementById('profileBtn').title = line ? line + ' - Account' : 'Account';
+  document.getElementById('profileBtn').title = line ? line + ' — Account' : 'Account';
 }
 
 /** Header profile button: My Account (read-only) + Change Password, reusing the same clientChangePassword_ backend call as before. */
@@ -1372,9 +1413,9 @@ function openProfileModal_() {
   var license = profile ? profile.license : null;
   var html =
     '<h3 style="margin-top:0">My Account</h3>' +
-    '<div class="field-static"><label>Name</label><div>' + escapeHtml(profile ? profile.fullName : '-') + '</div></div>' +
-    '<div class="field-static"><label>Subscription Type</label><div>' + escapeHtml(license ? licenseLabel_(license) : '-') + '</div></div>' +
-    '<div class="field-static"><label>Expiry Date</label><div>' + escapeHtml(license && license.expirationDate ? fmtLongDate_(license.expirationDate) : '-') + '</div></div>' +
+    '<div class="field-static"><label>Name</label><div>' + escapeHtml(profile ? profile.fullName : '—') + '</div></div>' +
+    '<div class="field-static"><label>Subscription Type</label><div>' + escapeHtml(license ? licenseLabel_(license) : '—') + '</div></div>' +
+    '<div class="field-static"><label>Expiry Date</label><div>' + escapeHtml(license && license.expirationDate ? fmtLongDate_(license.expirationDate) : '—') + '</div></div>' +
     '<div class="actions" style="justify-content:flex-start; margin:4px 0 24px"><button class="btn upgrade" id="pmUpgradeBtn" type="button">Upgrade Subscription</button></div>' +
     '<hr style="border:none; border-top:1px solid var(--border); margin:0 0 20px">' +
     '<h3 style="margin-top:0">Change Password</h3>' +
@@ -1423,7 +1464,7 @@ function renderLicenseBanner_(status) {
   if (status.status === 'TRIAL' && status.daysRemaining !== null && status.daysRemaining <= 7 && status.daysRemaining > 0) {
     text = 'Trial ends in ' + status.daysRemaining + ' day(s).'; cls = 'trial'; action = 'Upgrade Subscription';
   } else if (status.status === 'EXPIRED') {
-    text = 'Your trial or license has expired. Importing, entering, and publishing grades is paused - your students can still see anything already published.'; cls = 'expired'; action = 'Upgrade Subscription';
+    text = 'Your trial or license has expired. Importing, entering, and publishing grades is paused — your students can still see anything already published.'; cls = 'expired'; action = 'Upgrade Subscription';
   } else if (status.status === 'SUSPENDED') {
     text = 'Your account has been suspended. Contact support for details. Your students can still see anything already published.'; cls = 'expired';
   } else if (status.status === 'ACTIVE' && status.daysRemaining !== null && status.daysRemaining <= renewalWindowDays_(status.licenseType) && status.daysRemaining > 0) {
@@ -1470,7 +1511,7 @@ function renderLicenseRequestModal_(info, onDone) {
       '<p style="font-size:0.88rem">Pay with GCash first, then choose the plan you paid for and enter the reference number from your receipt so the payment can be verified.</p>' +
       '<div class="field"><label>Plan</label><select id="lrPlan"><option value="">Choose a plan…</option>' +
         (info.plans || []).map(function (p) {
-          return '<option value="' + escapeHtml(p.id) + '">' + escapeHtml(p.name + ' (' + (p.durationLabel || (p.days ? p.days + ' days' : p.months + ' months')) + ')' + (p.price ? ' - ' + p.price : '')) + '</option>';
+          return '<option value="' + escapeHtml(p.id) + '">' + escapeHtml(p.name + ' (' + (p.durationLabel || (p.days ? p.days + ' days' : p.months + ' months')) + ')' + (p.price ? ' — ' + p.price : '')) + '</option>';
         }).join('') + '</select></div>' +
       '<div class="field"><label>GCash reference number</label><input id="lrRef" maxlength="40" autocomplete="off"></div>' +
       '<div class="field"><label>Note (optional)</label><input id="lrNote" maxlength="300" autocomplete="off"></div>' +
@@ -1530,8 +1571,8 @@ function renderClassesTable_() {
       '<td>' + escapeHtml(ws.schoolYearLabel) + '</td>' +
       '<td><b>' + label + '</b>' + (active ? '<span class="active-pill">Active Class</span>' : '') + '</td>' +
       '<td>' + escapeHtml(ws.schoolName) + '</td>' +
-      '<td>' + (ws.adviserName ? escapeHtml(ws.adviserName) : '<span class="muted">-</span>') + '</td>' +
-      '<td>' + (ws.adviserDesignation ? escapeHtml(ws.adviserDesignation) : '<span class="muted">-</span>') + '</td>' +
+      '<td>' + (ws.adviserName ? escapeHtml(ws.adviserName) : '<span class="muted">—</span>') + '</td>' +
+      '<td>' + (ws.adviserDesignation ? escapeHtml(ws.adviserDesignation) : '<span class="muted">—</span>') + '</td>' +
       '<td><div class="row-actions">' +
         (active ? '' : '<button class="btn secondary small" data-set-active="' + id + '">Set active</button>') +
         '<button class="icon-btn" data-edit-class="' + id + '" title="Edit class" aria-label="Edit ' + label + '">' + iconHtml_('edit', 'Edit') + '</button>' +
@@ -1646,7 +1687,7 @@ function openClassModal_(ws) {
 
 function confirmDeleteClass_(ws, btn) {
   confirmModal('Delete ' + escapeHtml(classLabel_(ws)) + '?',
-    'This permanently removes the class (' + escapeHtml(ws.schoolYearLabel) + ') with its students, subjects and grades - including grades already published to students. This can\'t be undone.',
+    'This permanently removes the class (' + escapeHtml(ws.schoolYearLabel) + ') with its students, subjects and grades — including grades already published to students. This can\'t be undone.',
     'Delete class', function () {
       setClassesTableBusy_(true, btn);
       call('clientDeleteWorkspace_', [state.sessionToken, ws.workspaceId], function () {
@@ -1720,30 +1761,53 @@ function termChipsHtml_(cs) {
   return '<span class="terms" title="' + escapeHtml(label.join(' · ')) + '">' + chips + '</span>';
 }
 
+var SUBJECT_CATEGORY_LABELS_ = { CORE: 'Core Subjects', ELECTIVE: 'Elective Subjects', SPECIAL: 'Special Subjects' };
+var SUBJECT_CATEGORY_ORDER_ = ['CORE', 'ELECTIVE', 'SPECIAL'];
+
+/** One subject card. isSpecialStyle drives the dashed border and the "Special subject" placeholder text -- for a
+ *  K-10 class that's just cs.isCustom, but for SHS (where every subject is technically "custom", since there's no
+ *  fixed list) it's specifically the Special *category*, so Core/Elective don't wrongly look like special ones. */
+function subjectCardHtml_(cs, isSpecialStyle) {
+  var sub = cs.components.length > 0
+    ? cs.components.map(function (c) { return escapeHtml(c.subjectName); }).join(' · ')
+    : (isSpecialStyle ? 'Special subject' : '');
+  var name = escapeHtml(cs.subjectName);
+  var id = escapeHtml(cs.classSubjectId);
+  // Only teacher-added subjects get a delete cross -- default (catalog) subjects belong to the grade's fixed
+  // list and can't be removed this way. A sibling button, not nested inside subject-open (buttons can't nest).
+  var deleteBtn = cs.isCustom
+    ? '<button type="button" class="subject-delete" data-delete-subject="' + id + '" data-subject-name="' + name + '" title="Delete subject" aria-label="Delete ' + name + '">' + iconHtml_('cross', '\u2715') + '</button>'
+    : '';
+  return '<div class="subject-card' + (isSpecialStyle ? ' special' : '') + '">' +
+    '<button type="button" class="subject-open" data-open-subject="' + id + '" data-subject-name="' + name + '">' +
+      '<span class="name">' + name + '</span>' +
+      (sub ? '<span class="sub">' + sub + '</span>' : '') +
+      termChipsHtml_(cs) +
+    '</button>' + deleteBtn +
+  '</div>';
+}
+
 function paintSubjectGrid_(classSubjects) {
   var grid = document.getElementById('subjectGrid');
   var emptyMsg = document.getElementById('subjectsEmptyMsg');
   var ws = workspaceById_(state.currentWorkspaceId);
   var hasDefaults = !ws || isDefaultSubjectGrade_(ws.gradeLevel); // no class loaded yet: assume the common case
-  grid.innerHTML = classSubjects.map(function (cs) {
-    var sub = cs.components.length > 0
-      ? cs.components.map(function (c) { return escapeHtml(c.subjectName); }).join(' · ')
-      : (cs.isCustom ? 'Special subject' : '');
-    var name = escapeHtml(cs.subjectName);
-    var id = escapeHtml(cs.classSubjectId);
-    // Only special (teacher-added) subjects get a delete cross -- default subjects belong to the grade's fixed
-    // list and can't be removed this way. A sibling button, not nested inside subject-open (buttons can't nest).
-    var deleteBtn = cs.isCustom
-      ? '<button type="button" class="subject-delete" data-delete-subject="' + id + '" data-subject-name="' + name + '" title="Delete subject" aria-label="Delete ' + name + '">' + iconHtml_('cross', '\u2715') + '</button>'
-      : '';
-    return '<div class="subject-card' + (cs.isCustom ? ' special' : '') + '">' +
-      '<button type="button" class="subject-open" data-open-subject="' + id + '" data-subject-name="' + name + '">' +
-        '<span class="name">' + name + '</span>' +
-        (sub ? '<span class="sub">' + sub + '</span>' : '') +
-        termChipsHtml_(cs) +
-      '</button>' + deleteBtn +
-    '</div>';
-  }).join('');
+
+  if (ws && isSHSGrade_(ws.gradeLevel)) {
+    // Senior High has no fixed subject list -- group Core ahead of Electives ahead of Special, the same order
+    // the student report uses, instead of the grade's plan order (which doesn't apply here at all).
+    var groups = { CORE: [], ELECTIVE: [], SPECIAL: [] };
+    classSubjects.forEach(function (cs) {
+      var cat = groups[cs.subjectCategory] ? cs.subjectCategory : 'ELECTIVE'; // untagged (older) subjects default here
+      groups[cat].push(cs);
+    });
+    grid.innerHTML = SUBJECT_CATEGORY_ORDER_.filter(function (cat) { return groups[cat].length > 0; }).map(function (cat) {
+      return '<h4 class="subject-group-title">' + SUBJECT_CATEGORY_LABELS_[cat] + '</h4>' +
+        '<div class="subject-grid">' + groups[cat].map(function (cs) { return subjectCardHtml_(cs, cat === 'SPECIAL'); }).join('') + '</div>';
+    }).join('');
+  } else {
+    grid.innerHTML = '<div class="subject-grid">' + classSubjects.map(function (cs) { return subjectCardHtml_(cs, cs.isCustom); }).join('') + '</div>';
+  }
   emptyMsg.style.display = classSubjects.length === 0 && !hasDefaults ? 'block' : 'none';
 }
 
@@ -1795,7 +1859,7 @@ document.getElementById('addSubjectBtn').onclick = function () {
     title: 'Add subject',
     intro: hasDefaults
       ? 'For a subject that is not in the list, such as Religion. The regular subjects are already there.'
-      : 'This grade level has no fixed subject list - add each one it needs.',
+      : 'This grade level has no fixed subject list — add each one it needs.',
     submitLabel: 'Add Subject',
     fieldsHtml: '<div class="field"><label for="asName">Subject name</label><input id="asName" maxlength="80" placeholder="Religion" data-autofocus></div>',
     onSubmit: function (setError, submitBtn) {
@@ -1810,21 +1874,31 @@ document.getElementById('addSubjectBtn').onclick = function () {
 };
 
 /** Senior High has no fixed subject list, so Add Subject offers the common SHS subjects as one-tap buttons,
- *  plus a free-text fallback, instead of the plain name field the other grades get. */
+ *  plus a free-text fallback, instead of the plain name field the other grades get. Every subject added here is
+ *  tagged Core, Elective or Special so the student report can group Core ahead of Electives -- the quick-add
+ *  chips are all DepEd Core subjects, so those tap straight in as Core; a typed-in name asks which it is. */
 function openShsQuickAddModal_() {
   var chips = SHS_QUICK_ADD_SUBJECTS_.map(function (name, i) {
     return '<button type="button" class="btn secondary small" style="margin:0 6px 8px 0" data-shs-add="' + i + '">' + escapeHtml(name) + '</button>';
   }).join('');
   var html = '<h3 style="margin-top:0">Add subject</h3>' +
-    '<p style="color:#5C6773; font-size:0.9rem; margin-top:0">Senior High School has no fixed subject list. Tap one to add it, or type your own below.</p>' +
+    '<p style="color:#5C6773; font-size:0.9rem; margin-top:0">Senior High School has no fixed subject list. Tap one to add it as a Core subject, or type your own below.</p>' +
     '<div style="margin-bottom:8px">' + chips + '</div>' +
-    '<div class="field"><label for="shsCustomName">Other subject name</label><input id="shsCustomName" maxlength="80" placeholder="e.g. Research"></div>' +
+    '<div class="field"><label for="shsCustomName">Other subject name</label><input id="shsCustomName" maxlength="80" placeholder="e.g. Practical Research 2"></div>' +
+    '<div class="field">' +
+      '<label>Subject type</label>' +
+      '<div class="radio-row" role="radiogroup" aria-label="Subject type">' +
+        '<label class="radio-pill"><input type="radio" name="shsCategory" value="CORE"> Core</label>' +
+        '<label class="radio-pill"><input type="radio" name="shsCategory" value="ELECTIVE" checked> Elective</label>' +
+        '<label class="radio-pill"><input type="radio" name="shsCategory" value="SPECIAL"> Special</label>' +
+      '</div>' +
+    '</div>' +
     '<div id="shsAddMsg"></div>' +
     '<div class="actions"><button class="btn secondary" id="shsCloseBtn" type="button">Done</button><button class="btn" id="shsCustomAddBtn" type="button">Add</button></div>';
   var modal = openModal_(html);
 
-  var addByName = function (name, btn) {
-    call('clientCreateClassSubject_', [state.sessionToken, state.currentWorkspaceId, null, name], function () {
+  var addByName = function (name, category, btn) {
+    call('clientCreateClassSubject_', [state.sessionToken, state.currentWorkspaceId, null, name, category], function () {
       invalidateSubjectsCache_();
       renderSubjectGrid(true);
       showToast(name + ' added.', 'success');
@@ -1833,12 +1907,13 @@ function openShsQuickAddModal_() {
 
   document.getElementById('shsCloseBtn').onclick = closeModal_;
   modal.querySelectorAll('[data-shs-add]').forEach(function (btn) {
-    btn.onclick = function () { addByName(SHS_QUICK_ADD_SUBJECTS_[Number(btn.getAttribute('data-shs-add'))], btn); };
+    btn.onclick = function () { addByName(SHS_QUICK_ADD_SUBJECTS_[Number(btn.getAttribute('data-shs-add'))], 'CORE', btn); };
   });
   document.getElementById('shsCustomAddBtn').onclick = function () {
     var name = valueOf_('shsCustomName');
     if (!name) { document.getElementById('shsAddMsg').innerHTML = '<div class="msg error">Enter the subject name.</div>'; return; }
-    addByName(name, document.getElementById('shsCustomAddBtn'));
+    var category = (modal.querySelector('input[name="shsCategory"]:checked') || {}).value || 'ELECTIVE';
+    addByName(name, category, document.getElementById('shsCustomAddBtn'));
     document.getElementById('shsCustomName').value = '';
   };
 }
@@ -1883,10 +1958,12 @@ document.querySelectorAll('#termTabs button').forEach(function (btn) {
 
 function gradeHeadHtml_(components) {
   var cols = ['#', 'Student Name'].concat(components.map(function (c) { return c.subjectName; })).concat(['Grade', 'Description', 'Status', '']);
-  var descIdx = cols.length - 3, statusIdx = cols.length - 2;
+  var compEnd = 2 + components.length, descIdx = cols.length - 3, statusIdx = cols.length - 2;
   return '<tr>' + cols.map(function (c, i) {
-    var cls = i === descIdx ? ' class="col-desc"' : (i === statusIdx ? ' class="col-status"' : '');
-    return '<th' + cls + '>' + escapeHtml(c) + '</th>';
+    // col-comp on the (0 or 2) MAPEH component columns, same class the body cells use below, so CSS can give
+    // Male and Female identical fixed widths regardless of which table's names happen to be longer.
+    var cls = i === descIdx ? 'col-desc' : (i === statusIdx ? 'col-status' : (i >= 2 && i < compEnd ? 'col-comp' : ''));
+    return '<th' + (cls ? ' class="' + cls + '"' : '') + '>' + escapeHtml(c) + '</th>';
   }).join('') + '</tr>';
 }
 
@@ -1910,11 +1987,11 @@ function gradeRowHtml_(g, number, components) {
     components.forEach(function (c) {
       var value = g.components ? g.components[c.classSubjectId] : '';
       cells += g.locked
-        ? '<td>' + escapeHtml(value) + '</td>'
-        : '<td><input class="grade-input comp" type="number" min="60" max="100" step="1" inputmode="numeric" data-enr="' + enr + '" data-comp="' + escapeHtml(c.classSubjectId) +
+        ? '<td class="col-comp">' + escapeHtml(value) + '</td>'
+        : '<td class="col-comp"><input class="grade-input comp" type="number" min="60" max="100" step="1" inputmode="numeric" data-enr="' + enr + '" data-comp="' + escapeHtml(c.classSubjectId) +
           '" data-original="' + escapeHtml(value) + '" value="' + escapeHtml(value) + '" aria-label="' + escapeHtml(c.subjectName) + ' grade for ' + name + '"></td>';
     });
-    cells += '<td><strong class="calc-grade" data-saved="' + escapeHtml(g.termGrade) + '">' + (g.termGrade !== '' ? escapeHtml(g.termGrade) : '-') + '</strong>' +
+    cells += '<td><strong class="calc-grade" data-saved="' + escapeHtml(g.termGrade) + '">' + (g.termGrade !== '' ? escapeHtml(g.termGrade) : '—') + '</strong>' +
       (g.locked ? '<span class="lock-tag">Locked</span>' : '') + '</td>';
   } else {
     cells += g.locked
@@ -1948,8 +2025,8 @@ function paintGradeSheet_(data) {
   }
   if (!document.getElementById('reviewTableBodyMale')) {
     area.innerHTML =
-      '<div class="gender-col male"><div class="gender-head">Male</div><table><thead id="gradesTheadMale"></thead><tbody id="reviewTableBodyMale"></tbody></table></div>' +
-      '<div class="gender-col female"><div class="gender-head">Female</div><table><thead id="gradesTheadFemale"></thead><tbody id="reviewTableBodyFemale"></tbody></table></div>';
+      '<div class="gender-col male"><div class="gender-head">Male</div><div class="table-scroll"><table><thead id="gradesTheadMale"></thead><tbody id="reviewTableBodyMale"></tbody></table></div></div>' +
+      '<div class="gender-col female"><div class="gender-head">Female</div><div class="table-scroll"><table><thead id="gradesTheadFemale"></thead><tbody id="reviewTableBodyFemale"></tbody></table></div></div>';
   }
   renderGradeHead_(data.components);
   var columns = 6 + data.components.length;
@@ -1967,8 +2044,8 @@ function loadReview(keepRows) {
     state.currentSubject = data;
     document.getElementById('subjectTitle').textContent = data.subjectName;
     document.getElementById('gradeHint').textContent = data.components.length > 0
-      ? 'Type each learner\'s grade (60–100) for both components. The MAPEH grade is their average and appears once both have a grade; the description fills in automatically. Published grades are locked - unpublish one to edit it.'
-      : 'Type each learner\'s transmuted grade (60–100); the description fills in automatically. Published grades are locked - unpublish one to edit it.';
+      ? 'Type each learner\'s grade (60–100) for both components. The MAPEH grade is their average and appears once both have a grade; the description fills in automatically. Published grades are locked — unpublish one to edit it.'
+      : 'Type each learner\'s transmuted grade (60–100); the description fills in automatically. Published grades are locked — unpublish one to edit it.';
     paintGradeSheet_(data);
     var lockedCount = data.rows.filter(function (r) { return r.locked; }).length;
     document.getElementById('lockNote').innerHTML = lockedCount
@@ -1991,7 +2068,7 @@ document.getElementById('gradesArea').addEventListener('input', function (e) {
     if (input.value.trim() === '' || !isFinite(n) || Math.floor(n) !== n || n < 60 || n > 100) complete = false; else total += n;
   });
   if (complete) { out.textContent = Math.round(total / inputs.length); out.classList.add('preview'); }
-  else { out.textContent = out.getAttribute('data-saved') || '-'; out.classList.remove('preview'); }
+  else { out.textContent = out.getAttribute('data-saved') || '—'; out.classList.remove('preview'); }
 });
 
 document.getElementById('saveGradesBtn').onclick = function () {
@@ -2006,7 +2083,7 @@ document.getElementById('saveGradesBtn').onclick = function () {
     entries.push(entry);
     touchedInputs.push(input);
   });
-  if (entries.length === 0) { msgEl.innerHTML = '<div class="msg error">Nothing to save - type a grade first.</div>'; return; }
+  if (entries.length === 0) { msgEl.innerHTML = '<div class="msg error">Nothing to save — type a grade first.</div>'; return; }
   var isMapeh = state.currentSubject && state.currentSubject.components.length > 0;
   call('clientSaveManualGrades_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm, entries], function (data) {
     msgEl.innerHTML = '<div class="msg success">Saved ' + data.saved + ' grade(s). ' +
@@ -2020,7 +2097,7 @@ document.getElementById('saveGradesBtn').onclick = function () {
       var descCell = tr.querySelector('.col-desc');
       if (descCell) descCell.textContent = r.descriptor;
       var calc = tr.querySelector('.calc-grade'); // MAPEH only: the computed average shown next to the two component inputs
-      if (calc) { calc.textContent = r.termGrade !== '' ? r.termGrade : '-'; calc.setAttribute('data-saved', r.termGrade); }
+      if (calc) { calc.textContent = r.termGrade !== '' ? r.termGrade : '—'; calc.setAttribute('data-saved', r.termGrade); }
       var statusCell = tr.querySelector('.col-status');
       if (statusCell) statusCell.innerHTML = '<span class="status-pill DRAFT">DRAFT</span>';
       var actionCell = tr.querySelector('td:last-child');
@@ -2038,7 +2115,7 @@ document.getElementById('gradesArea').addEventListener('click', function (e) {
   var publish = btn.getAttribute('data-act') === 'publish';
   call(publish ? 'clientPublishLearner_' : 'clientUnpublishLearner_',
     [state.sessionToken, state.currentClassSubjectId, state.currentTerm, btn.getAttribute('data-enr')],
-    function () { invalidateSubjectsCache_(); loadReview(true); showToast(publish ? 'Published - this grade is now locked.' : 'Unpublished - you can edit this grade again.', 'success'); },
+    function () { invalidateSubjectsCache_(); loadReview(true); showToast(publish ? 'Published — this grade is now locked.' : 'Unpublished — you can edit this grade again.', 'success'); },
     function (err) { showToast(err, 'error'); },
     { button: btn });
 });
@@ -2097,13 +2174,13 @@ document.getElementById('ecrUploadBtn').onclick = function () {
 
 function termChoiceHtml_(t) {
   var label = 'Term ' + t.term;
-  if (t.gradedCount === 0) return '<div class="term-choice" style="color:var(--text-muted)">' + label + ' - no grades in this file</div>';
+  if (t.gradedCount === 0) return '<div class="term-choice" style="color:var(--text-muted)">' + label + ' — no grades in this file</div>';
   var notes = [];
   if (t.detail) notes.push(t.detail); // MAPEH: how many grades each component has
-  if (t.lockedCount > 0) notes.push(t.lockedCount + ' already published and locked - will be skipped');
+  if (t.lockedCount > 0) notes.push(t.lockedCount + ' already published and locked — will be skipped');
   if (t.skippedInvalid > 0) notes.push(t.skippedInvalid + ' cell(s) had no usable grade');
   return '<label class="term-choice"><input type="checkbox" data-term-check="' + t.term + '"' + (t.importable ? ' checked' : ' disabled') + '>' +
-    '<span>' + label + ' - ' + t.gradedCount + (t.detail ? ' learner(s)' : ' grade(s)') + (t.importable ? '' : ' (all locked)') + (notes.length ? '<br><span style="color:var(--text-muted); font-size:0.85rem">' + escapeHtml(notes.join(' · ')) + '</span>' : '') + '</span></label>';
+    '<span>' + label + ' — ' + t.gradedCount + (t.detail ? ' learner(s)' : ' grade(s)') + (t.importable ? '' : ' (all locked)') + (notes.length ? '<br><span style="color:var(--text-muted); font-size:0.85rem">' + escapeHtml(notes.join(' · ')) + '</span>' : '') + '</span></label>';
 }
 
 function renderImportPreview(preview) {
@@ -2117,18 +2194,18 @@ function renderImportPreview(preview) {
   importState.file = preview.file;
   var f = preview.file;
 
-  var html = '<div class="import-title">' + escapeHtml(f.subject) + ' - Grade ' + escapeHtml(f.gradeLevel) + ' · ' + escapeHtml(f.section) + '</div>' +
+  var html = '<div class="import-title">' + escapeHtml(f.subject) + ' — Grade ' + escapeHtml(f.gradeLevel) + ' · ' + escapeHtml(f.section) + '</div>' +
     '<div style="color:var(--text-muted); margin-bottom:6px">' + (f.schoolName ? escapeHtml(f.schoolName) + ' · ' : '') + 'School year ' + escapeHtml(f.schoolYear) + '</div>' +
     '<ul class="import-facts">' +
-    '<li>Class: <b>' + (preview.classExists ? 'already in your classes' : 'new - will be created') + '</b>' + (preview.schoolNameWillChange ? ' (school name will be updated)' : '') + '</li>' +
-    '<li>Subject: <b>' + (preview.classSubjectExists ? 'already in this class' : 'new - will be added') + '</b></li>' +
+    '<li>Class: <b>' + (preview.classExists ? 'already in your classes' : 'new — will be created') + '</b>' + (preview.schoolNameWillChange ? ' (school name will be updated)' : '') + '</li>' +
+    '<li>Subject: <b>' + (preview.classSubjectExists ? 'already in this class' : 'new — will be added') + '</b></li>' +
     '<li>Learners: <b>' + preview.learnerCount + '</b> in the file · ' + preview.matchedCount + ' already in the class · <b>' + preview.newCount + '</b> will be added</li></ul>';
 
   if (preview.classExists && preview.newCount > 0) {
     var options = '<option value="">Add as new</option>' + preview.existingRoster.map(function (r) {
       return '<option value="' + escapeHtml(r.enrollmentId) + '">Same as: ' + escapeHtml(r.fullName) + '</option>';
     }).join('');
-    html += '<div class="issue-block info"><h4>' + preview.newCount + ' learner(s) are not in this class yet - they will be added as new</h4>' +
+    html += '<div class="issue-block info"><h4>' + preview.newCount + ' learner(s) are not in this class yet — they will be added as new</h4>' +
       '<p style="margin:0 0 10px; font-size:0.88rem">If a name is only spelled differently from your list, match it to the existing learner instead.</p>' +
       preview.newLearners.map(function (name) {
         return '<div class="issue-row"><span>' + escapeHtml(name) + '</span><span class="actions-inline"><select data-match-name="' + escapeHtml(name) + '">' + options + '</select></span></div>';
@@ -2191,7 +2268,7 @@ function renderImportDone(result) {
   if (result.createdSubject) lines.push('Subject added.');
   if (result.addedLearners > 0) lines.push(result.addedLearners + ' learner(s) added.');
   result.terms.forEach(function (t) {
-    lines.push('Term ' + t.term + ': ' + t.imported + (t.note ? ' learner(s) imported' : ' grade(s) imported') + (t.note ? ' - ' + t.note : '') +
+    lines.push('Term ' + t.term + ': ' + t.imported + (t.note ? ' learner(s) imported' : ' grade(s) imported') + (t.note ? ' — ' + t.note : '') +
       (t.skippedLocked > 0 ? ', ' + t.skippedLocked + ' locked learner(s) skipped' : '') + '.');
   });
   // Music and Arts / PE and Health belong to MAPEH, which is the sheet that opens.
@@ -2199,7 +2276,7 @@ function renderImportDone(result) {
   var openName = openId !== result.classSubjectId ? 'MAPEH' : (importState.file ? importState.file.subject : 'subject');
   area.innerHTML = '<div class="msg success">Import complete.</div><ul class="import-facts">' +
     lines.map(function (l) { return '<li>' + escapeHtml(l) + '</li>'; }).join('') + '</ul>' +
-    (result.addedLearners > 0 ? '<p class="hint" style="margin:0 0 12px">An E-CR has no LRNs. Import your student .CSV under Students to add them - learners are matched by name.</p>' : '') +
+    (result.addedLearners > 0 ? '<p class="hint" style="margin:0 0 12px">An E-CR has no LRNs. Import your student .CSV under Students to add them — learners are matched by name.</p>' : '') +
     '<button class="btn" id="ecrOpenSubjectBtn">Open ' + escapeHtml(openName) + '</button> ' +
     (result.addedLearners > 0 ? '<button class="btn secondary" id="ecrGoStudentsBtn">Go to Students</button>' : '');
   showToast('Import complete.', 'success');
@@ -2240,7 +2317,7 @@ function rosterColumnHtml_(learners, label, cls) {
           '<td style="white-space:nowrap"><button class="btn small secondary" data-edit-student="' + escapeHtml(r.enrollmentId) + '" aria-label="Edit ' + name + '">' + iconHtml_('edit', '') + '<span>Edit</span></button></td></tr>';
       }).join('');
   return '<div class="gender-col ' + cls + '"><div class="gender-head">' + label + '</div>' +
-    '<table><thead><tr><th>#</th><th>LRN</th><th>Student Name</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    '<div class="table-scroll"><table class="roster-table"><thead><tr><th>#</th><th>LRN</th><th>Student Name</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div></div>';
 }
 
 function paintRoster_(roster) {
@@ -2309,7 +2386,7 @@ function openStudentModal_(learner) {
     fieldsHtml:
       '<div class="field"><label for="sfLrn">LRN</label><input id="sfLrn" inputmode="numeric" maxlength="12" placeholder="12 digits" autocomplete="off" data-autofocus value="' + escapeHtml(v.lrn) + '"></div>' +
       '<div class="field"><label for="sfName">Student name</label><input id="sfName" maxlength="120" placeholder="Dela Cruz, Juan" autocomplete="off" value="' + escapeHtml(v.fullName) + '">' +
-        '<div class="hint">Surname, Given Name - students log in with their surname.</div></div>' +
+        '<div class="hint">Surname, Given Name — students log in with their surname.</div></div>' +
       '<div class="field"><label for="sfSex">Gender</label><select id="sfSex"><option value="">Choose…</option>' +
         '<option value="M"' + (v.sex === 'M' ? ' selected' : '') + '>Male</option><option value="F"' + (v.sex === 'F' ? ' selected' : '') + '>Female</option></select></div>',
     onSubmit: function (setError, submitBtn) {
@@ -2482,7 +2559,7 @@ function openCsvPreviewModal_(fileName, parsed) {
       (parsed.problems.length ? '<li><b>' + parsed.problems.length + '</b> row(s) have a problem and will be skipped</li>' : '') + '</ul>' +
       problemListHtml_(parsed.problems) +
       (tooMany ? '<div class="msg error">A file can have at most ' + CSV_MAX_ROWS_ + ' students. Split it into smaller files.</div>' : '') +
-      '<p class="hint">Students already in this class without an LRN - for example from an E-CR - are matched by name and get their LRN. Nobody is added twice.</p>';
+      '<p class="hint">Students already in this class without an LRN — for example from an E-CR — are matched by name and get their LRN. Nobody is added twice.</p>';
   }
   body += '</div><div class="actions" id="csvActions"><button class="btn secondary" id="csvCancel" type="button">' + (ready ? 'Cancel' : 'Close') + '</button>' +
     (ready ? '<button class="btn" id="csvImport" type="button">Import ' + ready + ' student(s)</button>' : '') + '</div>';
@@ -2505,7 +2582,7 @@ function showCsvResult_(summary, clientProblems) {
   var skipped = clientProblems.concat(summary.skipped.map(function (s) { return { line: s.row, message: s.message }; }));
   var lines = [];
   if (summary.added) lines.push(summary.added + ' new student(s) added.');
-  if (summary.lrnSet) lines.push(summary.lrnSet + ' student(s) already in the class matched by name - LRN saved.');
+  if (summary.lrnSet) lines.push(summary.lrnSet + ' student(s) already in the class matched by name — LRN saved.');
   if (summary.enrolled) lines.push(summary.enrolled + ' student(s) from your other classes added to this class.');
   if (lines.length === 0) lines.push('No students were added.');
   document.getElementById('csvBody').innerHTML = '<div class="msg success">Import complete.</div><ul class="import-facts">' +
@@ -2518,14 +2595,14 @@ function showCsvResult_(summary, clientProblems) {
 
 function renderAccountLicense_(status, info) {
   var html;
-  if (status.status === 'TRIAL') html = '<p>Free trial' + (status.expirationDate ? ' - expires on ' + escapeHtml(fmtLongDate_(status.expirationDate)) : '') + '.</p>';
+  if (status.status === 'TRIAL') html = '<p>Free trial' + (status.expirationDate ? ' — expires on ' + escapeHtml(fmtLongDate_(status.expirationDate)) : '') + '.</p>';
   else if (status.status === 'ACTIVE') html = '<p>Active ' + planLabel_(status.licenseType) + 'license' + (status.expirationDate ? (' until ' + escapeHtml(fmtLongDate_(status.expirationDate))) : '') + '.</p>';
   else if (status.status === 'SUSPENDED') html = '<p>Your account is suspended. Contact support for details.</p>';
   else html = '<p>Your trial or license has expired.</p>';
 
   if (info) {
     if (info.pending) {
-      html += '<div class="msg warn">License request sent on ' + escapeHtml(fmtDate_(info.pending.requestedAt)) + ' - waiting for approval.</div>' +
+      html += '<div class="msg warn">License request sent on ' + escapeHtml(fmtDate_(info.pending.requestedAt)) + ' — waiting for approval.</div>' +
         '<button class="btn upgrade" id="acctRequestBtn">View request</button>';
     } else {
       if (info.lastDecision && info.lastDecision.status === 'DECLINED') {
