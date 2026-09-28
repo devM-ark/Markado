@@ -1395,11 +1395,11 @@ function bootstrapData_(mayNeedOnboarding) {
   // this is what lets Subjects and Students open instantly on first click instead of each
   // firing its own fetch (see renderSubjectGrid/renderRoster's cache-hit checks below).
   call('clientGetWorkspaceBundle_', [state.sessionToken, state.currentWorkspaceId], function (bundle) {
-    state.profile = bundle.profile;
-    renderProfile_(bundle.profile);
-    renderLicenseBanner_(bundle.profile.license);
+    state.profile = bundle.profile || null;
+    renderProfile_(state.profile);
+    if (state.profile) renderLicenseBanner_(state.profile.license);
 
-    state.workspaces = bundle.workspaces;
+    state.workspaces = bundle.workspaces || [];
     state.workspacesLoaded = true;
     ensureActiveClass_();
 
@@ -1411,6 +1411,8 @@ function bootstrapData_(mayNeedOnboarding) {
     loadClassesScreen();
     startBackgroundRefresh_();
   }, function (err) {
+    // Bundle not available on the deployed backend (e.g. Apps Script not yet redeployed): use the separate calls.
+    if (/unknown or unavailable function/i.test(String(err))) { bootstrapLegacy_(mayNeedOnboarding); return; }
     if (mayNeedOnboarding) {
       sessionStorage.removeItem(ONBOARD_FLAG);
       call('clientOnboard_', [state.sessionToken], function () {
@@ -1419,6 +1421,22 @@ function bootstrapData_(mayNeedOnboarding) {
       }, function (e2) { setErrorState(document.querySelector('#workspaceTable tbody'), e2, function () { bootstrapData_(false); }); });
     } else {
       setErrorState(document.querySelector('#workspaceTable tbody'), err, function () { bootstrapData_(false); });
+    }
+  });
+}
+
+/** The original login load: profile and workspaces as two separate calls. */
+function bootstrapLegacy_(mayNeedOnboarding) {
+  loadProfile_();
+  loadWorkspacesIntoState(function () { loadClassesScreen(); }, function (err) {
+    if (mayNeedOnboarding) {
+      sessionStorage.removeItem(ONBOARD_FLAG);
+      call('clientOnboard_', [state.sessionToken], function () {
+        sessionStorage.setItem(ONBOARD_FLAG, state.sessionToken);
+        bootstrapLegacy_(false);
+      }, function (e2) { setErrorState(document.querySelector('#workspaceTable tbody'), e2, function () { bootstrapLegacy_(false); }); });
+    } else {
+      setErrorState(document.querySelector('#workspaceTable tbody'), err, function () { bootstrapLegacy_(false); });
     }
   });
 }
@@ -1445,10 +1463,8 @@ function startBackgroundRefresh_() {
     if (document.hidden) return;      // tab isn't in view -- nothing on screen to refresh
     if (isGradeEntryDirty_()) return; // unsaved grade keystrokes -- leave everything alone this cycle
     call('clientGetWorkspaceBundle_', [state.sessionToken, state.currentWorkspaceId], function (bundle) {
-      state.profile = bundle.profile;
-      renderProfile_(bundle.profile);
-      renderLicenseBanner_(bundle.profile.license);
-      state.workspaces = bundle.workspaces;
+      if (bundle.profile) { state.profile = bundle.profile; renderProfile_(bundle.profile); renderLicenseBanner_(bundle.profile.license); }
+      state.workspaces = bundle.workspaces || state.workspaces;
       if (bundle.activeWorkspaceId) {
         state.cache.subjects[bundle.activeWorkspaceId] = bundle.classSubjects;
         state.cache.roster[bundle.activeWorkspaceId] = bundle.roster;
@@ -1566,6 +1582,14 @@ function openProfileModal_() {
       showToast('Password updated.', 'success');
     }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; }, { button: updateBtn });
   };
+}
+
+function loadProfile_() {
+  call('clientGetMyProfile_', [state.sessionToken], function (profile) {
+    state.profile = profile;
+    renderProfile_(profile);
+    renderLicenseBanner_(profile.license); // warnings about an expiring or expired license
+  }, function () { renderProfile_(null); }, { silent: true });
 }
 
 function fmtDate_(iso) { return iso ? String(iso).slice(0, 10) : ''; }  // still used for the request dates below
