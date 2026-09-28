@@ -173,20 +173,23 @@ function interpretResponse_(r) {
   var text = (r.text || '').trim();
   if (!r.ok) {
     var msg;
-    if (r.status === 401 || r.status === 403) msg = 'The server refused the request (HTTP ' + r.status + '). The web app may not be publicly accessible.';
-    else if (r.status === 404) msg = 'The server could not be found (HTTP 404). The web app URL may have changed.';
+    // The HTTP status is only meaningful to whoever set this up (a wrong deployment setting, an expired URL,
+    // a quota) -- not something a teacher or student can act on, so it goes to the console for that person to
+    // find, not into the toast everyone sees.
+    console.error('Markado: request failed with HTTP ' + r.status);
+    if (r.status === 401 || r.status === 403 || r.status === 404) msg = 'This isn\'t set up correctly right now. Please let your school\'s Markado admin know.';
     else if (r.status === 429) msg = 'Too many requests right now. Please wait a moment and try again.';
-    else msg = 'The server had a problem (HTTP ' + r.status + '). Please try again.';
+    else msg = 'Something went wrong on our end. Please try again in a moment.';
     return { ok: false, kind: 'http', error: msg, retryable: r.status >= 500 };
   }
   if (text.charAt(0) === '<') {
-    return { ok: false, kind: 'html', error: 'The server returned an unexpected page instead of data. It may be temporarily unavailable or over its quota \u2014 please try again shortly.', retryable: true };
+    return { ok: false, kind: 'html', error: 'This is temporarily unavailable. Please try again in a few minutes.', retryable: true };
   }
   var res;
   try {
     res = JSON.parse(text);
   } catch (e) {
-    return { ok: false, kind: 'parse', error: 'The server sent back something unexpected.' };
+    return { ok: false, kind: 'parse', error: 'Something went wrong. Please try again.' };
   }
   if (res && res.ok === false) {
     return { ok: false, kind: 'app', error: res.error || 'Something went wrong. Please try again.' };
@@ -204,8 +207,8 @@ function sendRequest_(fnName, args, timeoutMs, isRead) {
       resolve({
         ok: false, kind: 'timeout',
         error: isRead
-          ? 'The request timed out after ' + Math.round(timeoutMs / 1000) + ' seconds. The server may be busy \u2014 please try again.'
-          : 'The request timed out after ' + Math.round(timeoutMs / 1000) + ' seconds. It may still have been processed \u2014 refresh and check before trying again.',
+          ? 'This is taking longer than expected. Please try again.'
+          : 'This is taking longer than expected. It may have already gone through - refresh and check before trying again.',
       });
     }, timeoutMs);
 
@@ -227,9 +230,13 @@ function sendRequest_(fnName, args, timeoutMs, isRead) {
       .catch(function (err) {
         clearTimeout(timer);
         if (timedOut) return;
+        // err.message here is a raw browser-level string ("Failed to fetch" and the like) -- not something a
+        // plain-language message can usefully build on, so it's logged for anyone technical to check, and the
+        // toast just gives the one thing a person can actually do about it.
+        console.error('Markado: network request failed', err);
         resolve({
           ok: false, kind: 'network', retryable: true,
-          error: 'Could not reach the server (' + (err && err.message ? err.message : 'network error') + '). Check your internet connection.',
+          error: 'Could not reach the server. Check your internet connection and try again.',
         });
       });
   });

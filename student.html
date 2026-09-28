@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MARKADO: Online Grades Viewer - Student</title>
+<title>Markado: Online Grades Viewer - Student</title>
 <style>
   :root {
     --black: #0B0B0B;
@@ -75,6 +75,14 @@
 	max-width: 480px;
 	margin: 0 auto;
 	padding: 24px 18px 60px;
+  }
+
+  /* The login form stays narrow at any width (a wide login card looks sparse, not "using the space well"), but
+     the report has real tabular content to show, so on a laptop-sized screen it gets room to lay out flat
+     instead of sitting in a phone-width column with a horizontal scrollbar despite the screen having space free.
+     body.wide-view is toggled by show() below, only while the grades screen is the one on display. */
+  @media (min-width: 760px) {
+    body.wide-view main { max-width: 840px; }
   }
   
   .screen {
@@ -279,7 +287,21 @@
      SHS Core/Elective/Special, and a closing General Average row. Table can be wider than the card on a phone,
      so it scrolls horizontally inside its own wrapper rather than forcing the whole page to. */
   .report-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .report-table { min-width: 560px; }
+  /* table-layout:auto (the default) sizes each column from its own cells' content, which is exactly why Term
+     1/2/3 didn't come out identical (a blank MAPEH-component cell vs. a two-digit grade aren't the same width)
+     and Final Grade -- bold, with a highlight background -- ran wider than it needed. Fixed layout makes every
+     column's width a deliberate, explicit decision instead (via colgroup below) rather than one content forces
+     on it. Learning Areas is the one column left unconstrained, so it's the one that absorbs the remaining
+     space -- same technique as the teacher side's Male/Female tables. */
+  .report-table { min-width: 560px; table-layout: fixed; }
+  .report-table col.term-col { width: 42px; } /* all three identical */
+  .report-table col.final-col { width: 56px; }
+  .report-table col.desc-col { width: 88px; } /* fits "Benchmarking", the longest description band */
+  .report-table col.remark-col { width: 76px; } /* fits "Promoted" / "Retained" */
+  /* "Learning Areas" reads better centered like the rest of the header row; the subject names underneath read
+     better left-aligned -- .grades-table's shared th:first-child rule left-aligns both, so this (same specificity,
+     but naming both classes the element actually has makes the override unambiguous) undoes it for the header only. */
+  .report-table.grades-table th:first-child { text-align: center; }
   /* One uniform divider works for both header rows at once: on a rowspan cell it lands at the true bottom of the
      whole header (the header/body boundary); on the plain "Term" and "1/2/3" cells it lands after their own row
      (between the two header rows, and between the second row and the body, respectively). */
@@ -359,6 +381,12 @@
   .report-info-grid .info-label { color: #666; }
   .report-info-grid .info-value { font-weight: 600; color: var(--darkest); margin-left: 4px; }
 
+  /* Pairing e.g. "Student Name" with "Grade Level" side by side gets cramped on a phone -- one column each keeps
+     every value readable instead of wrapping mid-word. Matches the same mobile width main{} defaults to below. */
+  @media (max-width: 480px) {
+    .report-info-grid { grid-template-columns: 1fr; }
+  }
+
   .empty-state {
 	text-align: center;
 	padding: 48px 20px;
@@ -401,6 +429,36 @@
     </div>
   </section>
 
+  <!-- PIN SETUP (first login only: LRN + surname matched, but no PIN exists yet) -->
+  <section id="screen-pin-setup" class="screen">
+    <div class="card" style="margin-top:20px">
+      <h2 style="margin-top:0">Create a PIN</h2>
+      <p style="color:#555; font-size:0.9rem; margin-top:-8px">Set a 4-digit PIN so only you can see your grades next time.</p>
+      <div id="pinSetupMsg"></div>
+      <form id="pinSetupForm">
+        <div class="field"><label>New PIN</label><input id="pinSetupInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off"></div>
+        <div class="field"><label>Confirm PIN</label><input id="pinSetupConfirmInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off"></div>
+        <button class="btn" type="submit" id="pinSetupBtn">Save PIN</button>
+      </form>
+      <p style="margin-top:14px"><a href="#" id="pinSetupBackLink" style="color:#667; font-size:0.85rem">&larr; Back</a></p>
+    </div>
+  </section>
+
+  <!-- PIN VERIFY (every login after the first) -->
+  <section id="screen-pin-verify" class="screen">
+    <div class="card" style="margin-top:20px">
+      <h2 style="margin-top:0">Enter your PIN</h2>
+      <p style="color:#555; font-size:0.9rem; margin-top:-8px">Enter the 4-digit PIN you created.</p>
+      <div id="pinVerifyMsg"></div>
+      <form id="pinVerifyForm">
+        <div class="field"><label>PIN</label><input id="pinVerifyInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off"></div>
+        <button class="btn" type="submit" id="pinVerifyBtn">Continue</button>
+      </form>
+      <p style="color:#888; font-size:0.8rem; margin-top:14px">Forgot your PIN? Ask your teacher to reset it.</p>
+      <p style="margin-top:6px"><a href="#" id="pinVerifyBackLink" style="color:#667; font-size:0.85rem">&larr; Back</a></p>
+    </div>
+  </section>
+
   <!-- GRADES -->
   <section id="screen-grades" class="screen">
     <div id="viewControls" style="display:none">
@@ -425,6 +483,7 @@ var sessionToken = sessionStorage.getItem('ogv_student_session') || null;
 function show(id) {
   document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('active'); });
   document.getElementById(id).classList.add('active');
+  document.body.classList.toggle('wide-view', id === 'screen-grades');
 }
 
 
@@ -442,6 +501,10 @@ window.onApiSessionExpired = backToLogin_;
 
 if (!sessionToken) call('clientPing_', [], function () {}, function () {}, { silent: true });
 
+// A matched LRN + surname no longer logs the student straight in -- see PIN SETUP / PIN VERIFY above -- it just
+// hands back a short-lived pendingToken and which of those two screens comes next.
+var pendingToken = null;
+
 // Enter key submits the form (native <form> submit behavior) -- intercepted here so it goes through the same
 // handler as tapping the button, same pattern as teacher-login.html's authForm.
 document.getElementById('loginForm').onsubmit = function (e) {
@@ -453,12 +516,64 @@ document.getElementById('loginForm').onsubmit = function (e) {
   if (!lrn || !surname) return;
 
   call('clientStudentLogin_', [lrn, surname], function (data) {
+    pendingToken = data.pendingToken;
+    if (data.stage === 'setup') {
+      document.getElementById('pinSetupMsg').innerHTML = '';
+      document.getElementById('pinSetupForm').reset();
+      show('screen-pin-setup');
+    } else {
+      document.getElementById('pinVerifyMsg').innerHTML = '';
+      document.getElementById('pinVerifyForm').reset();
+      show('screen-pin-verify');
+    }
+  }, function (err) {
+    msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>';
+  }, { button: document.getElementById('loginBtn') });
+};
+
+['pinSetupBackLink', 'pinVerifyBackLink'].forEach(function (id) {
+  document.getElementById(id).onclick = function (e) {
+    e.preventDefault();
+    pendingToken = null; // abandoned, not invalidated server-side -- it just expires on its own shortly
+    show('screen-login');
+  };
+});
+
+document.getElementById('pinSetupForm').onsubmit = function (e) {
+  e.preventDefault();
+  var pin = document.getElementById('pinSetupInput').value.trim();
+  var confirmPin = document.getElementById('pinSetupConfirmInput').value.trim();
+  var msgEl = document.getElementById('pinSetupMsg');
+  msgEl.innerHTML = '';
+  if (!/^\d{4}$/.test(pin)) { msgEl.innerHTML = '<div class="msg error">Enter a 4-digit PIN.</div>'; return; }
+  if (pin !== confirmPin) { msgEl.innerHTML = '<div class="msg error">Those two PINs don\'t match.</div>'; return; }
+
+  call('clientCompleteStudentPinSetup_', [pendingToken, pin, confirmPin], function (data) {
+    pendingToken = null;
     sessionToken = data.sessionToken;
     sessionStorage.setItem('ogv_student_session', sessionToken);
     afterLogin();
   }, function (err) {
     msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>';
-  }, { button: document.getElementById('loginBtn') });
+  }, { button: document.getElementById('pinSetupBtn') });
+};
+
+document.getElementById('pinVerifyForm').onsubmit = function (e) {
+  e.preventDefault();
+  var pin = document.getElementById('pinVerifyInput').value.trim();
+  var msgEl = document.getElementById('pinVerifyMsg');
+  msgEl.innerHTML = '';
+  if (!/^\d{4}$/.test(pin)) { msgEl.innerHTML = '<div class="msg error">Enter your 4-digit PIN.</div>'; return; }
+
+  call('clientVerifyStudentPin_', [pendingToken, pin], function (data) {
+    pendingToken = null;
+    sessionToken = data.sessionToken;
+    sessionStorage.setItem('ogv_student_session', sessionToken);
+    afterLogin();
+  }, function (err) {
+    document.getElementById('pinVerifyInput').value = '';
+    msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>';
+  }, { button: document.getElementById('pinVerifyBtn') });
 };
 
 document.getElementById('logoutBtn').onclick = backToLogin_;
@@ -479,7 +594,7 @@ function termGrade_(subject, term) {
 }
 
 function gradeCell_(value) {
-  return value === null || value === undefined ? '<td class="dash">—</td>' : '<td class="num">' + escapeHtml(value) + '</td>';
+  return value === null || value === undefined ? '<td class="dash">-</td>' : '<td class="num">' + escapeHtml(value) + '</td>';
 }
 
 /** "Dela Cruz, Juan M." -> surname bolded, rest normal -- the format asked for on the report. */
@@ -532,7 +647,7 @@ function remarkClass_(remark) {
 }
 
 function finalCellHtml_(value) {
-  return value === null || value === undefined ? '<td class="dash final">—</td>' : '<td class="num final">' + escapeHtml(value) + '</td>';
+  return value === null || value === undefined ? '<td class="dash final">-</td>' : '<td class="num final">' + escapeHtml(value) + '</td>';
 }
 
 function subjectRowHtml_(s) {
@@ -574,7 +689,12 @@ function allTermsTable_(e) {
     rows = e.subjects.map(subjectRowHtml_).join('');
   }
   rows += generalAverageRowHtml_(e);
-  return '<div class="report-table-wrap"><table class="grades-table report-table"><thead>' +
+  // The colgroup is what actually pins each column's width under table-layout:fixed -- relying on the header
+  // cells alone wouldn't reliably work here since the "Term" header itself is one colspan=3 cell, not 3 separate
+  // ones (only the row below it, "1 2 3", has one cell per real column).
+  return '<div class="report-table-wrap"><table class="grades-table report-table">' +
+      '<colgroup><col><col class="term-col"><col class="term-col"><col class="term-col"><col class="final-col"><col class="desc-col"><col class="remark-col"></colgroup>' +
+      '<thead>' +
       '<tr><th rowspan="2">Learning Areas</th><th colspan="3">Term</th><th rowspan="2">Final Grade</th><th rowspan="2">Description</th><th rowspan="2">Remarks</th></tr>' +
       '<tr><th>1</th><th>2</th><th>3</th></tr>' +
     '</thead><tbody>' + rows + '</tbody></table></div>' +

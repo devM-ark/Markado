@@ -680,7 +680,13 @@
   [data-theme="dark"] .ico { filter: brightness(0) invert(1); opacity: 0.85; }
   
   .btn:not(.secondary) .ico,
-  .profile .ico { filter: brightness(0) invert(1); opacity: 1; }
+  .profile-icon { filter: brightness(0) invert(1); opacity: 1; }
+
+  .profile-icon {
+	width: 20px;
+	height: 20px;
+	flex-shrink: 0;
+  }
   .ico-fallback { font-size: 0.85rem; line-height: 1; }
 
   .icon-btn {
@@ -738,14 +744,11 @@
 	background: rgba(255,255,255,0.12);
   }
   
-  .profile .ico {
-	width: 32px;
-	height: 32px;
-  }
-  
   .profile-text {
 	display: flex;
 	flex-direction: column;
+	align-items: flex-start;
+	gap: 3px;
 	min-width: 0;
 	line-height: 1.3;
   }
@@ -756,15 +759,33 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	max-width: 100%;
   }
   
-  .profile-license {
-	font-size: 0.76rem;
-	opacity: 0.9;
-	overflow: hidden;
-	text-overflow: ellipsis;
+  /* The account-type tag in the header. Trial and Expired/Suspended stay muted or clearly a warning; Yearly
+     gets the gold treatment since it's the plan worth showing off -- Monthly sits deliberately in between. */
+  .plan-tag {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	padding: 2px 9px;
+	border-radius: 20px;
+	font-size: 0.68rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
 	white-space: nowrap;
   }
+
+  .plan-tag.trial { background: rgba(255,255,255,0.16); color: #fff; }
+  .plan-tag.monthly { background: var(--complement); color: #17324A; }
+  .plan-tag.yearly {
+	background: linear-gradient(135deg, #FCE8B0, #E0AA3E);
+	color: #4A3300;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  }
+  .plan-tag.expired, .plan-tag.suspended { background: var(--danger); color: #fff; }
+  .plan-tag.none { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.75); }
 
   .nav-item.nav-sub {
 	display: none;
@@ -797,7 +818,9 @@
 	color: var(--text-muted);
 	font-size: 0.92rem;
 	line-height: 1.5;
-	max-width: 72ch;
+	max-width: 100ch; /* wide enough that the sentences below fit on one line at most screen widths, not just tablet/phone */
+	text-align: justify;
+	text-align-last: left; /* the (usually short) last line of the paragraph stays left-aligned, not stretched */
   }
   
   .only-mobile { display: none; }
@@ -916,25 +939,43 @@
      which is what made the individual Publish button look like it had disappeared. */
   .table-scroll { overflow-x: auto; }
 
+  /* Roster header labels read better centered; LRN/Student Name/Action body cells stay left-aligned (the
+     global th,td rule above already left-aligns those, so only the header needs its own override here). */
+  .roster-table th { text-align: center; }
+
   /* Male and Female are two separate <table>s. Left on table-layout:auto (the default), each one sizes its own
      columns from its own rows -- so whichever table happens to have the longer names that run squeezes its own
      Action/Edit column narrower than the other table's, even though both sit in equal-width containers. Fixed
      layout makes column widths a purely structural (name-independent) decision, so both tables end up identical;
-     the Student Name column is the one column left unconstrained here, so it's the one that absorbs the rest. */
-  /* Fixing every other column forces Student Name (the one column left unconstrained) down to just a few
-     pixels once a MAPEH row's two component columns are added in -- min-width keeps it a sane floor and, below
-     that, the table grows past its container and scrolls (via .table-scroll) rather than crushing the name. */
-  .roster-table { table-layout: fixed; width: 100%; min-width: 340px; }
-  .grade-gender-cols table { table-layout: fixed; width: 100%; min-width: 420px; }
-  .roster-table th:first-child, .roster-table td:first-child { width: 30px; }
-  .roster-table th:nth-child(2), .roster-table td:nth-child(2) { width: 108px; } /* LRN -- Student Name absorbs whatever's left */
-  .roster-table th:last-child, .roster-table td:last-child { width: 92px; }
+     the Student Name column is the one column left unconstrained here, so it's the one that absorbs the rest.
+     On the roster this only actually matters once Male/Female stack full-width on a phone (auto-layout's normal,
+     content-hugging Student Name column is fine on a laptop, where there's room to spare either way), so it's
+     scoped to that same breakpoint below rather than applied everywhere. The grade sheet's two columns are
+     genuinely tight even on a laptop (MAPEH's two extra grade boxes), so that one keeps the fix at every width. */
+  .grade-gender-cols table {
+	table-layout: fixed;
+	width: 100%;
+	/* Fixing every other column forces Student Name (the one left unconstrained) down to just a few pixels once
+	   a MAPEH row's two component columns are added in -- min-width keeps it a sane floor and, below that, the
+	   table grows past its container and scrolls (via .table-scroll) rather than crushing the name. */
+	min-width: 420px;
+  }
   /* table-layout:fixed takes column widths from the header row, so the "#" column needs the width on th here
      too -- td.num-cell's own width (below) isn't enough by itself once the table stops auto-sizing from rows. */
   .grade-gender-cols table th:first-child, .grade-gender-cols table td:first-child { width: 44px; }
   .grade-gender-cols table th.col-comp, .grade-gender-cols table td.col-comp { width: 64px; }
   .grade-gender-cols table th:nth-last-child(4), .grade-gender-cols table td:nth-last-child(4) { width: 80px; } /* Grade */
   .grade-gender-cols table th:last-child, .grade-gender-cols table td:last-child { width: 92px; } /* Action */
+
+  @media (max-width: 768px) {
+    .roster-table { table-layout: fixed; width: 100%; min-width: 340px; }
+    .roster-table th:first-child, .roster-table td:first-child { width: 30px; }
+    .roster-table th:nth-child(2), .roster-table td:nth-child(2) { width: 108px; } /* LRN -- Student Name absorbs whatever's left */
+    .roster-table th:last-child, .roster-table td:last-child { width: 92px; }
+    /* Student Name's own column has no fixed width (it's the one that absorbs whatever's left, above) --
+       explicit wrapping here is what keeps a long name from just overflowing its cell sideways instead. */
+    .roster-table td:nth-child(3) { white-space: normal; word-break: break-word; }
+  }
 
   .gender-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
   .gender-col { background: var(--white); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; min-width: 0; }
@@ -984,8 +1025,7 @@
     select, input { font-size: 16px; } /* stops iOS Safari zooming the page on focus */
   }
   @media (max-width: 480px) {
-    .profile-license { display: none; }
-    .profile .ico { width: 28px; height: 28px; }
+    .profile-name { max-width: 110px; }
   }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -996,10 +1036,10 @@
 <header>
   <img src="assets/logo-banner.svg" alt="Markado" class="header-logo">
   <button class="profile" id="profileBtn" type="button" title="Account and license">
-    <img class="ico" data-icon="user" data-fallback="&#128100;" alt="">
+    <img class="ico profile-icon" data-icon="user" data-fallback="&#128100;" alt="">
     <span class="profile-text">
       <span class="profile-name" id="profileName">&nbsp;</span>
-      <span class="profile-license" id="profileLicense"></span>
+      <span class="plan-tag" id="profileLicense" style="display:none"></span>
     </span>
   </button>
 </header>
@@ -1077,7 +1117,7 @@
         <p class="instruction" id="subjectsInstruction">Click the subject you want to encode or import grades. You can also Publish and Unpublish the grades here.</p>
         <div class="class-selector"><label for="subjectsClassSelect">Class:</label><select id="subjectsClassSelect"></select></div>
         <div id="subjectGrid"></div>
-        <div id="subjectsEmptyMsg" class="empty-state" style="display:none"><div class="display">No Subjects Yet</div><p>This grade level doesn't have a fixed subject list. Add each subject with "Add Subject," or import its E-CR — importing adds the subject for you.</p></div>
+        <div id="subjectsEmptyMsg" class="empty-state" style="display:none"><div class="display">No Subjects Yet</div><p>This grade level doesn't have a fixed subject list. Add each subject with "Add Subject," or import its E-CR - importing adds the subject for you.</p></div>
       </div>
     </section>
 
@@ -1142,7 +1182,7 @@
       <button class="icon-btn" id="ecrCloseBtn" type="button" aria-label="Close">&#10005;</button>
     </div>
     <p style="margin-top:0">Upload the standard DepEd E-CR (.xlsx). The class, subject and learners are set up from the file, and you choose which terms to import.</p>
-    <p class="muted" style="font-size:0.85rem">Only names, class details, term grades and descriptions are saved — never raw scores. The MAPEH E-CR is read in one go: both components are imported and the MAPEH grade is worked out from them.</p>
+    <p class="muted" style="font-size:0.85rem">Only names, class details, term grades and descriptions are saved - never raw scores. The MAPEH E-CR is read in one go: both components are imported and the MAPEH grade is worked out from them.</p>
     <input type="file" id="ecrFileInput" accept=".xlsx">
     <button class="btn" id="ecrUploadBtn" style="margin-top:12px">Check file</button>
     <div id="ecrImportArea" style="margin-top:16px"></div>
@@ -1224,7 +1264,7 @@ function fmtLongDate_(iso) {
   return d && !isNaN(d.getTime()) ? d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
 }
 
-function classLabel_(ws) { return 'Grade ' + ws.gradeLevel + ' – ' + ws.section; }
+function classLabel_(ws) { return 'Grade ' + ws.gradeLevel + ' - ' + ws.section; }
 
 function defaultSchoolYear_() {
   var now = new Date();
@@ -1351,8 +1391,26 @@ function startApp_() {
 
 function bootstrapData_(mayNeedOnboarding) {
   setLoading(document.querySelector('#workspaceTable tbody'), 'Loading your classes…');
-  loadProfile_(); // fetched alongside the classes
-  loadWorkspacesIntoState(function () { loadClassesScreen(); }, function (err) {
+  // One round trip for profile+license, workspaces, and the active class's subjects/roster --
+  // this is what lets Subjects and Students open instantly on first click instead of each
+  // firing its own fetch (see renderSubjectGrid/renderRoster's cache-hit checks below).
+  call('clientGetWorkspaceBundle_', [state.sessionToken, state.currentWorkspaceId], function (bundle) {
+    state.profile = bundle.profile;
+    renderProfile_(bundle.profile);
+    renderLicenseBanner_(bundle.profile.license);
+
+    state.workspaces = bundle.workspaces;
+    state.workspacesLoaded = true;
+    ensureActiveClass_();
+
+    if (bundle.activeWorkspaceId) {
+      state.cache.subjects[bundle.activeWorkspaceId] = bundle.classSubjects;
+      state.cache.roster[bundle.activeWorkspaceId] = bundle.roster;
+    }
+
+    loadClassesScreen();
+    startBackgroundRefresh_();
+  }, function (err) {
     if (mayNeedOnboarding) {
       sessionStorage.removeItem(ONBOARD_FLAG);
       call('clientOnboard_', [state.sessionToken], function () {
@@ -1364,6 +1422,53 @@ function bootstrapData_(mayNeedOnboarding) {
     }
   });
 }
+
+// ---------- Quiet background refresh: keeps Classes/Subjects/Students current without spinners ----------
+// Grade entry (Class Record) is deliberately untouched -- it isn't part of the bundle at all, and this
+// also skips Students entirely while a grade is mid-edit, so a teacher's unsaved keystrokes are never at risk.
+
+var BACKGROUND_REFRESH_MS = 60000; // longer than a typical poll interval -- Sheets reads aren't free, and nobody needs sub-minute freshness here
+
+var backgroundRefreshTimer_ = null;
+
+function isGradeEntryDirty_() {
+  var dirty = false;
+  document.querySelectorAll('#gradesArea input.grade-input').forEach(function (input) {
+    if (input.value.trim() !== (input.getAttribute('data-original') || '')) dirty = true;
+  });
+  return dirty;
+}
+
+function startBackgroundRefresh_() {
+  stopBackgroundRefresh_();
+  backgroundRefreshTimer_ = setInterval(function () {
+    if (document.hidden) return;      // tab isn't in view -- nothing on screen to refresh
+    if (isGradeEntryDirty_()) return; // unsaved grade keystrokes -- leave everything alone this cycle
+    call('clientGetWorkspaceBundle_', [state.sessionToken, state.currentWorkspaceId], function (bundle) {
+      state.profile = bundle.profile;
+      renderProfile_(bundle.profile);
+      renderLicenseBanner_(bundle.profile.license);
+      state.workspaces = bundle.workspaces;
+      if (bundle.activeWorkspaceId) {
+        state.cache.subjects[bundle.activeWorkspaceId] = bundle.classSubjects;
+        state.cache.roster[bundle.activeWorkspaceId] = bundle.roster;
+      }
+      // Only repaint whichever tab is actually visible right now.
+      if (document.getElementById('screen-classes').classList.contains('active')) renderClassesTable_();
+      if (document.getElementById('screen-subjects').classList.contains('active')) renderSubjectGrid(true);
+      if (document.getElementById('screen-students').classList.contains('active') && !isGradeEntryDirty_()) renderRoster(true);
+    }, function () { /* silent -- a failed background refresh just leaves the last known data on screen */ }, { silent: true });
+  }, BACKGROUND_REFRESH_MS);
+}
+
+function stopBackgroundRefresh_() {
+  if (backgroundRefreshTimer_) clearInterval(backgroundRefreshTimer_);
+  backgroundRefreshTimer_ = null;
+}
+
+document.addEventListener('visibilitychange', function () {
+  if (document.hidden) stopBackgroundRefresh_(); else startBackgroundRefresh_();
+});
 
 function loadWorkspacesIntoState(then, onErr, forceReload) {
   if (state.workspacesLoaded && !forceReload) { ensureActiveClass_(); if (then) then(); return; }
@@ -1400,11 +1505,31 @@ function licenseLine_(license) {
   return label;
 }
 
+/** The header just needs name + plan at a glance -- the full line (with the expiry date) still lives in the
+ *  hover title and in the My Account modal below, so nothing is actually lost, just decluttered. Yearly gets
+ *  the gold tag since it's the plan worth showing off; Trial/Expired/Suspended read as muted/warning instead. */
+function planTagInfo_(license) {
+  if (!license) return { text: '', cls: 'none' };
+  if (license.status === 'TRIAL') return { text: 'Trial', cls: 'trial' };
+  if (license.status === 'ACTIVE') {
+    if (license.licenseType === 'yearly') return { text: '\u2605 Yearly', cls: 'yearly' };
+    if (license.licenseType === 'monthly') return { text: 'Monthly', cls: 'monthly' };
+    return { text: 'Active', cls: 'monthly' };
+  }
+  if (license.status === 'EXPIRED') return { text: 'Expired', cls: 'expired' };
+  if (license.status === 'SUSPENDED') return { text: 'Suspended', cls: 'suspended' };
+  return { text: 'No Plan', cls: 'none' };
+}
+
 function renderProfile_(profile) {
   var line = profile ? licenseLine_(profile.license) : '';
   document.getElementById('profileName').textContent = profile ? profile.fullName : 'My account';
-  document.getElementById('profileLicense').textContent = line;
-  document.getElementById('profileBtn').title = line ? line + ' — Account' : 'Account';
+  var tag = planTagInfo_(profile ? profile.license : null);
+  var tagEl = document.getElementById('profileLicense');
+  tagEl.textContent = tag.text;
+  tagEl.className = 'plan-tag' + (tag.cls ? ' ' + tag.cls : '');
+  tagEl.style.display = tag.text ? 'inline-flex' : 'none';
+  document.getElementById('profileBtn').title = line ? line + ' - Account' : 'Account';
 }
 
 /** Header profile button: My Account (read-only) + Change Password, reusing the same clientChangePassword_ backend call as before. */
@@ -1413,9 +1538,9 @@ function openProfileModal_() {
   var license = profile ? profile.license : null;
   var html =
     '<h3 style="margin-top:0">My Account</h3>' +
-    '<div class="field-static"><label>Name</label><div>' + escapeHtml(profile ? profile.fullName : '—') + '</div></div>' +
-    '<div class="field-static"><label>Subscription Type</label><div>' + escapeHtml(license ? licenseLabel_(license) : '—') + '</div></div>' +
-    '<div class="field-static"><label>Expiry Date</label><div>' + escapeHtml(license && license.expirationDate ? fmtLongDate_(license.expirationDate) : '—') + '</div></div>' +
+    '<div class="field-static"><label>Name</label><div>' + escapeHtml(profile ? profile.fullName : '-') + '</div></div>' +
+    '<div class="field-static"><label>Subscription Type</label><div>' + escapeHtml(license ? licenseLabel_(license) : '-') + '</div></div>' +
+    '<div class="field-static"><label>Expiry Date</label><div>' + escapeHtml(license && license.expirationDate ? fmtLongDate_(license.expirationDate) : '-') + '</div></div>' +
     '<div class="actions" style="justify-content:flex-start; margin:4px 0 24px"><button class="btn upgrade" id="pmUpgradeBtn" type="button">Upgrade Subscription</button></div>' +
     '<hr style="border:none; border-top:1px solid var(--border); margin:0 0 20px">' +
     '<h3 style="margin-top:0">Change Password</h3>' +
@@ -1443,14 +1568,6 @@ function openProfileModal_() {
   };
 }
 
-function loadProfile_() {
-  call('clientGetMyProfile_', [state.sessionToken], function (profile) {
-    state.profile = profile;
-    renderProfile_(profile);
-    renderLicenseBanner_(profile.license); // warnings about an expiring or expired license
-  }, function () { renderProfile_(null); }, { silent: true });
-}
-
 function fmtDate_(iso) { return iso ? String(iso).slice(0, 10) : ''; }  // still used for the request dates below
 
 /** Days before expiry when a renewal can be requested: 7 for a monthly license, 30 otherwise (mirrors the server). */
@@ -1464,7 +1581,7 @@ function renderLicenseBanner_(status) {
   if (status.status === 'TRIAL' && status.daysRemaining !== null && status.daysRemaining <= 7 && status.daysRemaining > 0) {
     text = 'Trial ends in ' + status.daysRemaining + ' day(s).'; cls = 'trial'; action = 'Upgrade Subscription';
   } else if (status.status === 'EXPIRED') {
-    text = 'Your trial or license has expired. Importing, entering, and publishing grades is paused — your students can still see anything already published.'; cls = 'expired'; action = 'Upgrade Subscription';
+    text = 'Your trial or license has expired. Importing, entering, and publishing grades is paused - your students can still see anything already published.'; cls = 'expired'; action = 'Upgrade Subscription';
   } else if (status.status === 'SUSPENDED') {
     text = 'Your account has been suspended. Contact support for details. Your students can still see anything already published.'; cls = 'expired';
   } else if (status.status === 'ACTIVE' && status.daysRemaining !== null && status.daysRemaining <= renewalWindowDays_(status.licenseType) && status.daysRemaining > 0) {
@@ -1511,7 +1628,7 @@ function renderLicenseRequestModal_(info, onDone) {
       '<p style="font-size:0.88rem">Pay with GCash first, then choose the plan you paid for and enter the reference number from your receipt so the payment can be verified.</p>' +
       '<div class="field"><label>Plan</label><select id="lrPlan"><option value="">Choose a plan…</option>' +
         (info.plans || []).map(function (p) {
-          return '<option value="' + escapeHtml(p.id) + '">' + escapeHtml(p.name + ' (' + (p.durationLabel || (p.days ? p.days + ' days' : p.months + ' months')) + ')' + (p.price ? ' — ' + p.price : '')) + '</option>';
+          return '<option value="' + escapeHtml(p.id) + '">' + escapeHtml(p.name + ' (' + (p.durationLabel || (p.days ? p.days + ' days' : p.months + ' months')) + ')' + (p.price ? ' - ' + p.price : '')) + '</option>';
         }).join('') + '</select></div>' +
       '<div class="field"><label>GCash reference number</label><input id="lrRef" maxlength="40" autocomplete="off"></div>' +
       '<div class="field"><label>Note (optional)</label><input id="lrNote" maxlength="300" autocomplete="off"></div>' +
@@ -1571,8 +1688,8 @@ function renderClassesTable_() {
       '<td>' + escapeHtml(ws.schoolYearLabel) + '</td>' +
       '<td><b>' + label + '</b>' + (active ? '<span class="active-pill">Active Class</span>' : '') + '</td>' +
       '<td>' + escapeHtml(ws.schoolName) + '</td>' +
-      '<td>' + (ws.adviserName ? escapeHtml(ws.adviserName) : '<span class="muted">—</span>') + '</td>' +
-      '<td>' + (ws.adviserDesignation ? escapeHtml(ws.adviserDesignation) : '<span class="muted">—</span>') + '</td>' +
+      '<td>' + (ws.adviserName ? escapeHtml(ws.adviserName) : '<span class="muted">-</span>') + '</td>' +
+      '<td>' + (ws.adviserDesignation ? escapeHtml(ws.adviserDesignation) : '<span class="muted">-</span>') + '</td>' +
       '<td><div class="row-actions">' +
         (active ? '' : '<button class="btn secondary small" data-set-active="' + id + '">Set active</button>') +
         '<button class="icon-btn" data-edit-class="' + id + '" title="Edit class" aria-label="Edit ' + label + '">' + iconHtml_('edit', 'Edit') + '</button>' +
@@ -1687,7 +1804,7 @@ function openClassModal_(ws) {
 
 function confirmDeleteClass_(ws, btn) {
   confirmModal('Delete ' + escapeHtml(classLabel_(ws)) + '?',
-    'This permanently removes the class (' + escapeHtml(ws.schoolYearLabel) + ') with its students, subjects and grades — including grades already published to students. This can\'t be undone.',
+    'This permanently removes the class (' + escapeHtml(ws.schoolYearLabel) + ') with its students, subjects and grades - including grades already published to students. This can\'t be undone.',
     'Delete class', function () {
       setClassesTableBusy_(true, btn);
       call('clientDeleteWorkspace_', [state.sessionToken, ws.workspaceId], function () {
@@ -1859,7 +1976,7 @@ document.getElementById('addSubjectBtn').onclick = function () {
     title: 'Add subject',
     intro: hasDefaults
       ? 'For a subject that is not in the list, such as Religion. The regular subjects are already there.'
-      : 'This grade level has no fixed subject list — add each one it needs.',
+      : 'This grade level has no fixed subject list - add each one it needs.',
     submitLabel: 'Add Subject',
     fieldsHtml: '<div class="field"><label for="asName">Subject name</label><input id="asName" maxlength="80" placeholder="Religion" data-autofocus></div>',
     onSubmit: function (setError, submitBtn) {
@@ -1991,7 +2108,7 @@ function gradeRowHtml_(g, number, components) {
         : '<td class="col-comp"><input class="grade-input comp" type="number" min="60" max="100" step="1" inputmode="numeric" data-enr="' + enr + '" data-comp="' + escapeHtml(c.classSubjectId) +
           '" data-original="' + escapeHtml(value) + '" value="' + escapeHtml(value) + '" aria-label="' + escapeHtml(c.subjectName) + ' grade for ' + name + '"></td>';
     });
-    cells += '<td><strong class="calc-grade" data-saved="' + escapeHtml(g.termGrade) + '">' + (g.termGrade !== '' ? escapeHtml(g.termGrade) : '—') + '</strong>' +
+    cells += '<td><strong class="calc-grade" data-saved="' + escapeHtml(g.termGrade) + '">' + (g.termGrade !== '' ? escapeHtml(g.termGrade) : '-') + '</strong>' +
       (g.locked ? '<span class="lock-tag">Locked</span>' : '') + '</td>';
   } else {
     cells += g.locked
@@ -2044,8 +2161,8 @@ function loadReview(keepRows) {
     state.currentSubject = data;
     document.getElementById('subjectTitle').textContent = data.subjectName;
     document.getElementById('gradeHint').textContent = data.components.length > 0
-      ? 'Type each learner\'s grade (60–100) for both components. The MAPEH grade is their average and appears once both have a grade; the description fills in automatically. Published grades are locked — unpublish one to edit it.'
-      : 'Type each learner\'s transmuted grade (60–100); the description fills in automatically. Published grades are locked — unpublish one to edit it.';
+      ? 'Type each learner\'s grade (60-100) for both components. The MAPEH grade is their average and appears once both have a grade; the description fills in automatically. Published grades are locked - unpublish one to edit it.'
+      : 'Type each learner\'s transmuted grade (60-100); the description fills in automatically. Published grades are locked - unpublish one to edit it.';
     paintGradeSheet_(data);
     var lockedCount = data.rows.filter(function (r) { return r.locked; }).length;
     document.getElementById('lockNote').innerHTML = lockedCount
@@ -2068,7 +2185,7 @@ document.getElementById('gradesArea').addEventListener('input', function (e) {
     if (input.value.trim() === '' || !isFinite(n) || Math.floor(n) !== n || n < 60 || n > 100) complete = false; else total += n;
   });
   if (complete) { out.textContent = Math.round(total / inputs.length); out.classList.add('preview'); }
-  else { out.textContent = out.getAttribute('data-saved') || '—'; out.classList.remove('preview'); }
+  else { out.textContent = out.getAttribute('data-saved') || '-'; out.classList.remove('preview'); }
 });
 
 document.getElementById('saveGradesBtn').onclick = function () {
@@ -2083,7 +2200,7 @@ document.getElementById('saveGradesBtn').onclick = function () {
     entries.push(entry);
     touchedInputs.push(input);
   });
-  if (entries.length === 0) { msgEl.innerHTML = '<div class="msg error">Nothing to save — type a grade first.</div>'; return; }
+  if (entries.length === 0) { msgEl.innerHTML = '<div class="msg error">Nothing to save - type a grade first.</div>'; return; }
   var isMapeh = state.currentSubject && state.currentSubject.components.length > 0;
   call('clientSaveManualGrades_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm, entries], function (data) {
     msgEl.innerHTML = '<div class="msg success">Saved ' + data.saved + ' grade(s). ' +
@@ -2097,7 +2214,7 @@ document.getElementById('saveGradesBtn').onclick = function () {
       var descCell = tr.querySelector('.col-desc');
       if (descCell) descCell.textContent = r.descriptor;
       var calc = tr.querySelector('.calc-grade'); // MAPEH only: the computed average shown next to the two component inputs
-      if (calc) { calc.textContent = r.termGrade !== '' ? r.termGrade : '—'; calc.setAttribute('data-saved', r.termGrade); }
+      if (calc) { calc.textContent = r.termGrade !== '' ? r.termGrade : '-'; calc.setAttribute('data-saved', r.termGrade); }
       var statusCell = tr.querySelector('.col-status');
       if (statusCell) statusCell.innerHTML = '<span class="status-pill DRAFT">DRAFT</span>';
       var actionCell = tr.querySelector('td:last-child');
@@ -2115,7 +2232,7 @@ document.getElementById('gradesArea').addEventListener('click', function (e) {
   var publish = btn.getAttribute('data-act') === 'publish';
   call(publish ? 'clientPublishLearner_' : 'clientUnpublishLearner_',
     [state.sessionToken, state.currentClassSubjectId, state.currentTerm, btn.getAttribute('data-enr')],
-    function () { invalidateSubjectsCache_(); loadReview(true); showToast(publish ? 'Published — this grade is now locked.' : 'Unpublished — you can edit this grade again.', 'success'); },
+    function () { invalidateSubjectsCache_(); loadReview(true); showToast(publish ? 'Published - this grade is now locked.' : 'Unpublished - you can edit this grade again.', 'success'); },
     function (err) { showToast(err, 'error'); },
     { button: btn });
 });
@@ -2174,13 +2291,13 @@ document.getElementById('ecrUploadBtn').onclick = function () {
 
 function termChoiceHtml_(t) {
   var label = 'Term ' + t.term;
-  if (t.gradedCount === 0) return '<div class="term-choice" style="color:var(--text-muted)">' + label + ' — no grades in this file</div>';
+  if (t.gradedCount === 0) return '<div class="term-choice" style="color:var(--text-muted)">' + label + ' - no grades in this file</div>';
   var notes = [];
   if (t.detail) notes.push(t.detail); // MAPEH: how many grades each component has
-  if (t.lockedCount > 0) notes.push(t.lockedCount + ' already published and locked — will be skipped');
+  if (t.lockedCount > 0) notes.push(t.lockedCount + ' already published and locked - will be skipped');
   if (t.skippedInvalid > 0) notes.push(t.skippedInvalid + ' cell(s) had no usable grade');
   return '<label class="term-choice"><input type="checkbox" data-term-check="' + t.term + '"' + (t.importable ? ' checked' : ' disabled') + '>' +
-    '<span>' + label + ' — ' + t.gradedCount + (t.detail ? ' learner(s)' : ' grade(s)') + (t.importable ? '' : ' (all locked)') + (notes.length ? '<br><span style="color:var(--text-muted); font-size:0.85rem">' + escapeHtml(notes.join(' · ')) + '</span>' : '') + '</span></label>';
+    '<span>' + label + ' - ' + t.gradedCount + (t.detail ? ' learner(s)' : ' grade(s)') + (t.importable ? '' : ' (all locked)') + (notes.length ? '<br><span style="color:var(--text-muted); font-size:0.85rem">' + escapeHtml(notes.join(' · ')) + '</span>' : '') + '</span></label>';
 }
 
 function renderImportPreview(preview) {
@@ -2194,18 +2311,18 @@ function renderImportPreview(preview) {
   importState.file = preview.file;
   var f = preview.file;
 
-  var html = '<div class="import-title">' + escapeHtml(f.subject) + ' — Grade ' + escapeHtml(f.gradeLevel) + ' · ' + escapeHtml(f.section) + '</div>' +
+  var html = '<div class="import-title">' + escapeHtml(f.subject) + ' - Grade ' + escapeHtml(f.gradeLevel) + ' · ' + escapeHtml(f.section) + '</div>' +
     '<div style="color:var(--text-muted); margin-bottom:6px">' + (f.schoolName ? escapeHtml(f.schoolName) + ' · ' : '') + 'School year ' + escapeHtml(f.schoolYear) + '</div>' +
     '<ul class="import-facts">' +
-    '<li>Class: <b>' + (preview.classExists ? 'already in your classes' : 'new — will be created') + '</b>' + (preview.schoolNameWillChange ? ' (school name will be updated)' : '') + '</li>' +
-    '<li>Subject: <b>' + (preview.classSubjectExists ? 'already in this class' : 'new — will be added') + '</b></li>' +
+    '<li>Class: <b>' + (preview.classExists ? 'already in your classes' : 'new - will be created') + '</b>' + (preview.schoolNameWillChange ? ' (school name will be updated)' : '') + '</li>' +
+    '<li>Subject: <b>' + (preview.classSubjectExists ? 'already in this class' : 'new - will be added') + '</b></li>' +
     '<li>Learners: <b>' + preview.learnerCount + '</b> in the file · ' + preview.matchedCount + ' already in the class · <b>' + preview.newCount + '</b> will be added</li></ul>';
 
   if (preview.classExists && preview.newCount > 0) {
     var options = '<option value="">Add as new</option>' + preview.existingRoster.map(function (r) {
       return '<option value="' + escapeHtml(r.enrollmentId) + '">Same as: ' + escapeHtml(r.fullName) + '</option>';
     }).join('');
-    html += '<div class="issue-block info"><h4>' + preview.newCount + ' learner(s) are not in this class yet — they will be added as new</h4>' +
+    html += '<div class="issue-block info"><h4>' + preview.newCount + ' learner(s) are not in this class yet - they will be added as new</h4>' +
       '<p style="margin:0 0 10px; font-size:0.88rem">If a name is only spelled differently from your list, match it to the existing learner instead.</p>' +
       preview.newLearners.map(function (name) {
         return '<div class="issue-row"><span>' + escapeHtml(name) + '</span><span class="actions-inline"><select data-match-name="' + escapeHtml(name) + '">' + options + '</select></span></div>';
@@ -2268,7 +2385,7 @@ function renderImportDone(result) {
   if (result.createdSubject) lines.push('Subject added.');
   if (result.addedLearners > 0) lines.push(result.addedLearners + ' learner(s) added.');
   result.terms.forEach(function (t) {
-    lines.push('Term ' + t.term + ': ' + t.imported + (t.note ? ' learner(s) imported' : ' grade(s) imported') + (t.note ? ' — ' + t.note : '') +
+    lines.push('Term ' + t.term + ': ' + t.imported + (t.note ? ' learner(s) imported' : ' grade(s) imported') + (t.note ? ' - ' + t.note : '') +
       (t.skippedLocked > 0 ? ', ' + t.skippedLocked + ' locked learner(s) skipped' : '') + '.');
   });
   // Music and Arts / PE and Health belong to MAPEH, which is the sheet that opens.
@@ -2276,7 +2393,7 @@ function renderImportDone(result) {
   var openName = openId !== result.classSubjectId ? 'MAPEH' : (importState.file ? importState.file.subject : 'subject');
   area.innerHTML = '<div class="msg success">Import complete.</div><ul class="import-facts">' +
     lines.map(function (l) { return '<li>' + escapeHtml(l) + '</li>'; }).join('') + '</ul>' +
-    (result.addedLearners > 0 ? '<p class="hint" style="margin:0 0 12px">An E-CR has no LRNs. Import your student .CSV under Students to add them — learners are matched by name.</p>' : '') +
+    (result.addedLearners > 0 ? '<p class="hint" style="margin:0 0 12px">An E-CR has no LRNs. Import your student .CSV under Students to add them - learners are matched by name.</p>' : '') +
     '<button class="btn" id="ecrOpenSubjectBtn">Open ' + escapeHtml(openName) + '</button> ' +
     (result.addedLearners > 0 ? '<button class="btn secondary" id="ecrGoStudentsBtn">Go to Students</button>' : '');
   showToast('Import complete.', 'success');
@@ -2386,9 +2503,16 @@ function openStudentModal_(learner) {
     fieldsHtml:
       '<div class="field"><label for="sfLrn">LRN</label><input id="sfLrn" inputmode="numeric" maxlength="12" placeholder="12 digits" autocomplete="off" data-autofocus value="' + escapeHtml(v.lrn) + '"></div>' +
       '<div class="field"><label for="sfName">Student name</label><input id="sfName" maxlength="120" placeholder="Dela Cruz, Juan" autocomplete="off" value="' + escapeHtml(v.fullName) + '">' +
-        '<div class="hint">Surname, Given Name — students log in with their surname.</div></div>' +
+        '<div class="hint">Surname, Given Name - students log in with their surname.</div></div>' +
       '<div class="field"><label for="sfSex">Gender</label><select id="sfSex"><option value="">Choose…</option>' +
-        '<option value="M"' + (v.sex === 'M' ? ' selected' : '') + '>Male</option><option value="F"' + (v.sex === 'F' ? ' selected' : '') + '>Female</option></select></div>',
+        '<option value="M"' + (v.sex === 'M' ? ' selected' : '') + '>Male</option><option value="F"' + (v.sex === 'F' ? ' selected' : '') + '>Female</option></select></div>' +
+      (editing ?
+        '<div class="field" style="border-top:1px solid var(--border); padding-top:14px; margin-top:2px">' +
+          '<label>Student PIN</label>' +
+          '<div class="hint" style="margin-bottom:8px">If the student forgot their PIN, this clears it - they\'ll be asked to create a new one next time they log in.</div>' +
+          '<button type="button" class="btn secondary small" id="resetPinBtn">Reset PIN</button>' +
+        '</div>'
+        : ''),
     onSubmit: function (setError, submitBtn) {
       var lrn = valueOf_('sfLrn'), name = valueOf_('sfName'), sex = valueOf_('sfSex');
       if (!/^\d{12}$/.test(lrn)) { setError('The LRN must be exactly 12 digits.'); return; }
@@ -2414,6 +2538,25 @@ function openStudentModal_(learner) {
       }
     },
   });
+
+  if (editing) {
+    var resetPinBtn = document.getElementById('resetPinBtn');
+    if (resetPinBtn) {
+      resetPinBtn.onclick = function () {
+        // confirmModal replaces this whole dialog with its own -- resetPinBtn itself won't still be in the
+        // DOM by the time onConfirm below runs, so there's no live button left to put a spinner on. Fine here:
+        // this is a single lightweight field-clear, not a multi-step or slow operation, so the toast alone
+        // (which fires regardless of success/failure) is enough feedback.
+        confirmModal('Reset ' + escapeHtml(learner.fullName) + '\'s PIN?',
+          'They\'ll be asked to create a new PIN the next time they log in. This can\'t be undone.',
+          'Reset PIN', function () {
+            call('clientResetStudentPin_', [state.sessionToken, learner.studentId], function () {
+              showToast('PIN reset.', 'success');
+            }, function (err) { showToast(err, 'error'); });
+          }, true);
+      };
+    }
+  }
 }
 
 // ---------- Students: .CSV template and import ----------
@@ -2559,7 +2702,7 @@ function openCsvPreviewModal_(fileName, parsed) {
       (parsed.problems.length ? '<li><b>' + parsed.problems.length + '</b> row(s) have a problem and will be skipped</li>' : '') + '</ul>' +
       problemListHtml_(parsed.problems) +
       (tooMany ? '<div class="msg error">A file can have at most ' + CSV_MAX_ROWS_ + ' students. Split it into smaller files.</div>' : '') +
-      '<p class="hint">Students already in this class without an LRN — for example from an E-CR — are matched by name and get their LRN. Nobody is added twice.</p>';
+      '<p class="hint">Students already in this class without an LRN - for example from an E-CR - are matched by name and get their LRN. Nobody is added twice.</p>';
   }
   body += '</div><div class="actions" id="csvActions"><button class="btn secondary" id="csvCancel" type="button">' + (ready ? 'Cancel' : 'Close') + '</button>' +
     (ready ? '<button class="btn" id="csvImport" type="button">Import ' + ready + ' student(s)</button>' : '') + '</div>';
@@ -2582,7 +2725,7 @@ function showCsvResult_(summary, clientProblems) {
   var skipped = clientProblems.concat(summary.skipped.map(function (s) { return { line: s.row, message: s.message }; }));
   var lines = [];
   if (summary.added) lines.push(summary.added + ' new student(s) added.');
-  if (summary.lrnSet) lines.push(summary.lrnSet + ' student(s) already in the class matched by name — LRN saved.');
+  if (summary.lrnSet) lines.push(summary.lrnSet + ' student(s) already in the class matched by name - LRN saved.');
   if (summary.enrolled) lines.push(summary.enrolled + ' student(s) from your other classes added to this class.');
   if (lines.length === 0) lines.push('No students were added.');
   document.getElementById('csvBody').innerHTML = '<div class="msg success">Import complete.</div><ul class="import-facts">' +
@@ -2595,14 +2738,14 @@ function showCsvResult_(summary, clientProblems) {
 
 function renderAccountLicense_(status, info) {
   var html;
-  if (status.status === 'TRIAL') html = '<p>Free trial' + (status.expirationDate ? ' — expires on ' + escapeHtml(fmtLongDate_(status.expirationDate)) : '') + '.</p>';
+  if (status.status === 'TRIAL') html = '<p>Free trial' + (status.expirationDate ? ' - expires on ' + escapeHtml(fmtLongDate_(status.expirationDate)) : '') + '.</p>';
   else if (status.status === 'ACTIVE') html = '<p>Active ' + planLabel_(status.licenseType) + 'license' + (status.expirationDate ? (' until ' + escapeHtml(fmtLongDate_(status.expirationDate))) : '') + '.</p>';
   else if (status.status === 'SUSPENDED') html = '<p>Your account is suspended. Contact support for details.</p>';
   else html = '<p>Your trial or license has expired.</p>';
 
   if (info) {
     if (info.pending) {
-      html += '<div class="msg warn">License request sent on ' + escapeHtml(fmtDate_(info.pending.requestedAt)) + ' — waiting for approval.</div>' +
+      html += '<div class="msg warn">License request sent on ' + escapeHtml(fmtDate_(info.pending.requestedAt)) + ' - waiting for approval.</div>' +
         '<button class="btn upgrade" id="acctRequestBtn">View request</button>';
     } else {
       if (info.lastDecision && info.lastDecision.status === 'DECLINED') {

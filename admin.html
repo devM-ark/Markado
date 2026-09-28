@@ -857,7 +857,7 @@ function openTeacherDetail(teacherId) {
     document.getElementById('detailEmail').textContent = d.email;
     document.getElementById('detailAccountStatus').textContent = d.accountStatus;
     document.getElementById('detailVerified').textContent = d.emailVerified ? 'Yes' : 'No';
-    document.getElementById('detailCreated').textContent = d.createdAt ? String(d.createdAt).slice(0, 10) : '—';
+    document.getElementById('detailCreated').textContent = d.createdAt ? String(d.createdAt).slice(0, 10) : '-';
     document.getElementById('detailTrial').textContent = d.trial ? (String(d.trial.start).slice(0, 10) + ' → ' + String(d.trial.end).slice(0, 10)) : 'No trial record';
     document.getElementById('detailLicenseStatus').innerHTML = '<span class="status-pill ' + escapeHtml(d.currentLicenseStatus.status) + '">' + escapeHtml(d.currentLicenseStatus.status) + '</span>' +
       (d.currentLicenseStatus.daysRemaining !== null ? ' (' + escapeHtml(d.currentLicenseStatus.daysRemaining) + ' days remaining)' : '');
