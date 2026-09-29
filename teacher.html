@@ -1099,7 +1099,7 @@
       <div id="studentsNoClassMsg" class="empty-state" style="display:none"><div class="display">No Class Selected</div><p>Add or Select a class first, under "Classes."</p></div>
       <div id="studentsContent">
         <div class="class-selector"><label for="studentsClassSelect">Class:</label><select id="studentsClassSelect"></select></div>
-        <p class="instruction">Students log in with their LRN and surname. Every student needs a 12-digit LRN. Names are written as Surname, Given Name.</p>
+        <p class="instruction">Students log in with their LRN and surname. Every student needs a 12-digit LRN. Names are written as Surname, Given Name. The Student List will be automatically generated when you import an E-CR.</p>
         <div id="rosterArea"></div>
       </div>
     </section>
@@ -1133,11 +1133,11 @@
 
       <div class="panel">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px">
-          <h3 style="margin:0">Term <span id="reviewTermLabel">1</span> grades</h3>
+          <h3 style="margin:0">Term <span id="reviewTermLabel">1</span> Grades</h3>
           <div class="page-actions">
-            <button class="btn secondary" id="unpublishBtn">Unpublish all</button>
-            <button class="btn secondary" id="saveGradesBtn">Save grades</button>
-            <button class="btn" id="publishBtn">Publish all</button>
+            <button class="btn secondary" id="unpublishBtn">Unpublish All</button>
+            <button class="btn secondary" id="saveGradesBtn">Save Grades</button>
+            <button class="btn" id="publishBtn">Publish All</button>
           </div>
         </div>
         <p id="gradeHint" style="color:var(--text-muted); font-size:0.85rem; margin:8px 0 0"></p>
@@ -1181,10 +1181,10 @@
       <h3 id="ecrTitle">Import an E-CR</h3>
       <button class="icon-btn" id="ecrCloseBtn" type="button" aria-label="Close">&#10005;</button>
     </div>
-    <p style="margin-top:0">Upload the standard DepEd E-CR (.xlsx). The class, subject and learners are set up from the file, and you choose which terms to import.</p>
-    <p class="muted" style="font-size:0.85rem">Only names, class details, term grades and descriptions are saved - never raw scores. The MAPEH E-CR is read in one go: both components are imported and the MAPEH grade is worked out from them.</p>
+    <p style="margin-top:0">Upload the standard DepEd E-CR excel file. The system will automatically read all the data needed.</p>
+    <p class="muted" style="font-size:0.85rem">Only Names, Class details, and Final Term Grades are saved in the system.</p>
     <input type="file" id="ecrFileInput" accept=".xlsx">
-    <button class="btn" id="ecrUploadBtn" style="margin-top:12px">Check file</button>
+    <button class="btn" id="ecrUploadBtn" style="margin-top:12px">Check File</button>
     <div id="ecrImportArea" style="margin-top:16px"></div>
   </div>
 </div>

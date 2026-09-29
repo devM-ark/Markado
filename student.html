@@ -227,7 +227,7 @@
 	font-weight: 600;
 	color: var(--primary);
 	padding: 8px 4px;
-	border-bottom: 2px solid var(--lightest);
+	border: 1px solid var(--light);
   }
   
   .grades-table th:first-child,
@@ -237,12 +237,8 @@
   
   .grades-table td {
 	padding: 12px 4px;
-	border-bottom: 1px solid var(--lightest);
+	border: 1px solid var(--light);
 	text-align: center;
-  }
-  
-  .grades-table tr:last-child td {
-	border-bottom: none;
   }
   
   .grades-table .subj {
@@ -282,6 +278,12 @@
 	padding-bottom: 6px;
   }
 
+  .grades-table .component-row td.num,
+  .grades-table .component-row td.dash {
+	font-style: italic;
+	font-size: 0.85rem;
+  }
+
   /* All Terms report only: the shared rules above (.subj/.num/.dash/.final/.desc/.component-row) still apply --
      these are just what's new here: a two-row header (Term spans 1/2/3), a Remarks column, section dividers for
      SHS Core/Elective/Special, and a closing General Average row. Table can be wider than the card on a phone,
@@ -305,7 +307,7 @@
   /* One uniform divider works for both header rows at once: on a rowspan cell it lands at the true bottom of the
      whole header (the header/body boundary); on the plain "Term" and "1/2/3" cells it lands after their own row
      (between the two header rows, and between the second row and the body, respectively). */
-  .report-table thead th { background: var(--darkest); color: #fff; border-bottom: 1px solid rgba(255,255,255,0.25); }
+  .report-table thead th { background: var(--darkest); color: #fff; border-color: rgba(255,255,255,0.3); }
   .report-table .remark { text-align: left; font-size: 0.85rem; color: #444; }
   .report-table .remark.pass { color: #2E5B3E; font-weight: 600; }
   .report-table .remark.fail { color: #A3402F; font-weight: 600; }
@@ -380,6 +382,7 @@
   .report-info-grid .full { grid-column: 1 / -1; }
   .report-info-grid .info-label { color: #666; }
   .report-info-grid .info-value { font-weight: 600; color: var(--darkest); margin-left: 4px; }
+  .report-info-grid .info-spacer { grid-column: 1 / -1; height: 1em; }
 
   /* Pairing e.g. "Student Name" with "Grade Level" side by side gets cramped on a phone -- one column each keeps
      every value readable instead of wrapping mid-word. Matches the same mobile width main{} defaults to below. */
@@ -418,13 +421,13 @@
   <!-- LOGIN -->
   <section id="screen-login" class="screen active">
     <div class="card" style="margin-top:20px">
-      <h2 style="margin-top:0">Check Your Grades</h2>
+      <h2 style="margin-top:0">Log In</h2>
       <p style="color:#555; font-size:0.9rem; margin-top:-8px">Enter your LRN and Surname.</p>
       <div id="loginMsg"></div>
       <form id="loginForm">
         <div class="field"><label>LRN</label><input id="lrnInput" inputmode="numeric" placeholder=""></div>
         <div class="field"><label>Surname</label><input id="surnameInput" placeholder=""></div>
-        <button class="btn" type="submit" id="loginBtn">View my Grades</button>
+        <button class="btn" type="submit" id="loginBtn">Login</button>
       </form>
     </div>
   </section>
@@ -433,7 +436,7 @@
   <section id="screen-pin-setup" class="screen">
     <div class="card" style="margin-top:20px">
       <h2 style="margin-top:0">Create a PIN</h2>
-      <p style="color:#555; font-size:0.9rem; margin-top:-8px">Set a 4-digit PIN so only you can see your grades next time.</p>
+      <p style="color:#555; font-size:0.9rem; margin-top:-8px">Set a 4-digit PIN for more security.</p>
       <div id="pinSetupMsg"></div>
       <form id="pinSetupForm">
         <div class="field"><label>New PIN</label><input id="pinSetupInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off"></div>
@@ -447,12 +450,12 @@
   <!-- PIN VERIFY (every login after the first) -->
   <section id="screen-pin-verify" class="screen">
     <div class="card" style="margin-top:20px">
-      <h2 style="margin-top:0">Enter your PIN</h2>
-      <p style="color:#555; font-size:0.9rem; margin-top:-8px">Enter the 4-digit PIN you created.</p>
+      <h2 style="margin-top:0">Verification</h2>
+      <p style="color:#555; font-size:0.9rem; margin-top:-8px">Enter the 4-digit PIN.</p>
       <div id="pinVerifyMsg"></div>
       <form id="pinVerifyForm">
         <div class="field"><label>PIN</label><input id="pinVerifyInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off"></div>
-        <button class="btn" type="submit" id="pinVerifyBtn">Continue</button>
+        <button class="btn" type="submit" id="pinVerifyBtn">Verify</button>
       </form>
       <p style="color:#888; font-size:0.8rem; margin-top:14px">Forgot your PIN? Ask your teacher to reset it.</p>
       <p style="margin-top:6px"><a href="#" id="pinVerifyBackLink" style="color:#667; font-size:0.85rem">&larr; Back</a></p>
@@ -626,6 +629,7 @@ function reportHeaderHtml_(e) {
     infoRow_('LRN', escapeHtml(e.lrn || '')) +
     infoRow_('Section', escapeHtml(e.section || '')) +
     (isSHS ? infoRow_('Track', escapeHtml(e.track || '')) + infoRow_('Cluster', escapeHtml(e.cluster || '')) : '') +
+    '<div class="info-spacer"></div>' +
     infoRow_('Class Adviser', escapeHtml(e.adviserName || ''), true);
 
   return '<div class="report-header">' +
