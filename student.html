@@ -125,6 +125,27 @@
 	outline-offset: 1px;
   }
 
+  .pin-boxes {
+	display: flex;
+	gap: 10px;
+  }
+
+  .pin-boxes input {
+	width: 48px;
+	height: 56px;
+	padding: 0;
+	border: 1px solid var(--light);
+	border-radius: 6px;
+	font-size: 1.4rem;
+	text-align: center;
+	-webkit-text-security: disc; /* dots like the old type="password" box, digit input still shows briefly on type */
+  }
+
+  .pin-boxes input:focus {
+	outline: 2px solid var(--accent);
+	outline-offset: 1px;
+  }
+
   .btn {
     background: var(--primary);
 	color: var(--white);
@@ -390,6 +411,13 @@
     .report-info-grid { grid-template-columns: 1fr; }
   }
 
+  /* Desktop/laptop only: nudge Grade Level and Section further right, and deepen subject indents. */
+  @media (min-width: 760px) {
+    .report-info-grid .info-shift-right { margin-left: 1in; }
+    .grades-table tr:not(.component-row) td.subj { padding-left: 1cm; }
+    .grades-table .component-row .comp-name { padding-left: calc(22px + 1cm); }
+  }
+
   .empty-state {
 	text-align: center;
 	padding: 48px 20px;
@@ -427,7 +455,7 @@
       <form id="loginForm">
         <div class="field"><label>LRN</label><input id="lrnInput" inputmode="numeric" placeholder=""></div>
         <div class="field"><label>Surname</label><input id="surnameInput" placeholder=""></div>
-        <button class="btn" type="submit" id="loginBtn">Login</button>
+        <button class="btn" type="submit" id="loginBtn">Log In</button>
       </form>
     </div>
   </section>
@@ -436,11 +464,29 @@
   <section id="screen-pin-setup" class="screen">
     <div class="card" style="margin-top:20px">
       <h2 style="margin-top:0">Create a PIN</h2>
-      <p style="color:#555; font-size:0.9rem; margin-top:-8px">Set a 4-digit PIN for more security.</p>
+      <p style="color:#555; font-size:0.9rem; margin-top:-8px">Set a 4-digit PIN..</p>
       <div id="pinSetupMsg"></div>
       <form id="pinSetupForm">
-        <div class="field"><label>New PIN</label><input id="pinSetupInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off"></div>
-        <div class="field"><label>Confirm PIN</label><input id="pinSetupConfirmInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off"></div>
+        <div class="field">
+          <label>New PIN</label>
+          <div class="pin-boxes" data-hidden="pinSetupInput">
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
+          </div>
+          <input type="hidden" id="pinSetupInput">
+        </div>
+        <div class="field">
+          <label>Confirm PIN</label>
+          <div class="pin-boxes" data-hidden="pinSetupConfirmInput">
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
+          </div>
+          <input type="hidden" id="pinSetupConfirmInput">
+        </div>
         <button class="btn" type="submit" id="pinSetupBtn">Save PIN</button>
       </form>
       <p style="margin-top:14px"><a href="#" id="pinSetupBackLink" style="color:#667; font-size:0.85rem">&larr; Back</a></p>
@@ -450,12 +496,12 @@
   <!-- PIN VERIFY (every login after the first) -->
   <section id="screen-pin-verify" class="screen">
     <div class="card" style="margin-top:20px">
-      <h2 style="margin-top:0">Verification</h2>
+      <h2 style="margin-top:0">Enter your PIN</h2>
       <p style="color:#555; font-size:0.9rem; margin-top:-8px">Enter the 4-digit PIN.</p>
       <div id="pinVerifyMsg"></div>
       <form id="pinVerifyForm">
         <div class="field"><label>PIN</label><input id="pinVerifyInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off"></div>
-        <button class="btn" type="submit" id="pinVerifyBtn">Verify</button>
+        <button class="btn" type="submit" id="pinVerifyBtn">Continue</button>
       </form>
       <p style="color:#888; font-size:0.8rem; margin-top:14px">Forgot your PIN? Ask your teacher to reset it.</p>
       <p style="margin-top:6px"><a href="#" id="pinVerifyBackLink" style="color:#667; font-size:0.85rem">&larr; Back</a></p>
@@ -488,6 +534,39 @@ function show(id) {
   document.getElementById(id).classList.add('active');
   document.body.classList.toggle('wide-view', id === 'screen-grades');
 }
+
+// Wires a set of single-digit boxes to behave as one PIN field: typing a digit advances to the
+// next box, Backspace on an empty box retreats to the previous one, and pasting a full PIN
+// distributes it across the boxes. The combined digits are written into the existing hidden
+// input (data-hidden) so the rest of the PIN setup/verify code didn't need to change at all.
+function wirePinBoxes_(container) {
+  var boxes = Array.prototype.slice.call(container.querySelectorAll('input'));
+  var hidden = document.getElementById(container.dataset.hidden);
+
+  function sync() {
+    hidden.value = boxes.map(function (b) { return b.value; }).join('');
+  }
+
+  boxes.forEach(function (box, i) {
+    box.addEventListener('input', function () {
+      box.value = box.value.replace(/\D/g, '').slice(-1);
+      sync();
+      if (box.value && boxes[i + 1]) boxes[i + 1].focus();
+    });
+    box.addEventListener('keydown', function (e) {
+      if (e.key === 'Backspace' && !box.value && boxes[i - 1]) boxes[i - 1].focus();
+    });
+    box.addEventListener('paste', function (e) {
+      var digits = (e.clipboardData.getData('text').match(/\d/g) || []).slice(0, boxes.length);
+      if (!digits.length) return;
+      e.preventDefault();
+      digits.forEach(function (d, j) { if (boxes[j]) boxes[j].value = d; });
+      sync();
+      (boxes[digits.length] || boxes[boxes.length - 1]).focus();
+    });
+  });
+}
+document.querySelectorAll('.pin-boxes').forEach(wirePinBoxes_);
 
 
 function backToLogin_() {
@@ -524,6 +603,7 @@ document.getElementById('loginForm').onsubmit = function (e) {
       document.getElementById('pinSetupMsg').innerHTML = '';
       document.getElementById('pinSetupForm').reset();
       show('screen-pin-setup');
+      document.querySelector('#pinSetupForm .pin-boxes input').focus();
     } else {
       document.getElementById('pinVerifyMsg').innerHTML = '';
       document.getElementById('pinVerifyForm').reset();
@@ -617,17 +697,18 @@ function isSHSGrade_(gradeLevel) {
 var SUBJECT_CATEGORY_LABELS_ = { CORE: 'Core Subjects', ELECTIVE: 'Elective Subjects', SPECIAL: 'Special Subjects' };
 var SUBJECT_CATEGORY_ORDER_ = ['CORE', 'ELECTIVE', 'SPECIAL'];
 
-function infoRow_(label, valueHtml, full) {
-  return '<div' + (full ? ' class="full"' : '') + '><span class="info-label">' + escapeHtml(label) + ':</span><span class="info-value">' + valueHtml + '</span></div>';
+function infoRow_(label, valueHtml, full, extraClass) {
+  var cls = [full ? 'full' : '', extraClass || ''].filter(Boolean).join(' ');
+  return '<div' + (cls ? ' class="' + cls + '"' : '') + '><span class="info-label">' + escapeHtml(label) + ':</span><span class="info-value">' + valueHtml + '</span></div>';
 }
 
 function reportHeaderHtml_(e) {
   var isSHS = isSHSGrade_(e.gradeLevel);
   var rows =
     infoRow_('Student Name', studentNameHtml_(e.studentName)) +
-    infoRow_('Grade Level', escapeHtml(e.gradeLevel || '')) +
+    infoRow_('Grade Level', escapeHtml(e.gradeLevel || ''), false, 'info-shift-right') +
     infoRow_('LRN', escapeHtml(e.lrn || '')) +
-    infoRow_('Section', escapeHtml(e.section || '')) +
+    infoRow_('Section', escapeHtml(e.section || ''), false, 'info-shift-right') +
     (isSHS ? infoRow_('Track', escapeHtml(e.track || '')) + infoRow_('Cluster', escapeHtml(e.cluster || '')) : '') +
     '<div class="info-spacer"></div>' +
     infoRow_('Class Adviser', escapeHtml(e.adviserName || ''), true);

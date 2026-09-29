@@ -818,7 +818,7 @@
 	color: var(--text-muted);
 	font-size: 0.92rem;
 	line-height: 1.5;
-	max-width: 100ch; /* wide enough that the sentences below fit on one line at most screen widths, not just tablet/phone */
+	max-width: 100ch; 
 	text-align: justify;
 	text-align-last: left; /* the (usually short) last line of the paragraph stays left-aligned, not stretched */
   }
@@ -1099,7 +1099,7 @@
       <div id="studentsNoClassMsg" class="empty-state" style="display:none"><div class="display">No Class Selected</div><p>Add or Select a class first, under "Classes."</p></div>
       <div id="studentsContent">
         <div class="class-selector"><label for="studentsClassSelect">Class:</label><select id="studentsClassSelect"></select></div>
-        <p class="instruction">Students log in with their LRN and surname. Every student needs a 12-digit LRN. Names are written as Surname, Given Name. The Student List will be automatically generated when you import an E-CR.</p>
+        <p class="instruction">Students login with their LRN and Surname. Every student needs a 12-digit LRN.</p>
         <div id="rosterArea"></div>
       </div>
     </section>
@@ -1114,7 +1114,7 @@
       </div>
       <div id="subjectsNoClassMsg" class="empty-state" style="display:none"><div class="display">No Class Selected</div><p>Add or Select a class first, under "Classes."</p></div>
       <div id="subjectsContent">
-        <p class="instruction" id="subjectsInstruction">Click the subject you want to encode or import grades. You can also Publish and Unpublish the grades here.</p>
+        <p class="instruction" id="subjectsInstruction">Click the subject you want to encode or import grades. You can also Publish and Unpublish the grades of your students here.</p>
         <div class="class-selector"><label for="subjectsClassSelect">Class:</label><select id="subjectsClassSelect"></select></div>
         <div id="subjectGrid"></div>
         <div id="subjectsEmptyMsg" class="empty-state" style="display:none"><div class="display">No Subjects Yet</div><p>This grade level doesn't have a fixed subject list. Add each subject with "Add Subject," or import its E-CR - importing adds the subject for you.</p></div>
