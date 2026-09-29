@@ -414,8 +414,8 @@
 
   /* Desktop/laptop only: nudge Grade Level and Section further right, and deepen subject indents. */
   @media (min-width: 760px) {
-    .report-info-grid .info-shift-right { margin-left: 1in; }
-    .grades-table tr:not(.component-row) td.subj { padding-left: 1cm; }
+    .report-info-grid .info-shift-right { margin-left: 2in; }
+    .grades-table tr:not(.component-row) td.subj { padding-left: 0.5cm; }
     .grades-table .component-row .comp-name { padding-left: calc(22px + 1cm); }
   }
 
@@ -465,7 +465,7 @@
   <section id="screen-pin-setup" class="screen">
     <div class="card" style="margin-top:20px">
       <h2 style="margin-top:0">Create a PIN</h2>
-      <p style="color:#555; font-size:0.9rem; margin-top:-8px">Set a 4-digit PIN..</p>
+      <p style="color:#555; font-size:0.9rem; margin-top:-8px">Set a 4-digit PIN.</p>
       <div id="pinSetupMsg"></div>
       <form id="pinSetupForm">
         <div class="field">
@@ -501,7 +501,16 @@
       <p style="color:#555; font-size:0.9rem; margin-top:-8px">Enter the 4-digit PIN.</p>
       <div id="pinVerifyMsg"></div>
       <form id="pinVerifyForm">
-        <div class="field"><label>PIN</label><input id="pinVerifyInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off"></div>
+        <div class="field">
+          <label>PIN</label>
+          <div class="pin-boxes" data-hidden="pinVerifyInput">
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
+          </div>
+          <input type="hidden" id="pinVerifyInput">
+        </div>
         <button class="btn" type="submit" id="pinVerifyBtn">Continue</button>
       </form>
       <p style="color:#888; font-size:0.8rem; margin-top:14px">Forgot your PIN? Ask your teacher to reset it.</p>
@@ -569,6 +578,14 @@ function wirePinBoxes_(container) {
 }
 document.querySelectorAll('.pin-boxes').forEach(wirePinBoxes_);
 
+function clearPinBoxes_(hiddenId) {
+  var group = document.querySelector('.pin-boxes[data-hidden="' + hiddenId + '"]');
+  if (!group) return;
+  group.querySelectorAll('input').forEach(function (b) { b.value = ''; });
+  document.getElementById(hiddenId).value = '';
+  group.querySelector('input').focus();
+}
+
 
 function backToLogin_() {
   sessionStorage.removeItem('ogv_student_session');
@@ -609,6 +626,7 @@ document.getElementById('loginForm').onsubmit = function (e) {
       document.getElementById('pinVerifyMsg').innerHTML = '';
       document.getElementById('pinVerifyForm').reset();
       show('screen-pin-verify');
+      document.querySelector('#pinVerifyForm .pin-boxes input').focus();
     }
   }, function (err) {
     msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>';
@@ -655,7 +673,7 @@ document.getElementById('pinVerifyForm').onsubmit = function (e) {
     sessionStorage.setItem('ogv_student_session', sessionToken);
     afterLogin();
   }, function (err) {
-    document.getElementById('pinVerifyInput').value = '';
+    clearPinBoxes_('pinVerifyInput');
     msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>';
   }, { button: document.getElementById('pinVerifyBtn') });
 };
