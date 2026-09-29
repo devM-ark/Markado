@@ -188,7 +188,46 @@
   #registerFields {
 	display: none;
   }
-  
+
+  .modal-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(0,0,0,0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+	z-index: 50;
+  }
+
+  .modal-overlay .card {
+	margin: 0;
+  }
+
+  .pin-boxes {
+	display: flex;
+	justify-content: center;
+	gap: 10px;
+  }
+
+  .pin-boxes input {
+	width: 48px;
+	height: 56px;
+	padding: 0;
+	border: 1px solid var(--border);
+	border-radius: 3px;
+	font-size: 1.4rem;
+	text-align: center;
+	font-family: inherit;
+	background: var(--white);
+	color: var(--black);
+  }
+
+  .pin-boxes input:focus {
+	outline: 2px solid var(--accent);
+	outline-offset: 1px;
+  }
+
 </style>
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 </head>
@@ -224,6 +263,28 @@
     <div class="toggle-auth"><button id="forgotPasswordBtn">Forgot Password?</button></div>
   </div>
 
+  <div id="confirmCodeOverlay" class="modal-overlay" style="display:none">
+    <div class="card">
+      <h2 style="margin-top:0">Confirm your Email</h2>
+      <p style="color:var(--text-muted); font-size:0.9rem; margin-top:-8px">Enter the 4-digit code we emailed you. It expires in 5 minutes.</p>
+      <div id="confirmCodeMsg"></div>
+      <form id="confirmCodeForm">
+        <div class="field">
+          <div class="pin-boxes" data-hidden="confirmCodeInput">
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
+          </div>
+          <input type="hidden" id="confirmCodeInput">
+        </div>
+        <button class="btn" type="submit" id="confirmCodeBtn">Confirm</button>
+      </form>
+      <div class="toggle-auth"><button type="button" id="resendCodeBtn">Resend Code</button></div>
+      <div class="toggle-auth"><button type="button" id="cancelCodeBtn">Cancel</button></div>
+    </div>
+  </div>
+
   <script>
     // Respects a dark-mode preference already chosen in the dashboard's Settings page.
     if (localStorage.getItem('markado_theme') === 'dark') {
@@ -236,6 +297,81 @@
     }
 
     var isRegisterMode = false;
+    var pendingTeacherRegToken = null;
+
+    // Same digit-box behavior as student.html's PIN entry: one digit per box, auto-advance,
+    // Backspace retreats, paste distributes -- mirrored into the combined hidden input.
+    function wirePinBoxes_(container) {
+      var boxes = Array.prototype.slice.call(container.querySelectorAll('input'));
+      var hidden = document.getElementById(container.dataset.hidden);
+      function sync() { hidden.value = boxes.map(function (b) { return b.value; }).join(''); }
+      boxes.forEach(function (box, i) {
+        box.addEventListener('input', function () {
+          box.value = box.value.replace(/\D/g, '').slice(-1);
+          sync();
+          if (box.value && boxes[i + 1]) boxes[i + 1].focus();
+        });
+        box.addEventListener('keydown', function (e) {
+          if (e.key === 'Backspace' && !box.value && boxes[i - 1]) boxes[i - 1].focus();
+        });
+        box.addEventListener('paste', function (e) {
+          var digits = (e.clipboardData.getData('text').match(/\d/g) || []).slice(0, boxes.length);
+          if (!digits.length) return;
+          e.preventDefault();
+          digits.forEach(function (d, j) { if (boxes[j]) boxes[j].value = d; });
+          sync();
+          (boxes[digits.length] || boxes[boxes.length - 1]).focus();
+        });
+      });
+    }
+    document.querySelectorAll('.pin-boxes').forEach(wirePinBoxes_);
+
+    function clearConfirmCodeBoxes_() {
+      var group = document.querySelector('.pin-boxes[data-hidden="confirmCodeInput"]');
+      group.querySelectorAll('input').forEach(function (b) { b.value = ''; });
+      document.getElementById('confirmCodeInput').value = '';
+    }
+
+    function openConfirmCodeModal_() {
+      document.getElementById('confirmCodeMsg').innerHTML = '';
+      clearConfirmCodeBoxes_();
+      document.getElementById('confirmCodeOverlay').style.display = 'flex';
+      document.querySelector('#confirmCodeOverlay .pin-boxes input').focus();
+    }
+
+    function closeConfirmCodeModal_() {
+      document.getElementById('confirmCodeOverlay').style.display = 'none';
+      pendingTeacherRegToken = null;
+    }
+
+    document.getElementById('cancelCodeBtn').onclick = closeConfirmCodeModal_;
+
+    document.getElementById('confirmCodeForm').onsubmit = function (e) {
+      e.preventDefault();
+      var code = document.getElementById('confirmCodeInput').value.trim();
+      var msgEl = document.getElementById('confirmCodeMsg');
+      msgEl.innerHTML = '';
+      if (!/^\d{4}$/.test(code)) { msgEl.innerHTML = '<div class="msg error">Enter the 4-digit code.</div>'; return; }
+
+      call('clientConfirmTeacherCode_', [pendingTeacherRegToken, code], function () {
+        closeConfirmCodeModal_();
+        document.getElementById('authMsg').innerHTML = '<div class="msg success">Your account is confirmed. You can now log in.</div>';
+      }, function (err) {
+        clearConfirmCodeBoxes_();
+        document.querySelector('#confirmCodeOverlay .pin-boxes input').focus();
+        msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>';
+      }, { button: document.getElementById('confirmCodeBtn') });
+    };
+
+    document.getElementById('resendCodeBtn').onclick = function () {
+      var msgEl = document.getElementById('confirmCodeMsg');
+      call('clientResendTeacherCode_', [pendingTeacherRegToken], function (data) {
+        pendingTeacherRegToken = data.pendingToken;
+        clearConfirmCodeBoxes_();
+        document.querySelector('#confirmCodeOverlay .pin-boxes input').focus();
+        msgEl.innerHTML = '<div class="msg success">A new code has been sent.</div>';
+      }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; }, { button: document.getElementById('resendCodeBtn') });
+    };
 
     document.getElementById('toggleAuthBtn').onclick = function () {
       isRegisterMode = !isRegisterMode;
@@ -263,15 +399,20 @@
       if (isRegisterMode) {
         var fullName = document.getElementById('regFullName').value.trim();
         if (!fullName || !email || !password) return;
-        call('clientRegister_', [fullName, email, password], function () {
+        call('clientRegister_', [fullName, email, password], function (data) {
           // Clear credentials from the form now that they've been used —
           // nothing sensitive should linger in visible input fields.
           document.getElementById('regFullName').value = '';
           document.getElementById('authEmail').value = '';
           document.getElementById('authPassword').value = '';
-          isRegisterMode = false;
-          document.getElementById('toggleAuthBtn').click(); // this clears authMsg as a side effect -- message is set after, below
-          msgEl.innerHTML = '<div class="msg success">Check your email for a verification link, then log in.</div>';
+          if (data && data.pendingToken) {
+            pendingTeacherRegToken = data.pendingToken;
+            openConfirmCodeModal_();
+          } else {
+            isRegisterMode = false;
+            document.getElementById('toggleAuthBtn').click(); // this clears authMsg as a side effect -- message is set after, below
+            msgEl.innerHTML = '<div class="msg success">' + escapeHtml((data && data.message) || 'Registered.') + '</div>';
+          }
         }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; }, { button: document.getElementById('authSubmit') });
       } else {
         if (!email || !password) return;
