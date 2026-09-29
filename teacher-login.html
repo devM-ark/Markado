@@ -264,14 +264,14 @@
         var fullName = document.getElementById('regFullName').value.trim();
         if (!fullName || !email || !password) return;
         call('clientRegister_', [fullName, email, password], function () {
-          msgEl.innerHTML = '<div class="msg success">Check your email for a verification link, then log in.</div>';
           // Clear credentials from the form now that they've been used —
           // nothing sensitive should linger in visible input fields.
           document.getElementById('regFullName').value = '';
           document.getElementById('authEmail').value = '';
           document.getElementById('authPassword').value = '';
           isRegisterMode = false;
-          document.getElementById('toggleAuthBtn').click();
+          document.getElementById('toggleAuthBtn').click(); // this clears authMsg as a side effect -- message is set after, below
+          msgEl.innerHTML = '<div class="msg success">Check your email for a verification link, then log in.</div>';
         }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; }, { button: document.getElementById('authSubmit') });
       } else {
         if (!email || !password) return;
