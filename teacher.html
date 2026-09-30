@@ -818,7 +818,7 @@
 	color: var(--text-muted);
 	font-size: 0.92rem;
 	line-height: 1.5;
-	max-width: 100ch; 
+	max-width: 100ch; /* wide enough that the sentences below fit on one line at most screen widths, not just tablet/phone */
 	text-align: justify;
 	text-align-last: left; /* the (usually short) last line of the paragraph stays left-aligned, not stretched */
   }
@@ -1099,7 +1099,7 @@
       <div id="studentsNoClassMsg" class="empty-state" style="display:none"><div class="display">No Class Selected</div><p>Add or Select a class first, under "Classes."</p></div>
       <div id="studentsContent">
         <div class="class-selector"><label for="studentsClassSelect">Class:</label><select id="studentsClassSelect"></select></div>
-        <p class="instruction">Students login with their LRN and Surname. Every student needs a 12-digit LRN.</p>
+        <p class="instruction">Students login with their LRN and surname. Every student needs a 12-digit LRN.</p>
         <div id="rosterArea"></div>
       </div>
     </section>
@@ -1114,10 +1114,10 @@
       </div>
       <div id="subjectsNoClassMsg" class="empty-state" style="display:none"><div class="display">No Class Selected</div><p>Add or Select a class first, under "Classes."</p></div>
       <div id="subjectsContent">
-        <p class="instruction" id="subjectsInstruction">Click the subject you want to encode or import grades. You can also Publish and Unpublish the grades of your students here.</p>
+        <p class="instruction" id="subjectsInstruction">Click the subject you want to encode or import grades. You can also Publish and Unpublish the grades here.</p>
         <div class="class-selector"><label for="subjectsClassSelect">Class:</label><select id="subjectsClassSelect"></select></div>
         <div id="subjectGrid"></div>
-        <div id="subjectsEmptyMsg" class="empty-state" style="display:none"><div class="display">No Subjects Yet</div><p>This grade level doesn't have a fixed subject list. Add each subject with "Add Subject," or import its E-CR - importing adds the subject for you.</p></div>
+        <div id="subjectsEmptyMsg" class="empty-state" style="display:none"><div class="display">No Subjects Yet</div><p>This grade level doesn't have a fixed subject list. Add each subject with "Add Subject," or import E-CR.</p></div>
       </div>
     </section>
 
@@ -1181,8 +1181,8 @@
       <h3 id="ecrTitle">Import an E-CR</h3>
       <button class="icon-btn" id="ecrCloseBtn" type="button" aria-label="Close">&#10005;</button>
     </div>
-    <p style="margin-top:0">Upload the standard DepEd E-CR excel file. The system will automatically read all the data needed.</p>
-    <p class="muted" style="font-size:0.85rem">Only Names, Class details, and Final Term Grades are saved in the system.</p>
+    <p style="margin-top:0">Upload the standard DepEd E-CR excel file. The class, subject and learners are set up from the file, and you choose which terms to import.</p>
+    <p class="muted" style="font-size:0.85rem">Only names, class details, final term grades are saved.</p>
     <input type="file" id="ecrFileInput" accept=".xlsx">
     <button class="btn" id="ecrUploadBtn" style="margin-top:12px">Check File</button>
     <div id="ecrImportArea" style="margin-top:16px"></div>
@@ -1886,7 +1886,151 @@ function isSHSGrade_(gradeLevel) {
 
 var SHS_QUICK_ADD_SUBJECTS_ = [
   'Effective Communication', 'Mabisang Komunikasyon', 'General Mathematics',
-  'General Science', 'Life and Career Skills', 'Pag-aaral ng Kasaysayan at Lipunan Pilipino',
+  'General Science', 'Life and Career Skills', 'Pag-aaral ng Kasaysayan at Lipunang Pilipino',
+];
+
+/** Official SHS subject list, copied from the HELPER sheet of the DepEd SHS E-CR. Each row is
+ *  [subject, track (C core / A academic / T tech-pro), cluster, [terms, units per term] in Grade 11, same for Grade 12]. */
+var SHS_CATALOG_ = [
+  ["Effective Communication","C","CORE",[3,2],null],
+  ["General Mathematics","C","CORE",[3,2],null],
+  ["General Science","C","CORE",[3,2],null],
+  ["Life and Career Skills","C","CORE",[3,2],null],
+  ["Mabisang Komunikasyon","C","CORE",[3,2],null],
+  ["Pag-aaral ng Kasaysayan at Lipunang Pilipino","C","CORE",[3,2],null],
+  ["Art Criticism and Creative Markets","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Citizenship and Civic Engagement","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Contemporary Literature 1","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Contemporary Literature 2","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Creative Composition 1","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Creative Composition 2","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Creative Industries - Applied and Traditional Arts","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Creative Industries - Dance","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Creative Industries - Literary Arts","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Creative Industries - Media Arts","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Creative Industries - Music","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Creative Industries - Theater Arts","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Creative Industries - Visual Arts","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Filipino 1 (Wika at Komunikasyon sa Akademikong Filipino)","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Filipino 2 (Filipino sa Isports)","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Filipino 2 (Filipino sa Larang Teknikal-Propesyonal)","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Filipino 2 (Filipino sa Sining at Disenyo)","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Filipino Identity Through the Arts","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Introduction to the Philosophy of the Human Person","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Leadership and Management in the Arts","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Malikhaing Pagsulat","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Performance Criticism and Creative Markets","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Philippine Governance (Philippine Politics and Governance)","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Social Sciences (Theory and Practice)","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",[1,3],[1,3]],
+  ["Creative Production and Presentation","A","ARTS, SOCIAL SCIENCES, AND HUMANITIES",null,[1,6]],
+  ["Business 1 (Basic Accounting)","A","BUSINESS AND ENTREPRENEURSHIP",[1,3],[1,3]],
+  ["Business 2 (Business Finance and Income Taxation)","A","BUSINESS AND ENTREPRENEURSHIP",[1,3],[1,3]],
+  ["Contemporary Marketing","A","BUSINESS AND ENTREPRENEURSHIP",[1,3],[1,3]],
+  ["Entrepreneurship","A","BUSINESS AND ENTREPRENEURSHIP",[1,3],[1,3]],
+  ["Introduction to Organization and Management","A","BUSINESS AND ENTREPRENEURSHIP",[1,3],[1,3]],
+  ["Business 3 (Business Economics)","A","BUSINESS AND ENTREPRENEURSHIP",null,[1,3]],
+  ["Design and Innovation","A","FIELD EXPERIENCE",[1,3],[1,3]],
+  ["Research 1","A","FIELD EXPERIENCE",[1,3],[1,3]],
+  ["Research 2","A","FIELD EXPERIENCE",[1,3],[1,3]],
+  ["Arts Apprenticeship – Dance","A","FIELD EXPERIENCE",null,[1,6]],
+  ["Arts Apprenticeship - Literary Arts","A","FIELD EXPERIENCE",null,[1,6]],
+  ["Arts Apprenticeship - Media Arts","A","FIELD EXPERIENCE",null,[1,6]],
+  ["Arts Apprenticeship – Music","A","FIELD EXPERIENCE",null,[1,6]],
+  ["Arts Apprenticeship – Theater Arts","A","FIELD EXPERIENCE",null,[1,6]],
+  ["Arts Apprenticeship – Traditional Cultural Expressions","A","FIELD EXPERIENCE",null,[1,6]],
+  ["Arts Apprenticeship – Visual Arts","A","FIELD EXPERIENCE",null,[1,6]],
+  ["Field Exposure (Off Campus)","A","FIELD EXPERIENCE",null,[1,3]],
+  ["In-Campus Field Exposure for Sports","A","FIELD EXPERIENCE",null,[1,3]],
+  ["Work Immersion for Academic Track","A","FIELD EXPERIENCE",null,[1,12]],
+  ["Advanced Mathematics","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",[1,3],[1,3]],
+  ["Basic Calculus","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",[1,3],[1,3]],
+  ["Biology 1","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",[1,3],[1,3]],
+  ["Biology 2","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",[1,3],[1,3]],
+  ["Biology 3","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",[1,3],[1,3]],
+  ["Chemistry 1","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",[1,3],[1,3]],
+  ["Chemistry 2","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",[1,3],[1,3]],
+  ["Chemistry 3","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",[1,3],[1,3]],
+  ["Earth and Space Science 1","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",[1,3],[1,3]],
+  ["Earth and Space Science 2","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",[1,3],[1,3]],
+  ["Earth and Space Science 3","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",[1,3],[1,3]],
+  ["Empowerment Technologies","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",[1,3],[1,3]],
+  ["Finite Mathematics 1","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",[1,3],[1,3]],
+  ["Finite Mathematics 2","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",[1,3],[1,3]],
+  ["Physics 1","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",[1,3],[1,3]],
+  ["Physics 2","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",[1,3],[1,3]],
+  ["Physics 3","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",[1,3],[1,3]],
+  ["Pre-Calculus","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",[1,3],[1,3]],
+  ["Biology 4","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",null,[1,3]],
+  ["Chemistry 4","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",null,[1,3]],
+  ["Conceptual Biology and Earth and Space Science","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",null,[1,3]],
+  ["Conceptual Physics and Chemistry in Daily Life","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",null,[1,3]],
+  ["Database Management","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",null,[1,3]],
+  ["Earth and Space Science 4","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",null,[1,3]],
+  ["Fundamentals of Data Analytics","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",null,[1,3]],
+  ["Physics 4","A","SCIENCE, TECHNOLOGY, ENGINEERING, AND MATHEMATICS",null,[1,3]],
+  ["Exercise and Sports Programming","A","SPORTS, HEALTH, AND WELLNESS",[1,3],[1,3]],
+  ["First Aid","A","SPORTS, HEALTH, AND WELLNESS",[1,3],[1,3]],
+  ["Fundamentals of Basic Life Support","A","SPORTS, HEALTH, AND WELLNESS",[1,3],[1,3]],
+  ["Human Movement 1 (Basic Anatomy in Sports and Exercise)","A","SPORTS, HEALTH, AND WELLNESS",[1,3],[1,3]],
+  ["Human Movement 2 (Motor Skills Development)","A","SPORTS, HEALTH, AND WELLNESS",[1,3],[1,3]],
+  ["Physical Education 1 (Fitness and Recreation)","A","SPORTS, HEALTH, AND WELLNESS",[1,3],[1,3]],
+  ["Physical Education 2 (Sports and Dance)","A","SPORTS, HEALTH, AND WELLNESS",[1,3],[1,3]],
+  ["Sports Activity Management","A","SPORTS, HEALTH, AND WELLNESS",[1,3],[1,3]],
+  ["Sports Coaching","A","SPORTS, HEALTH, AND WELLNESS",[1,3],[1,3]],
+  ["Sports Officiating","A","SPORTS, HEALTH, AND WELLNESS",[1,3],[1,3]],
+  ["Aesthetic Services (Beauty Care)","T","AESTHETIC, WELLNESS, AND HUMAN CARE",[3,4],[1,12]],
+  ["Caregiving (Adult Care)","T","AESTHETIC, WELLNESS, AND HUMAN CARE",[3,4],[1,12]],
+  ["Caregiving (Child Care)","T","AESTHETIC, WELLNESS, AND HUMAN CARE",[3,4],[1,12]],
+  ["Hairdressing Services","T","AESTHETIC, WELLNESS, AND HUMAN CARE",[3,4],[1,12]],
+  ["Agricultural Crops Production","T","AGRI-FISHERY BUSINESS AND FOOD INNOVATION",[3,4],[1,12]],
+  ["Agro-entrepreneurship","T","AGRI-FISHERY BUSINESS AND FOOD INNOVATION",[3,4],[1,12]],
+  ["Aquaculture","T","AGRI-FISHERY BUSINESS AND FOOD INNOVATION",[3,4],[1,12]],
+  ["Fish Capture Operation","T","AGRI-FISHERY BUSINESS AND FOOD INNOVATION",[3,4],[1,12]],
+  ["Food Processing","T","AGRI-FISHERY BUSINESS AND FOOD INNOVATION",[3,4],[1,12]],
+  ["Organic Agriculture Production","T","AGRI-FISHERY BUSINESS AND FOOD INNOVATION",[3,4],[1,12]],
+  ["Poultry Production (Chicken)","T","AGRI-FISHERY BUSINESS AND FOOD INNOVATION",[3,4],[1,12]],
+  ["Ruminants Production","T","AGRI-FISHERY BUSINESS AND FOOD INNOVATION",[3,4],[1,12]],
+  ["Swine Production","T","AGRI-FISHERY BUSINESS AND FOOD INNOVATION",[3,4],[1,12]],
+  ["Garments Artisanry","T","ARTISANRY AND CREATIVE ENTERPRISE",[3,4],[1,12]],
+  ["Handicrafts: Weaving","T","ARTISANRY AND CREATIVE ENTERPRISE",[3,4],[1,12]],
+  ["Driving and Automotive Servicing","T","AUTOMOTIVE AND SMALL ENGINE TECHNOLOGIES",[3,4],[1,12]],
+  ["Motorcycle and Small Engine Servicing","T","AUTOMOTIVE AND SMALL ENGINE TECHNOLOGIES",[3,4],[1,12]],
+  ["Automotive Servicing (Electrical Repair)","T","AUTOMOTIVE AND SMALL ENGINE TECHNOLOGIES",null,[1,12]],
+  ["Automotive Servicing (Engine and Chassis Repairs)","T","AUTOMOTIVE AND SMALL ENGINE TECHNOLOGIES",null,[1,12]],
+  ["Carpentry","T","CONSTRUCTION AND BUILDING TECHNOLOGIES",[3,4],[1,12]],
+  ["Construction Operation","T","CONSTRUCTION AND BUILDING TECHNOLOGIES",[3,4],[1,12]],
+  ["Manual Metal Arc Welding","T","CONSTRUCTION AND BUILDING TECHNOLOGIES",[3,4],[1,12]],
+  ["Technical Drafting","T","CONSTRUCTION AND BUILDING TECHNOLOGIES",[3,4],[1,12]],
+  ["Animation","T","CREATIVE ARTS AND DESIGN TECHNOLOGIES",[3,4],[1,12]],
+  ["Illustration","T","CREATIVE ARTS AND DESIGN TECHNOLOGIES",[3,4],[1,12]],
+  ["Visual Graphic Design","T","CREATIVE ARTS AND DESIGN TECHNOLOGIES",[3,4],[1,12]],
+  ["Bakery Operations","T","HOSPITALITY AND TOURISM",[3,4],[1,12]],
+  ["Events Management Services","T","HOSPITALITY AND TOURISM",[3,4],[1,12]],
+  ["Food and Beverage Operation","T","HOSPITALITY AND TOURISM",[3,4],[1,12]],
+  ["Hotel Operations (Front Office Services)","T","HOSPITALITY AND TOURISM",[3,4],[1,12]],
+  ["Hotel Operations (Housekeeping Services)","T","HOSPITALITY AND TOURISM",[3,4],[1,12]],
+  ["Kitchen Operations","T","HOSPITALITY AND TOURISM",[3,4],[1,12]],
+  ["Tourism Services","T","HOSPITALITY AND TOURISM",[3,4],[1,12]],
+  ["Broadband Installation","T","ICT SUPPORT AND COMPUTER PROGRAMMING TECHNOLOGIES",[3,4],[1,12]],
+  ["Computer Programming (.Net Technology)","T","ICT SUPPORT AND COMPUTER PROGRAMMING TECHNOLOGIES",[3,4],[1,12]],
+  ["Computer Programming (Java)","T","ICT SUPPORT AND COMPUTER PROGRAMMING TECHNOLOGIES",[3,4],[1,12]],
+  ["Computer Programming (Oracle Database)","T","ICT SUPPORT AND COMPUTER PROGRAMMING TECHNOLOGIES",[3,4],[1,12]],
+  ["Computer Systems Servicing","T","ICT SUPPORT AND COMPUTER PROGRAMMING TECHNOLOGIES",[3,4],[1,12]],
+  ["Contact Center Services","T","ICT SUPPORT AND COMPUTER PROGRAMMING TECHNOLOGIES",[3,4],[1,12]],
+  ["Domestic Refrigeration and Air-Conditioning Servicing","T","INDUSTRIAL TECHNOLOGIES",[3,4],[1,12]],
+  ["Electrical Installation and Maintenance","T","INDUSTRIAL TECHNOLOGIES",[3,4],[1,12]],
+  ["Electronic Products Assembly and Servicing","T","INDUSTRIAL TECHNOLOGIES",[3,4],[1,12]],
+  ["Photovoltaic Systems Installation","T","INDUSTRIAL TECHNOLOGIES",[3,4],[1,12]],
+  ["Commercial Air-Conditioning Installation and Servicing","T","INDUSTRIAL TECHNOLOGIES",null,[1,12]],
+  ["Mechatronics","T","INDUSTRIAL TECHNOLOGIES",null,[1,12]],
+  ["Marine Engineering at the Support Level","T","MARITIME",[3,4],[1,12]],
+  ["Marine Transportation at the Support Level","T","MARITIME",[3,4],[1,12]],
+  ["Ships Catering Services","T","MARITIME",[3,4],[1,12]],
+  ["Work Immersion for Tech-Pro Track (320 hours)","T","WORK IMMERSION",null,[1,12]],
+  ["Work Immersion for Tech-Pro Track (540 hours) - 1 Term","T","WORK IMMERSION",null,[1,21]],
+  ["Work Immersion for Tech-Pro Track (640 hours) - 1 Term","T","WORK IMMERSION",null,[1,24]],
+  ["Work Immersion for Tech-Pro Track (540 hours) - 2 Terms","T","WORK IMMERSION",null,[2,10.5]],
+  ["Work Immersion for Tech-Pro Track (640 hours) - 2 Terms","T","WORK IMMERSION",null,[2,12]]
 ];
 
 var TERM_STATUS_TEXT_ = { PUBLISHED: 'Published', DRAFT: 'Draft', EMPTY: 'No grades yet' };
@@ -2014,18 +2158,44 @@ document.getElementById('addSubjectBtn').onclick = function () {
   });
 };
 
-/** Senior High has no fixed subject list, so Add Subject offers the common SHS subjects as one-tap buttons,
- *  plus a free-text fallback, instead of the plain name field the other grades get. Every subject added here is
- *  tagged Core, Elective or Special so the student report can group Core ahead of Electives -- the quick-add
- *  chips are all DepEd Core subjects, so those tap straight in as Core; a typed-in name asks which it is. */
+/** Senior High Add Subject. The official SHS subject list (from the DepEd SHS E-CR) is searchable: picking a subject
+ *  fills in its type, units per term and how many terms it runs, using the class's grade level (a Tech-Pro subject is
+ *  4 units x 3 terms in Grade 11 but 12 units x 1 term in Grade 12). A subject that runs fewer than 3 terms still asks
+ *  the teacher WHICH terms, because the list only says how many. Anything not in the list can be typed in by hand.
+ *  Core subjects (Grade 11) stay as one-tap buttons. Every subject is tagged Core / Elective / Special so the student
+ *  report can group Core ahead of the rest. */
+var SHS_TRACK_LABEL_ = { C: 'Core', A: 'Academic', T: 'Tech-Pro' };
+
+function shsCategoryForEntry_(e) {
+  if (e[1] === 'C') return 'CORE';
+  return /OTHER ELECTIVE|SPECIAL/i.test(e[2]) ? 'SPECIAL' : 'ELECTIVE';
+}
+
+function shsLevelInfo_(e, level) { return level === 12 ? e[4] : e[3]; } // [terms, unitsPerTerm] or null
+
+function shsSearch_(query, level) {
+  var words = String(query || '').toLowerCase().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return [];
+  return SHS_CATALOG_.filter(function (e) {
+    if ((level === 11 || level === 12) && !shsLevelInfo_(e, level)) return false;
+    var hay = (e[0] + ' ' + e[2] + ' ' + SHS_TRACK_LABEL_[e[1]]).toLowerCase();
+    return words.every(function (w) { return hay.indexOf(w) !== -1; });
+  });
+}
+
 function openShsQuickAddModal_() {
-  var chips = SHS_QUICK_ADD_SUBJECTS_.map(function (name, i) {
+  var ws = workspaceById_(state.currentWorkspaceId);
+  var level = ws ? parseInt(String(ws.gradeLevel).replace(/[^0-9]/g, ''), 10) : NaN;
+  var coreChips = level === 12 ? '' : SHS_QUICK_ADD_SUBJECTS_.map(function (name, i) {
     return '<button type="button" class="btn secondary small" style="margin:0 6px 8px 0" data-shs-add="' + i + '">' + escapeHtml(name) + '</button>';
   }).join('');
   var html = '<h3 style="margin-top:0">Add subject</h3>' +
-    '<p style="color:#5C6773; font-size:0.9rem; margin-top:0">Senior High School has no fixed subject list. Tap one to add it as a Core subject, or type your own below.</p>' +
-    '<div style="margin-bottom:8px">' + chips + '</div>' +
-    '<div class="field"><label for="shsCustomName">Other subject name</label><input id="shsCustomName" maxlength="80" placeholder="e.g. Practical Research 2"></div>' +
+    '<p style="color:#5C6773; font-size:0.9rem; margin-top:0">Search the official Senior High subject list and the units and terms fill in for you. The General Average is weighted by units.</p>' +
+    (coreChips ? '<div style="margin-bottom:8px"><div style="font-size:0.8rem;color:#5C6773;margin-bottom:4px">Core subjects (tap to add)</div>' + coreChips + '</div>' : '') +
+    '<div class="field"><label for="shsSearch">Search subject</label><input id="shsSearch" maxlength="80" placeholder="e.g. biology, welding, work immersion" autocomplete="off" data-autofocus></div>' +
+    '<div id="shsResults" style="margin:-4px 0 10px"></div>' +
+    '<div class="field"><label for="shsCustomName">Subject name</label><input id="shsCustomName" maxlength="80" placeholder="Pick from the list above, or type your own"></div>' +
+    '<div id="shsPickedNote" style="font-size:0.82rem;color:#5C6773;margin:-4px 0 10px"></div>' +
     '<div class="field">' +
       '<label>Subject type</label>' +
       '<div class="radio-row" role="radiogroup" aria-label="Subject type">' +
@@ -2034,28 +2204,111 @@ function openShsQuickAddModal_() {
         '<label class="radio-pill"><input type="radio" name="shsCategory" value="SPECIAL"> Special</label>' +
       '</div>' +
     '</div>' +
+    '<div class="field"><label for="shsUnits">Units per term</label><input id="shsUnits" type="number" min="0.5" max="40" step="0.5" placeholder="e.g. 3"></div>' +
+    '<div class="field">' +
+      '<label id="shsTermsLabel">Terms this subject runs</label>' +
+      '<div class="radio-row">' +
+        '<label class="radio-pill"><input type="checkbox" name="shsTerm" value="1" checked> Term 1</label>' +
+        '<label class="radio-pill"><input type="checkbox" name="shsTerm" value="2" checked> Term 2</label>' +
+        '<label class="radio-pill"><input type="checkbox" name="shsTerm" value="3" checked> Term 3</label>' +
+      '</div>' +
+    '</div>' +
     '<div id="shsAddMsg"></div>' +
     '<div class="actions"><button class="btn secondary" id="shsCloseBtn" type="button">Done</button><button class="btn" id="shsCustomAddBtn" type="button">Add</button></div>';
   var modal = openModal_(html);
 
-  var addByName = function (name, category, btn) {
-    call('clientCreateClassSubject_', [state.sessionToken, state.currentWorkspaceId, null, name, category], function () {
+  var picked = null;       // { name, terms } while the form still matches a list entry
+  var shown = [];          // entries currently listed under the search box
+  var msgEl = document.getElementById('shsAddMsg');
+  var termBoxes = function () { return modal.querySelectorAll('input[name="shsTerm"]'); };
+  var setTermsLabel = function () {
+    var need = picked ? picked.terms : 0;
+    document.getElementById('shsTermsLabel').textContent = need > 0 && need < 3
+      ? 'Choose the ' + need + ' term' + (need === 1 ? '' : 's') + ' this subject runs'
+      : 'Terms this subject runs';
+  };
+
+  var resetForm = function () {
+    picked = null;
+    document.getElementById('shsSearch').value = '';
+    document.getElementById('shsResults').innerHTML = '';
+    document.getElementById('shsCustomName').value = '';
+    document.getElementById('shsPickedNote').textContent = '';
+    document.getElementById('shsUnits').value = '';
+    termBoxes().forEach(function (b) { b.checked = true; });
+    var elective = modal.querySelector('input[name="shsCategory"][value="ELECTIVE"]');
+    if (elective) elective.checked = true;
+    setTermsLabel();
+  };
+
+  var pick = function (e) {
+    var info = shsLevelInfo_(e, level) || e[3] || e[4];
+    var levelUsed = shsLevelInfo_(e, level) ? level : (e[3] ? 11 : 12);
+    picked = { name: e[0], terms: info[0] };
+    document.getElementById('shsCustomName').value = e[0];
+    document.getElementById('shsUnits').value = info[1];
+    var cat = modal.querySelector('input[name="shsCategory"][value="' + shsCategoryForEntry_(e) + '"]');
+    if (cat) cat.checked = true;
+    termBoxes().forEach(function (b) { b.checked = info[0] >= 3; }); // 1-2 term subjects: teacher picks which
+    document.getElementById('shsPickedNote').textContent = SHS_TRACK_LABEL_[e[1]] + ' · ' + e[2] + ' · Grade ' + levelUsed + ': ' +
+      info[1] + ' unit' + (info[1] === 1 ? '' : 's') + ' per term × ' + info[0] + ' term' + (info[0] === 1 ? '' : 's') +
+      ' = ' + (info[1] * info[0]) + ' units';
+    document.getElementById('shsResults').innerHTML = '';
+    document.getElementById('shsSearch').value = '';
+    setTermsLabel();
+    msgEl.innerHTML = '';
+  };
+
+  var renderResults = function () {
+    var q = document.getElementById('shsSearch').value;
+    var box = document.getElementById('shsResults');
+    var all = shsSearch_(q, level);
+    shown = all.slice(0, 8);
+    if (String(q).trim() === '') { box.innerHTML = ''; return; }
+    if (all.length === 0) { box.innerHTML = '<div style="font-size:0.85rem;color:#5C6773">No match in the official list. Type the subject below instead.</div>'; return; }
+    box.innerHTML = shown.map(function (e, i) {
+      var info = shsLevelInfo_(e, level) || e[3] || e[4];
+      return '<button type="button" class="btn secondary small" data-shs-pick="' + i + '" style="display:block;width:100%;text-align:left;margin:0 0 4px;white-space:normal">' +
+        '<b>' + escapeHtml(e[0]) + '</b><br><span style="font-size:0.78rem;color:#5C6773">' + escapeHtml(SHS_TRACK_LABEL_[e[1]] + ' · ' + e[2]) +
+        ' · ' + info[1] + ' unit' + (info[1] === 1 ? '' : 's') + ' × ' + info[0] + ' term' + (info[0] === 1 ? '' : 's') + '</span></button>';
+    }).join('') + (all.length > shown.length ? '<div style="font-size:0.8rem;color:#5C6773">' + (all.length - shown.length) + ' more - keep typing to narrow it down.</div>' : '');
+    box.querySelectorAll('[data-shs-pick]').forEach(function (btn) {
+      btn.onclick = function () { pick(shown[Number(btn.getAttribute('data-shs-pick'))]); };
+    });
+  };
+
+  var addByName = function (name, category, btn, unitsPerTerm, terms, onDone) {
+    call('clientCreateClassSubject_', [state.sessionToken, state.currentWorkspaceId, null, name, category, unitsPerTerm, terms], function () {
       invalidateSubjectsCache_();
       renderSubjectGrid(true);
       showToast(name + ' added.', 'success');
-    }, function (err) { document.getElementById('shsAddMsg').innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; }, { button: btn });
+      if (onDone) onDone();
+    }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; }, { button: btn });
   };
 
   document.getElementById('shsCloseBtn').onclick = closeModal_;
+  document.getElementById('shsSearch').oninput = renderResults;
+  document.getElementById('shsCustomName').oninput = function () {
+    // Editing the name away from the list entry turns it back into a custom subject.
+    if (picked && this.value.trim() !== picked.name) { picked = null; document.getElementById('shsPickedNote').textContent = ''; setTermsLabel(); }
+  };
   modal.querySelectorAll('[data-shs-add]').forEach(function (btn) {
-    btn.onclick = function () { addByName(SHS_QUICK_ADD_SUBJECTS_[Number(btn.getAttribute('data-shs-add'))], 'CORE', btn); };
+    btn.onclick = function () { addByName(SHS_QUICK_ADD_SUBJECTS_[Number(btn.getAttribute('data-shs-add'))], 'CORE', btn, 2, [1, 2, 3]); };
   });
   document.getElementById('shsCustomAddBtn').onclick = function () {
     var name = valueOf_('shsCustomName');
-    if (!name) { document.getElementById('shsAddMsg').innerHTML = '<div class="msg error">Enter the subject name.</div>'; return; }
+    if (!name) { msgEl.innerHTML = '<div class="msg error">Search for a subject, or type its name.</div>'; return; }
     var category = (modal.querySelector('input[name="shsCategory"]:checked') || {}).value || 'ELECTIVE';
-    addByName(name, category, document.getElementById('shsCustomAddBtn'));
-    document.getElementById('shsCustomName').value = '';
+    var units = Number(valueOf_('shsUnits'));
+    if (!isFinite(units) || units <= 0) { msgEl.innerHTML = '<div class="msg error">Enter the units per term.</div>'; return; }
+    var terms = Array.prototype.map.call(modal.querySelectorAll('input[name="shsTerm"]:checked'), function (el) { return Number(el.value); });
+    if (terms.length === 0) { msgEl.innerHTML = '<div class="msg error">Choose at least one term.</div>'; return; }
+    if (picked && terms.length !== picked.terms) {
+      msgEl.innerHTML = '<div class="msg error">' + escapeHtml(picked.name) + ' runs ' + picked.terms + ' term' + (picked.terms === 1 ? '' : 's') + ' - tick exactly ' + picked.terms + '.</div>';
+      return;
+    }
+    msgEl.innerHTML = '';
+    addByName(name, category, document.getElementById('shsCustomAddBtn'), units, terms, resetForm);
   };
 }
 
@@ -2340,6 +2593,7 @@ function renderImportPreview(preview) {
     '<ul class="import-facts">' +
     '<li>Class: <b>' + (preview.classExists ? 'already in your classes' : 'new - will be created') + '</b>' + (preview.schoolNameWillChange ? ' (school name will be updated)' : '') + '</li>' +
     '<li>Subject: <b>' + (preview.classSubjectExists ? 'already in this class' : 'new - will be added') + '</b></li>' +
+    (preview.shs && preview.shs.unitsPerTerm ? '<li>Units: <b>' + escapeHtml(preview.shs.unitsPerTerm) + ' per term</b>' + (preview.shs.terms && preview.shs.terms.length ? ' · runs in term ' + escapeHtml(preview.shs.terms.join(', ')) : '') + '</li>' : '') +
     '<li>Learners: <b>' + preview.learnerCount + '</b> in the file · ' + preview.matchedCount + ' already in the class · <b>' + preview.newCount + '</b> will be added</li></ul>';
 
   if (preview.classExists && preview.newCount > 0) {
