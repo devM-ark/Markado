@@ -7,6 +7,10 @@
 
 <script src="config.js"></script>
 <script src="api.js"></script>
+<script src="sf9-frames.js"></script>
+<script src="sf9.js"></script>
+<style id="sf9Css"></style>
+<style id="sf9PageStyle"></style>
 <style>
   :root {
     --black: #0B0B0B;
@@ -175,6 +179,51 @@
   .field {
 	margin-bottom: 16px;
   }
+
+  /* Plan picker in the license request */
+  .plan-card { display: flex; align-items: flex-start; gap: 10px; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer; background: var(--white); }
+  .plan-card input { width: auto; margin: 4px 0 0; }
+  .plan-card:has(input:checked) { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
+  .plan-card.disabled { opacity: 0.55; cursor: not-allowed; }
+  .plan-card .pc-body { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  .plan-card .pc-top { display: flex; justify-content: space-between; gap: 10px; }
+  .plan-card .pc-name { font-weight: 700; }
+  .plan-card .pc-price { font-weight: 600; }
+  .plan-card .pc-meta { font-size: 0.85rem; color: var(--text-muted); }
+  .plan-card .pc-reason { color: var(--danger); }
+
+  /* Print Reports */
+  .print-list-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .print-list-head h3 { margin: 0; }
+  .print-learners { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 4px 16px; max-height: 280px; overflow-y: auto; }
+  .print-learners label { display: flex; align-items: center; gap: 8px; padding: 4px 2px; font-size: 0.9rem; cursor: pointer; }
+  .print-learners label.female span { color: #8a4b6b; }
+  .print-learners label.male span { color: #2f5f8a; }
+  .print-learners input { width: auto; margin: 0; }
+  .print-preview-wrap { overflow: hidden; border: 1px solid var(--border); background: #fff; position: relative; }
+  .print-preview-inner { position: absolute; left: 0; top: 0; }
+  #sf9PrintRoot { position: absolute; left: -100000px; top: 0; }
+  @media print {
+    body.sf9-printing > *:not(#sf9PrintRoot) { display: none !important; }
+    body.sf9-printing { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+    body.sf9-printing #sf9PrintRoot { position: static; left: auto; }
+    #sf9PrintRoot .sf9-page, #sf9PrintRoot .slip-page { break-after: page; page-break-after: always; margin: 0; }
+    #sf9PrintRoot .sf9-page:last-child, #sf9PrintRoot .slip-page:last-child { break-after: auto; page-break-after: auto; }
+  }
+
+  /* Home tab */
+  .home-section-title { margin: 0 0 4px; }
+  .home-hint { color: var(--text-muted); font-size: 0.85rem; margin: 0 0 16px; }
+  .classdays-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px; }
+  .classdays-grid .field { margin: 0; }
+  .classdays-grid input { text-align: center; padding: 8px 6px; }
+  .classdays-total { margin-top: 12px; font-size: 0.9rem; color: var(--text-muted); }
+  .logo-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+  .logo-preview { width: 96px; height: 96px; border: 1px dashed var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--white); color: var(--text-muted); font-size: 0.75rem; text-align: center; padding: 6px; }
+  .logo-preview img { width: 100%; height: 100%; object-fit: contain; }
+  /* Until the Home tab is saved, every other tab is locked */
+  .nav-item.locked { opacity: 0.4; cursor: not-allowed; }
+  .nav-item.locked:hover { background: none; }
   
   .field label {
 	display: block;
@@ -1057,10 +1106,12 @@
   <aside class="sidebar">
     <div class="sidebar-brand"><img src="assets/logo-header.png" alt="Markado" onerror="this.style.display='none'"></div>
     <nav>
+      <button class="nav-item" data-screen="home"><img class="nav-icon" src="assets/icons/home.svg" alt=""><span>Home</span></button>
       <button class="nav-item active" data-screen="classes"><img class="nav-icon" src="assets/icons/classes.svg" alt=""><span>Classes</span></button>
       <button class="nav-item" data-screen="students"><img class="nav-icon" src="assets/icons/students.svg" alt=""><span>Students</span></button>
       <button class="nav-item" data-screen="subjects"><img class="nav-icon" src="assets/icons/subjects.svg" alt=""><span>Subjects</span></button>
       <button class="nav-item nav-sub" id="navImportEcr" type="button"><img class="nav-icon" src="assets/icons/add.svg" alt=""><span>Import ECR</span></button>
+      <button class="nav-item" data-screen="print"><img class="nav-icon" src="assets/icons/print.svg" alt=""><span>Print</span></button>
       <button class="nav-item" data-screen="settings"><img class="nav-icon" src="assets/icons/settings.svg" alt=""><span>Settings</span></button>
     </nav>
     <div class="sidebar-footer">
@@ -1070,6 +1121,50 @@
 
   <main>
     <div id="licenseBanner"></div>
+
+    <section id="screen-home" class="screen">
+      <div class="page-head">
+        <h2>Home</h2>
+        <div class="page-actions">
+          <button class="btn" id="saveHomeBtn" type="button"><span>Save</span></button>
+        </div>
+      </div>
+      <div id="homeContent"></div>
+    </section>
+
+    <section id="screen-print" class="screen">
+      <div class="page-head">
+        <h2>Print Reports</h2>
+        <div class="page-actions">
+          <button class="btn" id="printBtn" type="button"><span>Print / Save as PDF</span></button>
+        </div>
+      </div>
+      <div id="printEmpty" class="panel" style="display:none"><p style="margin:0">Create a class first, then come back here to print its reports.</p></div>
+      <div id="printBody">
+        <div class="panel">
+          <div class="row">
+            <div class="field"><label for="printClass">Class</label><select id="printClass"></select></div>
+            <div class="field"><label for="printKind">Report</label>
+              <select id="printKind"><option value="card">Report Card (SF9)</option><option value="slip">Grade Slip</option></select></div>
+          </div>
+          <p class="home-hint" style="margin:0">Includes every grade you have entered, published or not. To save a PDF, choose <b>Save as PDF</b> as the destination in the print window. Report cards print landscape and grade slips portrait.</p>
+        </div>
+        <div class="panel">
+          <div class="print-list-head">
+            <h3 class="home-section-title" id="printCount">Learners</h3>
+            <button class="btn secondary" type="button" id="printToggleAll">Select none</button>
+          </div>
+          <div id="printLearners" class="print-learners"></div>
+        </div>
+        <div class="panel">
+          <div class="print-list-head">
+            <h3 class="home-section-title">Preview</h3>
+            <select id="printPreviewSel" style="max-width:260px"></select>
+          </div>
+          <div id="printPreviewWrap" class="print-preview-wrap"><div id="printPreview" class="sf9 print-preview-inner"></div></div>
+        </div>
+      </div>
+    </section>
 
     <section id="screen-classes" class="screen active">
       <div class="page-head">
@@ -1099,7 +1194,7 @@
       <div id="studentsNoClassMsg" class="empty-state" style="display:none"><div class="display">No Class Selected</div><p>Add or Select a class first, under "Classes."</p></div>
       <div id="studentsContent">
         <div class="class-selector"><label for="studentsClassSelect">Class:</label><select id="studentsClassSelect"></select></div>
-        <p class="instruction">Students login with their LRN and surname. Every student needs a 12-digit LRN.</p>
+        <p class="instruction">Students log in with their LRN and surname. Every student needs a 12-digit LRN. Names are written as Surname, Given Name.</p>
         <div id="rosterArea"></div>
       </div>
     </section>
@@ -1117,7 +1212,7 @@
         <p class="instruction" id="subjectsInstruction">Click the subject you want to encode or import grades. You can also Publish and Unpublish the grades here.</p>
         <div class="class-selector"><label for="subjectsClassSelect">Class:</label><select id="subjectsClassSelect"></select></div>
         <div id="subjectGrid"></div>
-        <div id="subjectsEmptyMsg" class="empty-state" style="display:none"><div class="display">No Subjects Yet</div><p>This grade level doesn't have a fixed subject list. Add each subject with "Add Subject," or import E-CR.</p></div>
+        <div id="subjectsEmptyMsg" class="empty-state" style="display:none"><div class="display">No Subjects Yet</div><p>This grade level doesn't have a fixed subject list. Add each subject with "Add Subject," or import its E-CR - importing adds the subject for you.</p></div>
       </div>
     </section>
 
@@ -1133,11 +1228,11 @@
 
       <div class="panel">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px">
-          <h3 style="margin:0">Term <span id="reviewTermLabel">1</span> Grades</h3>
+          <h3 style="margin:0">Term <span id="reviewTermLabel">1</span> grades</h3>
           <div class="page-actions">
-            <button class="btn secondary" id="unpublishBtn">Unpublish All</button>
-            <button class="btn secondary" id="saveGradesBtn">Save Grades</button>
-            <button class="btn" id="publishBtn">Publish All</button>
+            <button class="btn secondary" id="unpublishBtn">Unpublish all</button>
+            <button class="btn secondary" id="saveGradesBtn">Save grades</button>
+            <button class="btn" id="publishBtn">Publish all</button>
           </div>
         </div>
         <p id="gradeHint" style="color:var(--text-muted); font-size:0.85rem; margin:8px 0 0"></p>
@@ -1181,10 +1276,10 @@
       <h3 id="ecrTitle">Import an E-CR</h3>
       <button class="icon-btn" id="ecrCloseBtn" type="button" aria-label="Close">&#10005;</button>
     </div>
-    <p style="margin-top:0">Upload the standard DepEd E-CR excel file. The class, subject and learners are set up from the file, and you choose which terms to import.</p>
-    <p class="muted" style="font-size:0.85rem">Only names, class details, final term grades are saved.</p>
+    <p style="margin-top:0">Upload the standard DepEd E-CR (.xlsx). The class, subject and learners are set up from the file, and you choose which terms to import.</p>
+    <p class="muted" style="font-size:0.85rem">Only names, class details, term grades and descriptions are saved - never raw scores. The MAPEH E-CR is read in one go: both components are imported and the MAPEH grade is worked out from them.</p>
     <input type="file" id="ecrFileInput" accept=".xlsx">
-    <button class="btn" id="ecrUploadBtn" style="margin-top:12px">Check File</button>
+    <button class="btn" id="ecrUploadBtn" style="margin-top:12px">Check file</button>
     <div id="ecrImportArea" style="margin-top:16px"></div>
   </div>
 </div>
@@ -1204,6 +1299,8 @@ var state = {
   currentTerm: 1,
   roster: [],
   profile: null,
+  schoolProfile: null,   // the Home tab's saved details; null until the first load (or when the backend predates the Home tab)
+  schoolLogo: '',        // the school logo as a data URL, kept on this device and re-fetched only when it changes
   cache: { roster: {}, subjects: {} }, // workspaceId -> last-loaded data; cleared on the mutations that could change it
 };
 
@@ -1338,8 +1435,12 @@ document.addEventListener('keydown', function (e) {
 document.querySelectorAll('.nav-item[data-screen]').forEach(function (btn) {
   btn.onclick = function () {
     var screenName = btn.getAttribute('data-screen');
+    if (screenName !== 'home' && isHomeLocked_()) { showToast('Fill in and save your Home details first.', 'error'); return; }
+    document.body.classList.remove('sf9-printing');
     setActiveNav(screenName);
     show('screen-' + screenName);
+    if (screenName === 'home') renderHome_();
+    if (screenName === 'print') loadPrintScreen_();
     if (screenName === 'classes') loadClassesScreen();
     if (screenName === 'students') loadStudentsScreen();
     if (screenName === 'subjects') loadSubjectsScreen();
@@ -1408,7 +1509,12 @@ function bootstrapData_(mayNeedOnboarding) {
       state.cache.roster[bundle.activeWorkspaceId] = bundle.roster;
     }
 
-    loadClassesScreen();
+    // undefined = the deployed backend predates the Home tab: leave everything unlocked rather than lock people out.
+    state.schoolProfile = bundle.schoolProfile || null;
+    syncLogo_();
+    applyHomeLock_();
+
+    if (isHomeLocked_()) { document.querySelector('.nav-item[data-screen="home"]').click(); } else { loadClassesScreen(); }
     startBackgroundRefresh_();
   }, function (err) {
     // Bundle not available on the deployed backend (e.g. Apps Script not yet redeployed): use the separate calls.
@@ -1465,6 +1571,7 @@ function startBackgroundRefresh_() {
     call('clientGetWorkspaceBundle_', [state.sessionToken, state.currentWorkspaceId], function (bundle) {
       if (bundle.profile) { state.profile = bundle.profile; renderProfile_(bundle.profile); renderLicenseBanner_(bundle.profile.license); }
       state.workspaces = bundle.workspaces || state.workspaces;
+      if (bundle.schoolProfile) { state.schoolProfile = bundle.schoolProfile; applyHomeLock_(); } // never re-renders Home: the teacher may be typing there
       if (bundle.activeWorkspaceId) {
         state.cache.subjects[bundle.activeWorkspaceId] = bundle.classSubjects;
         state.cache.roster[bundle.activeWorkspaceId] = bundle.roster;
@@ -1504,9 +1611,7 @@ function invalidateWorkspaces_() { state.workspacesLoaded = false; }
 function licenseLabel_(license) {
   if (!license) return '';
   if (license.status === 'TRIAL') return 'Free Trial';
-  if (license.status === 'ACTIVE') {
-    return license.licenseType === 'monthly' ? 'Monthly Subscription' : (license.licenseType === 'yearly' ? 'Yearly Subscription' : 'Subscription');
-  }
+  if (license.status === 'ACTIVE') return license.planName ? license.planName + ' Plan' : 'Subscription';
   if (license.status === 'EXPIRED') return 'License expired';
   if (license.status === 'SUSPENDED') return 'Account suspended';
   return 'No active license';
@@ -1514,22 +1619,33 @@ function licenseLabel_(license) {
 
 function licenseLine_(license) {
   var label = licenseLabel_(license);
+  if (license && license.status === 'ACTIVE' && license.noExpiry) return label + ' \u2022 Never expires';
   var date = license && license.expirationDate ? fmtLongDate_(license.expirationDate) : '';
   if (!date) return label;
-  if (license.status === 'TRIAL' || license.status === 'ACTIVE') return label + ' • Expires on ' + date;
-  if (license.status === 'EXPIRED') return label + ' • Ended on ' + date;
+  if (license.status === 'TRIAL' || license.status === 'ACTIVE') return label + ' \u2022 Expires on ' + date;
+  if (license.status === 'EXPIRED') return label + ' \u2022 Ended on ' + date;
   return label;
 }
 
+/** How many classes the plan includes, in words ("1 class", "3 classes", "Unlimited classes"). */
+function classAllowanceText_(license) {
+  var n = license ? license.classLimit : null;
+  if (n === null || n === undefined) return 'Unlimited classes';
+  return n + (n === 1 ? ' class' : ' classes');
+}
+
 /** The header just needs name + plan at a glance -- the full line (with the expiry date) still lives in the
- *  hover title and in the My Account modal below, so nothing is actually lost, just decluttered. Yearly gets
- *  the gold tag since it's the plan worth showing off; Trial/Expired/Suspended read as muted/warning instead. */
+ *  hover title and in the My Account modal below. Premium and Lifetime get the gold tag; Trial/Expired/Suspended
+ *  read as muted/warning instead. */
 function planTagInfo_(license) {
   if (!license) return { text: '', cls: 'none' };
   if (license.status === 'TRIAL') return { text: 'Trial', cls: 'trial' };
   if (license.status === 'ACTIVE') {
-    if (license.licenseType === 'yearly') return { text: '\u2605 Yearly', cls: 'yearly' };
-    if (license.licenseType === 'monthly') return { text: 'Monthly', cls: 'monthly' };
+    if (license.planId === 'lifetime') return { text: '\u221E Lifetime', cls: 'yearly' };
+    if (license.planId === 'premium') return { text: '\u2605 Premium', cls: 'yearly' };
+    if (license.planId === 'yearly') return { text: '\u2605 Yearly', cls: 'yearly' };
+    if (license.planId === 'basic') return { text: 'Basic', cls: 'monthly' };
+    if (license.planId === 'monthly') return { text: 'Monthly', cls: 'monthly' };
     return { text: 'Active', cls: 'monthly' };
   }
   if (license.status === 'EXPIRED') return { text: 'Expired', cls: 'expired' };
@@ -1556,7 +1672,8 @@ function openProfileModal_() {
     '<h3 style="margin-top:0">My Account</h3>' +
     '<div class="field-static"><label>Name</label><div>' + escapeHtml(profile ? profile.fullName : '-') + '</div></div>' +
     '<div class="field-static"><label>Subscription Type</label><div>' + escapeHtml(license ? licenseLabel_(license) : '-') + '</div></div>' +
-    '<div class="field-static"><label>Expiry Date</label><div>' + escapeHtml(license && license.expirationDate ? fmtLongDate_(license.expirationDate) : '-') + '</div></div>' +
+    '<div class="field-static"><label>Expiry Date</label><div>' + escapeHtml(license && license.noExpiry && license.status === 'ACTIVE' ? 'Never expires' : (license && license.expirationDate ? fmtLongDate_(license.expirationDate) : '-')) + '</div></div>' +
+    '<div class="field-static"><label>Classes</label><div>' + escapeHtml(state.workspaces.length + (license && license.classLimit !== null && license.classLimit !== undefined ? ' of ' + license.classLimit : '') + ' used \u2022 ' + classAllowanceText_(license)) + '</div></div>' +
     '<div class="actions" style="justify-content:flex-start; margin:4px 0 24px"><button class="btn upgrade" id="pmUpgradeBtn" type="button">Upgrade Subscription</button></div>' +
     '<hr style="border:none; border-top:1px solid var(--border); margin:0 0 20px">' +
     '<h3 style="margin-top:0">Change Password</h3>' +
@@ -1594,11 +1711,6 @@ function loadProfile_() {
 
 function fmtDate_(iso) { return iso ? String(iso).slice(0, 10) : ''; }  // still used for the request dates below
 
-/** Days before expiry when a renewal can be requested: 7 for a monthly license, 30 otherwise (mirrors the server). */
-function renewalWindowDays_(licenseType) { return licenseType === 'monthly' ? 7 : 30; }
-
-function planLabel_(licenseType) { return licenseType === 'monthly' ? 'monthly ' : (licenseType === 'yearly' ? 'yearly ' : ''); }
-
 function renderLicenseBanner_(status) {
   var el = document.getElementById('licenseBanner');
   var text = '', cls = '', action = '';
@@ -1608,8 +1720,8 @@ function renderLicenseBanner_(status) {
     text = 'Your trial or license has expired. Importing, entering, and publishing grades is paused - your students can still see anything already published.'; cls = 'expired'; action = 'Upgrade Subscription';
   } else if (status.status === 'SUSPENDED') {
     text = 'Your account has been suspended. Contact support for details. Your students can still see anything already published.'; cls = 'expired';
-  } else if (status.status === 'ACTIVE' && status.daysRemaining !== null && status.daysRemaining <= renewalWindowDays_(status.licenseType) && status.daysRemaining > 0) {
-    text = 'Your license expires in ' + status.daysRemaining + ' day(s).'; cls = 'trial'; action = 'Upgrade Subscription';
+  } else if (status.status === 'ACTIVE' && status.daysRemaining !== null && status.daysRemaining <= (status.renewalWindowDays || 30) && status.daysRemaining > 0) {
+    text = 'Your ' + (status.planName ? status.planName + ' plan' : 'license') + ' ends in ' + status.daysRemaining + ' day(s).'; cls = 'trial'; action = 'Renew or Upgrade';
   }
   if (!text) { el.innerHTML = ''; return; }
   // The request flow itself lives in Settings > Subscription only -- this just routes there instead of opening it inline.
@@ -1650,10 +1762,14 @@ function renderLicenseRequestModal_(info, onDone) {
         ? '<div class="msg error">Your last request was declined: ' + escapeHtml(info.lastDecision.adminNote) + '</div>' : '') +
       '<div class="msg" style="white-space:pre-wrap; background:var(--complement)">' + escapeHtml(info.instructions || 'Ask your administrator how to pay for a license.') + '</div>' +
       '<p style="font-size:0.88rem">Pay with GCash first, then choose the plan you paid for and enter the reference number from your receipt so the payment can be verified.</p>' +
-      '<div class="field"><label>Plan</label><select id="lrPlan"><option value="">Choose a plan…</option>' +
+      '<div class="field"><label>Plan</label><div id="lrPlans">' +
         (info.plans || []).map(function (p) {
-          return '<option value="' + escapeHtml(p.id) + '">' + escapeHtml(p.name + ' (' + (p.durationLabel || (p.days ? p.days + ' days' : p.months + ' months')) + ')' + (p.price ? ' - ' + p.price : '')) + '</option>';
-        }).join('') + '</select></div>' +
+          var ok = p.available !== false;
+          return '<label class="plan-card' + (ok ? '' : ' disabled') + '"><input type="radio" name="lrPlan" value="' + escapeHtml(p.id) + '"' + (ok ? '' : ' disabled') + '>' +
+            '<span class="pc-body"><span class="pc-top"><span class="pc-name">' + escapeHtml(p.name) + '</span>' + (p.price ? '<span class="pc-price">' + escapeHtml(p.price) + '</span>' : '') + '</span>' +
+            '<span class="pc-meta">' + escapeHtml([p.durationLabel, p.classLabel].filter(Boolean).join(' \u2022 ')) + '</span>' +
+            (ok ? '' : '<span class="pc-meta pc-reason">' + escapeHtml(p.reason || '') + '</span>') + '</span></label>';
+        }).join('') + '</div></div>' +
       '<div class="field"><label>GCash reference number</label><input id="lrRef" maxlength="40" autocomplete="off"></div>' +
       '<div class="field"><label>Note (optional)</label><input id="lrNote" maxlength="300" autocomplete="off"></div>' +
       '<div id="lrMsg"></div><div class="actions"><button class="btn secondary" id="lrClose">Cancel</button><button class="btn" id="lrSubmit">Send request</button></div>';
@@ -1664,7 +1780,8 @@ function renderLicenseRequestModal_(info, onDone) {
   var msgEl = document.getElementById('lrMsg');
   var submit = document.getElementById('lrSubmit');
   if (submit) submit.onclick = function () {
-    var plan = document.getElementById('lrPlan').value;
+    var picked = document.querySelector('input[name="lrPlan"]:checked');
+    var plan = picked ? picked.value : '';
     var ref = document.getElementById('lrRef').value.trim();
     if (!plan) { msgEl.innerHTML = '<div class="msg error">Choose the plan you paid for.</div>'; return; }
     if (!ref) { msgEl.innerHTML = '<div class="msg error">Enter the GCash reference number of your payment.</div>'; return; }
@@ -1751,7 +1868,24 @@ function setClassesTableBusy_(busy, exceptBtn) {
   document.getElementById('addClassBtn').disabled = busy;
 }
 
-document.getElementById('addClassBtn').onclick = function () { openClassModal_(null); };
+document.getElementById('addClassBtn').onclick = function () {
+  // Stop at the plan's class limit with an upgrade prompt, before the form -- the server enforces the same limit.
+  var lic = state.profile ? state.profile.license : null;
+  if (lic && lic.classLimit !== null && lic.classLimit !== undefined && state.workspaces.length >= lic.classLimit) { openClassLimitModal_(lic); return; }
+  openClassModal_(null);
+};
+
+function openClassLimitModal_(lic) {
+  var who = lic.status === 'TRIAL' || lic.planName === 'Trial' ? 'Your free trial' : 'Your ' + (lic.planName || 'current') + ' plan';
+  var hint = lic.planId === 'premium' ? 'Upgrade to Lifetime for unlimited classes.' : (lic.planId === 'basic'
+    ? 'Upgrade to Premium (up to 3 classes) or Lifetime to add more.' : 'Upgrade your subscription to add more classes.');
+  openModal_('<h3 style="margin-top:0">Class limit reached</h3>' +
+    '<p>' + escapeHtml(who + ' includes ' + classAllowanceText_(lic).toLowerCase() + ', and you already have ' + state.workspaces.length + '.') + '</p>' +
+    '<p style="font-size:0.9rem">' + escapeHtml(hint) + '</p>' +
+    '<div class="actions"><button class="btn secondary" id="clCloseBtn" type="button">Not now</button><button class="btn upgrade" id="clUpgradeBtn" type="button">Upgrade Subscription</button></div>');
+  document.getElementById('clCloseBtn').onclick = closeModal_;
+  document.getElementById('clUpgradeBtn').onclick = function () { closeModal_(); openLicenseRequestModal(refreshLicenseViews_); };
+}
 
 var DESIGNATIONS_ = ['Teacher I', 'Teacher II', 'Teacher III', 'Master Teacher I', 'Master Teacher II', 'Master Teacher III', 'Master Teacher IV'];
 var SHS_TRACKS_ = ['Academic', 'TechPro']; // must match AppsScript/ManualEntry.gs's SHS_TRACKS_
@@ -1771,8 +1905,8 @@ function gradeOptionsHtml_(selected) {
 function openClassModal_(ws) {
   var editing = !!ws;
   var v = editing ? ws : {
-    schoolName: state.workspaces[0] ? state.workspaces[0].schoolName : '', // most teachers stay at one school
-    schoolYearLabel: defaultSchoolYear_(), gradeLevel: '', section: '', adviserName: '', adviserDesignation: '',
+    schoolName: '',
+    schoolYearLabel: (state.schoolProfile && state.schoolProfile.schoolYear) || defaultSchoolYear_(), gradeLevel: '', section: '', adviserName: '', adviserDesignation: '',
     track: '', cluster: '',
   };
   formModal_({
@@ -1781,9 +1915,8 @@ function openClassModal_(ws) {
     wide: true,
     submitLabel: editing ? 'Save changes' : 'Add Class',
     fieldsHtml:
-      '<div class="field"><label for="cfSchool">School name</label><input id="cfSchool" maxlength="120" placeholder="Shown to students" value="' + escapeHtml(v.schoolName) + '"></div>' +
       '<div class="row">' +
-        '<div class="field"><label for="cfYear">School year</label><input id="cfYear" maxlength="30" placeholder="2026-2027" value="' + escapeHtml(v.schoolYearLabel) + '"></div>' +
+        '<div class="field"><label for="cfYear">School year</label><select id="cfYear">' + schoolYearOptionsHtml_(v.schoolYearLabel) + '</select></div>' +
         '<div class="field"><label for="cfGrade">Grade level</label><select id="cfGrade"' + (editing ? '' : ' data-autofocus') + '>' + gradeOptionsHtml_(v.gradeLevel) + '</select></div>' +
         '<div class="field"><label for="cfSection">Section</label><input id="cfSection" maxlength="60" placeholder="Rizal" value="' + escapeHtml(v.section) + '"></div>' +
       '</div>' +
@@ -1799,7 +1932,8 @@ function openClassModal_(ws) {
           '<datalist id="designationList">' + DESIGNATIONS_.map(function (d) { return '<option value="' + d + '">'; }).join('') + '</datalist></div>' +
       '</div>',
     onSubmit: function (setError, submitBtn) {
-      var school = valueOf_('cfSchool'), year = valueOf_('cfYear'), grade = valueOf_('cfGrade'), section = valueOf_('cfSection');
+      var school = state.schoolProfile && state.schoolProfile.schoolName ? state.schoolProfile.schoolName : (editing ? ws.schoolName : ''), // set on the Home tab
+          year = valueOf_('cfYear'), grade = valueOf_('cfGrade'), section = valueOf_('cfSection');
       var adviser = valueOf_('cfAdviser'), designation = valueOf_('cfDesignation');
       var track = isSHSGrade_(grade) ? valueOf_('cfTrack') : '';
       var cluster = isSHSGrade_(grade) ? valueOf_('cfCluster') : '';
@@ -2537,6 +2671,7 @@ function showImportScreen() {
 }
 
 function openEcrModal_() {
+  if (isHomeLocked_()) { showToast('Fill in and save your Home details first.', 'error'); return; }
   showImportScreen();
   document.getElementById('ecrModal').hidden = false;
   document.getElementById('ecrFileInput').focus();
@@ -3016,10 +3151,16 @@ function showCsvResult_(summary, clientProblems) {
 
 function renderAccountLicense_(status, info) {
   var html;
-  if (status.status === 'TRIAL') html = '<p>Free trial' + (status.expirationDate ? ' - expires on ' + escapeHtml(fmtLongDate_(status.expirationDate)) : '') + '.</p>';
-  else if (status.status === 'ACTIVE') html = '<p>Active ' + planLabel_(status.licenseType) + 'license' + (status.expirationDate ? (' until ' + escapeHtml(fmtLongDate_(status.expirationDate))) : '') + '.</p>';
+  var used = state.workspaces.length;
+  var classes = '<p style="font-size:0.88rem; opacity:0.85; margin-top:-6px">' + escapeHtml(classAllowanceText_(status)) +
+    (status.classLimit !== null && status.classLimit !== undefined ? ' \u2022 ' + used + ' of ' + status.classLimit + ' used' : '') + '</p>';
+  if (status.status === 'TRIAL') html = '<p>Free trial' + (status.expirationDate ? ' - expires on ' + escapeHtml(fmtLongDate_(status.expirationDate)) : '') + '.</p>' + classes;
+  else if (status.status === 'ACTIVE') {
+    html = '<p><b>' + escapeHtml(status.planName ? status.planName + ' plan' : 'Subscription') + '</b> - ' +
+      (status.noExpiry ? 'never expires.' : 'active until ' + escapeHtml(fmtLongDate_(status.expirationDate)) + '.') + '</p>' + classes;
+  }
   else if (status.status === 'SUSPENDED') html = '<p>Your account is suspended. Contact support for details.</p>';
-  else html = '<p>Your trial or license has expired.</p>';
+  else html = '<p>Your trial or license has expired.</p>' + classes;
 
   if (info) {
     if (info.pending) {
@@ -3029,7 +3170,7 @@ function renderAccountLicense_(status, info) {
       if (info.lastDecision && info.lastDecision.status === 'DECLINED') {
         html += '<div class="msg error">Your last request was declined: ' + escapeHtml(info.lastDecision.adminNote) + '</div>';
       }
-      if (info.canRequest) html += '<button class="btn upgrade" id="acctRequestBtn">Upgrade Subscription</button>';
+      if (info.canRequest) html += '<button class="btn upgrade" id="acctRequestBtn">' + (status.status === 'ACTIVE' ? 'Renew or Upgrade' : 'Choose a Plan') + '</button>';
       else if (info.reason && status.status !== 'SUSPENDED') html += '<p style="font-size:0.85rem; opacity:0.8">' + escapeHtml(info.reason) + '</p>';
     }
   }
@@ -3043,6 +3184,347 @@ function setThemeButtonsActive_() {
   document.getElementById('darkModeBtn').classList.toggle('active', isDark);
   document.getElementById('lightModeBtn').classList.toggle('active', !isDark);
 }
+
+// ---------- Print Reports: Report Card (SF9) and Grade Slip ----------
+
+document.getElementById('sf9Css').textContent = Sf9.css;
+
+var printState_ = { workspaceId: null, data: null, selected: {}, loading: false };
+
+function printSchool_() {
+  var p = state.schoolProfile || {};
+  return {
+    schoolName: p.schoolName || '', schoolYear: p.schoolYear || '', region: p.region || '', division: p.division || '',
+    district: p.district || '', municipality: p.municipality || '', principalName: p.principalName || '',
+    classDays: p.classDays || {}, logo: state.schoolLogo || '',
+  };
+}
+
+function printKind_() { return document.getElementById('printKind').value; }
+
+function printSelectedLearners_() {
+  if (!printState_.data) return [];
+  return printState_.data.learners.filter(function (l) { return printState_.selected[l.enrollmentId]; });
+}
+
+function loadPrintScreen_() {
+  var empty = state.workspaces.length === 0;
+  document.getElementById('printEmpty').style.display = empty ? '' : 'none';
+  document.getElementById('printBody').style.display = empty ? 'none' : '';
+  document.getElementById('printBtn').style.display = empty ? 'none' : '';
+  if (empty) return;
+
+  var sel = document.getElementById('printClass');
+  var wanted = printState_.workspaceId || state.currentWorkspaceId || state.workspaces[0].id;
+  if (!state.workspaces.some(function (w) { return w.id === wanted; })) wanted = state.workspaces[0].id;
+  sel.innerHTML = state.workspaces.map(function (w) {
+    var label = classLabel_(w) + (w.schoolYearLabel ? ' (' + w.schoolYearLabel + ')' : '');
+    return '<option value="' + escapeHtml(w.id) + '"' + (w.id === wanted ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
+  }).join('');
+  fetchPrintData_(wanted);
+}
+
+function fetchPrintData_(workspaceId) {
+  printState_.workspaceId = workspaceId;
+  printState_.data = null;
+  document.getElementById('printLearners').innerHTML = '<span class="home-hint" style="margin:0">Loading learners…</span>';
+  document.getElementById('printPreview').innerHTML = '';
+  call('clientGetClassReportCards_', [state.sessionToken, workspaceId], function (data) {
+    if (printState_.workspaceId !== workspaceId) return; // the teacher already switched to another class
+    printState_.data = data;
+    printState_.selected = {};
+    data.learners.forEach(function (l) { printState_.selected[l.enrollmentId] = true; });
+    renderPrintLearners_();
+    renderPrintPreview_();
+  }, function (err) {
+    document.getElementById('printLearners').innerHTML = '<span class="msg error" style="display:block">' + escapeHtml(err) + '</span>';
+  });
+}
+
+function renderPrintLearners_() {
+  var learners = printState_.data.learners;
+  var box = document.getElementById('printLearners');
+  if (learners.length === 0) {
+    box.innerHTML = '<span class="home-hint" style="margin:0">This class has no learners yet.</span>';
+  } else {
+    box.innerHTML = learners.map(function (l) {
+      return '<label class="' + (l.sex === 'F' ? 'female' : 'male') + '"><input type="checkbox" data-eid="' + escapeHtml(l.enrollmentId) + '"' +
+        (printState_.selected[l.enrollmentId] ? ' checked' : '') + '><span>' + escapeHtml(l.studentName || '(no name)') + '</span></label>';
+    }).join('');
+    box.querySelectorAll('input').forEach(function (cb) {
+      cb.onchange = function () { printState_.selected[cb.getAttribute('data-eid')] = cb.checked; refreshPrintSelection_(); };
+    });
+  }
+  refreshPrintSelection_();
+}
+
+function refreshPrintSelection_() {
+  var chosen = printSelectedLearners_();
+  var total = printState_.data ? printState_.data.learners.length : 0;
+  document.getElementById('printCount').textContent = 'Learners (' + chosen.length + ' of ' + total + ' selected)';
+  document.getElementById('printToggleAll').textContent = chosen.length === total && total > 0 ? 'Select none' : 'Select all';
+  var sel = document.getElementById('printPreviewSel');
+  var previous = sel.value;
+  sel.innerHTML = chosen.map(function (l) {
+    return '<option value="' + escapeHtml(l.enrollmentId) + '"' + (l.enrollmentId === previous ? ' selected' : '') + '>' + escapeHtml(l.studentName) + '</option>';
+  }).join('');
+  renderPrintPreview_();
+}
+
+function renderPrintPreview_() {
+  var wrap = document.getElementById('printPreviewWrap');
+  var inner = document.getElementById('printPreview');
+  var chosen = printSelectedLearners_();
+  var id = document.getElementById('printPreviewSel').value;
+  var learner = chosen.filter(function (l) { return l.enrollmentId === id; })[0] || chosen[0];
+  if (!learner) { inner.innerHTML = ''; wrap.style.height = '60px'; return; }
+  var kind = printKind_();
+  var full = Sf9.BOX[kind];
+  // The preview is built at its on-screen size (not scaled down afterwards), so the page is only ever scaled once.
+  var bw = Math.max(200, wrap.clientWidth), bh = Math.round(bw * full.h / full.w);
+  inner.style.width = bw + 'px';
+  inner.innerHTML = Sf9.pagesHtml(kind, [learner], printState_.data, printSchool_(), { w: bw, h: bh });
+  Sf9.fit(inner, true);
+  wrap.style.height = bh + 'px';
+}
+
+document.getElementById('printClass').onchange = function () { fetchPrintData_(this.value); };
+document.getElementById('printKind').onchange = renderPrintPreview_;
+document.getElementById('printPreviewSel').onchange = renderPrintPreview_;
+document.getElementById('printToggleAll').onclick = function () {
+  var all = printState_.data ? printState_.data.learners : [];
+  var turnOn = printSelectedLearners_().length !== all.length;
+  all.forEach(function (l) { printState_.selected[l.enrollmentId] = turnOn; });
+  renderPrintLearners_();
+};
+window.addEventListener('resize', function () { if (document.getElementById('screen-print').classList.contains('active')) renderPrintPreview_(); });
+
+document.getElementById('printBtn').onclick = function () {
+  var learners = printSelectedLearners_();
+  if (learners.length === 0) { showToast('Choose at least one learner to print.', 'error'); return; }
+  var kind = printKind_();
+  var root = document.getElementById('sf9PrintRoot');
+  root.className = 'sf9';
+  root.innerHTML = Sf9.pagesHtml(kind, learners, printState_.data, printSchool_());
+  document.getElementById('sf9PageStyle').textContent = '@page { ' + Sf9.BOX[kind].page + '; }';
+  Sf9.fit(root);
+  // Print only once the seal / logo are decoded, or they come out blank.
+  var images = Array.prototype.slice.call(root.querySelectorAll('img')).map(function (img) {
+    return img.decode ? img.decode().catch(function () { /* a broken logo must not block printing */ }) : Promise.resolve();
+  });
+  Promise.all(images).then(function () {
+    document.body.classList.add('sf9-printing');
+    window.print();
+  });
+};
+window.addEventListener('afterprint', function () { document.body.classList.remove('sf9-printing'); });
+
+// ---------- Home tab: school details, locked tabs, logo ----------
+
+var HOME_REGIONS_ = [
+  ['I', 'Region I - Ilocos Region'], ['II', 'Region II - Cagayan Valley'], ['III', 'Region III - Central Luzon'],
+  ['IV-A', 'Region IV-A - CALABARZON'], ['MIMAROPA', 'MIMAROPA Region'], ['V', 'Region V - Bicol Region'],
+  ['VI', 'Region VI - Western Visayas'], ['VII', 'Region VII - Central Visayas'], ['VIII', 'Region VIII - Eastern Visayas'],
+  ['IX', 'Region IX - Zamboanga Peninsula'], ['X', 'Region X - Northern Mindanao'], ['XI', 'Region XI - Davao Region'],
+  ['XII', 'Region XII - SOCCSKSARGEN'], ['XIII', 'Region XIII - Caraga'], ['NCR', 'National Capital Region (NCR)'],
+  ['CAR', 'Cordillera Administrative Region (CAR)'], ['BARMM', 'Bangsamoro Autonomous Region (BARMM)'], ['NIR', 'Negros Island Region (NIR)'],
+];
+var HOME_MONTHS_ = ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr'];
+var LOGO_MAX_CHARS_ = 45000; // the server's limit for one stored logo
+
+var homeLogoDraft_ = undefined; // undefined = logo untouched since the last save, '' = removed, 'data:...' = newly chosen
+
+function isHomeLocked_() { return !!state.schoolProfile && !state.schoolProfile.complete; }
+
+/** Dims and blocks every tab except Home until the Home details have been saved. */
+function applyHomeLock_() {
+  var locked = isHomeLocked_();
+  document.body.classList.toggle('home-locked', locked);
+  document.querySelectorAll('.nav-item[data-screen]').forEach(function (btn) {
+    var isOther = btn.getAttribute('data-screen') !== 'home';
+    btn.classList.toggle('locked', locked && isOther);
+    if (isOther && locked) btn.setAttribute('aria-disabled', 'true'); else btn.removeAttribute('aria-disabled');
+  });
+  document.getElementById('navImportEcr').classList.toggle('locked', locked);
+}
+
+/** The three school years the teacher can pick from: last year's, this year's and next year's. */
+function schoolYearList_() {
+  var start = parseInt(defaultSchoolYear_().split('-')[0], 10);
+  return [start - 1, start, start + 1].map(function (y) { return y + '-' + (y + 1); });
+}
+
+function schoolYearOptionsHtml_(selected) {
+  var list = schoolYearList_();
+  if (selected && list.indexOf(selected) === -1) list.push(selected); // a class from an older year keeps its own
+  return list.map(function (y) {
+    return '<option value="' + escapeHtml(y) + '"' + (y === selected ? ' selected' : '') + '>' + escapeHtml(y.replace('-', ' - ')) + '</option>';
+  }).join('');
+}
+
+// -- The logo is kept on this device (localStorage) so it is there instantly and offline, and in the teacher's
+//    account so it follows them to another device. The device copy is refreshed only when its version differs.
+function logoStoreKey_() { return 'markado_logo_' + String((state.profile && state.profile.email) || '').toLowerCase(); }
+
+function readLocalLogo_() {
+  try { return JSON.parse(localStorage.getItem(logoStoreKey_()) || 'null'); } catch (e) { return null; }
+}
+
+function writeLocalLogo_(version, dataUrl) {
+  try { localStorage.setItem(logoStoreKey_(), JSON.stringify({ version: version, dataUrl: dataUrl })); } catch (e) { /* storage full or blocked: the account copy still works */ }
+}
+
+function syncLogo_() {
+  var p = state.schoolProfile;
+  if (!p || !p.hasLogo) {
+    try { localStorage.removeItem(logoStoreKey_()); } catch (e) { /* ignore */ }
+    state.schoolLogo = '';
+    return;
+  }
+  var local = readLocalLogo_();
+  if (local && local.version === p.logoVersion && local.dataUrl) { state.schoolLogo = local.dataUrl; return; }
+  call('clientGetSchoolLogo_', [state.sessionToken], function (r) {
+    state.schoolLogo = r.logo || '';
+    writeLocalLogo_(r.version, state.schoolLogo);
+    var preview = document.getElementById('homeLogoPreview');
+    if (preview && homeLogoDraft_ === undefined) renderHomeLogo_();
+  }, function () { /* silent: the logo is optional */ }, { silent: true });
+}
+
+/** Shrinks a chosen image so it fits the stored-logo limit: tries a few sizes/formats until one is small enough. */
+function logoFromFile_(file, done, fail) {
+  if (!/^image\/(png|jpeg|webp)$/.test(file.type)) { fail('Choose a PNG, JPG or WebP image.'); return; }
+  var reader = new FileReader();
+  reader.onerror = function () { fail('That file could not be read.'); };
+  reader.onload = function () {
+    var img = new Image();
+    img.onerror = function () { fail('That file could not be opened as an image.'); };
+    img.onload = function () {
+      var attempts = [[256, 'image/png', 1], [200, 'image/png', 1], [256, 'image/jpeg', 0.85], [200, 'image/jpeg', 0.75], [160, 'image/jpeg', 0.7]];
+      for (var i = 0; i < attempts.length; i++) {
+        var max = attempts[i][0], type = attempts[i][1], quality = attempts[i][2];
+        var scale = Math.min(1, max / Math.max(img.width, img.height));
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        var ctx = canvas.getContext('2d');
+        if (type === 'image/jpeg') { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); } // JPEG has no transparency
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        var url = canvas.toDataURL(type, quality);
+        if (url.length <= LOGO_MAX_CHARS_) { done(url); return; }
+      }
+      fail('That image is too detailed to store. Try a simpler or smaller logo.');
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderHomeLogo_() {
+  var shown = homeLogoDraft_ !== undefined ? homeLogoDraft_ : state.schoolLogo;
+  var box = document.getElementById('homeLogoPreview');
+  if (!box) return;
+  box.innerHTML = shown ? '<img src="' + shown + '" alt="School logo">' : 'No logo yet';
+  document.getElementById('homeLogoRemove').style.display = shown ? '' : 'none';
+}
+
+function updateClassDaysTotal_() {
+  var total = 0;
+  HOME_MONTHS_.forEach(function (m) { var n = parseInt(document.getElementById('hd' + m).value, 10); if (isFinite(n)) total += n; });
+  document.getElementById('homeClassDaysTotal').textContent = 'Total class days: ' + total;
+}
+
+function renderHome_() {
+  var p = state.schoolProfile || { classDays: {} };
+  var locked = isHomeLocked_();
+  var schoolName = p.schoolName || (state.workspaces[0] ? state.workspaces[0].schoolName : ''); // older teachers already typed it on a class
+  var year = p.schoolYear || defaultSchoolYear_();
+  homeLogoDraft_ = undefined;
+
+  var regionOptions = '<option value="">Choose…</option>' + HOME_REGIONS_.map(function (r) {
+    return '<option value="' + r[0] + '"' + (p.region === r[0] ? ' selected' : '') + '>' + escapeHtml(r[1]) + '</option>';
+  }).join('');
+  var monthFields = HOME_MONTHS_.map(function (m) {
+    var v = p.classDays && p.classDays[m] !== undefined ? p.classDays[m] : '';
+    return '<div class="field"><label for="hd' + m + '">' + m + '</label><input id="hd' + m + '" type="number" inputmode="numeric" min="0" max="31" value="' + escapeHtml(v) + '"></div>';
+  }).join('');
+
+  document.getElementById('homeContent').innerHTML =
+    (locked ? '<div class="msg warn">Welcome! Fill in your school details below and press <b>Save</b> to unlock the rest of Markado.</div>' : '') +
+    '<div id="homeMsg"></div>' +
+    '<div class="panel">' +
+      '<h3 class="home-section-title">School</h3><p class="home-hint">These print on every report card.</p>' +
+      '<div class="row">' +
+        '<div class="field" style="flex:2 1 260px"><label for="hSchool">School name</label><input id="hSchool" maxlength="120" value="' + escapeHtml(schoolName) + '"></div>' +
+        '<div class="field"><label for="hYear">School year</label><select id="hYear">' + schoolYearOptionsHtml_(year) + '</select></div>' +
+      '</div>' +
+      '<div class="row">' +
+        '<div class="field"><label for="hRegion">Region</label><select id="hRegion">' + regionOptions + '</select></div>' +
+        '<div class="field"><label for="hDivision">Division</label><input id="hDivision" maxlength="80" placeholder="e.g. Cebu City" value="' + escapeHtml(p.division || '') + '"></div>' +
+      '</div>' +
+      '<div class="row">' +
+        '<div class="field"><label for="hDistrict">District</label><input id="hDistrict" maxlength="80" value="' + escapeHtml(p.district || '') + '"></div>' +
+        '<div class="field"><label for="hMunicipality">Municipality</label><input id="hMunicipality" maxlength="80" value="' + escapeHtml(p.municipality || '') + '"></div>' +
+      '</div>' +
+      '<div class="field" style="max-width:420px"><label for="hPrincipal">Principal / School Head</label><input id="hPrincipal" maxlength="80" placeholder="Juan D. Dela Cruz" value="' + escapeHtml(p.principalName || '') + '"></div>' +
+    '</div>' +
+    '<div class="panel">' +
+      '<h3 class="home-section-title">Class days per month</h3><p class="home-hint">Number of school days in each month. Optional - you can fill these in as the year goes.</p>' +
+      '<div class="classdays-grid">' + monthFields + '</div>' +
+      '<div class="classdays-total" id="homeClassDaysTotal"></div>' +
+    '</div>' +
+    '<div class="panel">' +
+      '<h3 class="home-section-title">School logo</h3><p class="home-hint">Optional. Saved on this device and in your account, so it works offline and on other devices.</p>' +
+      '<div class="logo-row"><div class="logo-preview" id="homeLogoPreview"></div>' +
+        '<div class="page-actions"><button class="btn secondary" type="button" id="homeLogoPick">Upload logo</button>' +
+        '<button class="btn secondary" type="button" id="homeLogoRemove">Remove</button></div>' +
+        '<input type="file" id="homeLogoInput" accept="image/png,image/jpeg,image/webp" hidden></div>' +
+    '</div>';
+
+  renderHomeLogo_();
+  updateClassDaysTotal_();
+  HOME_MONTHS_.forEach(function (m) { document.getElementById('hd' + m).oninput = updateClassDaysTotal_; });
+  document.getElementById('homeLogoPick').onclick = function () { document.getElementById('homeLogoInput').click(); };
+  document.getElementById('homeLogoRemove').onclick = function () { homeLogoDraft_ = ''; renderHomeLogo_(); };
+  document.getElementById('homeLogoInput').onchange = function () {
+    var file = this.files && this.files[0];
+    this.value = '';
+    if (!file) return;
+    logoFromFile_(file, function (url) { homeLogoDraft_ = url; renderHomeLogo_(); }, function (message) { showToast(message, 'error'); });
+  };
+}
+
+document.getElementById('saveHomeBtn').onclick = function () {
+  var btn = this;
+  var msg = document.getElementById('homeMsg');
+  var setError = function (m) { msg.innerHTML = m ? '<div class="msg error">' + escapeHtml(m) + '</div>' : ''; if (m) window.scrollTo(0, 0); };
+  setError('');
+  var classDays = {};
+  HOME_MONTHS_.forEach(function (m) { classDays[m] = document.getElementById('hd' + m).value.trim(); });
+  var profile = {
+    schoolName: valueOf_('hSchool'), schoolYear: valueOf_('hYear'), region: valueOf_('hRegion'),
+    division: valueOf_('hDivision'), district: valueOf_('hDistrict'), municipality: valueOf_('hMunicipality'),
+    principalName: valueOf_('hPrincipal'), classDays: classDays, logo: homeLogoDraft_,
+  };
+  var wasLocked = isHomeLocked_();
+  var savedLogoDraft = homeLogoDraft_;
+  call('clientSaveSchoolProfile_', [state.sessionToken, profile], function (saved) {
+    state.schoolProfile = saved;
+    if (savedLogoDraft !== undefined) {
+      state.schoolLogo = savedLogoDraft;
+      if (savedLogoDraft) writeLocalLogo_(saved.logoVersion, savedLogoDraft); else { try { localStorage.removeItem(logoStoreKey_()); } catch (e) { /* ignore */ } }
+    }
+    homeLogoDraft_ = undefined;
+    invalidateWorkspaces_(); // the school name was copied onto every class
+    applyHomeLock_();
+    if (wasLocked) {
+      showToast('Saved. All tabs are now unlocked.', 'success');
+      document.querySelector('.nav-item[data-screen="classes"]').click();
+    } else {
+      showToast('Home details saved.', 'success');
+    }
+  }, setError, { button: btn });
+};
 
 function loadSettingsScreen() {
   setThemeButtonsActive_();
@@ -3074,5 +3556,6 @@ document.getElementById('darkModeBtn').onclick = function () { applyTheme_('dark
 
 startApp_();
 </script>
+<div id="sf9PrintRoot" class="sf9"></div>
 </body>
 </html>

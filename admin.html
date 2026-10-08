@@ -481,9 +481,10 @@
       <h3 style="margin-top:0">License Requests</h3>
       <div id="licenseSettingsMsg"></div>
       <div class="field"><label>Payment instructions shown to teachers (GCash number, account name, amount…)</label><textarea id="licenseInstructionsInput" rows="5" maxlength="1000"></textarea></div>
-      <div class="field"><label>Monthly Plan Price</label><input id="monthlyPriceInput" maxlength="30"></div>
-      <div class="field"><label>Yearly Plan Price</label><input id="yearlyPriceInput" maxlength="30"></div>
-      <p style="font-size:0.8rem; color:var(--gray-4); margin-top:-4px">Monthly = a fixed 30 days, Yearly = 12 months, counted from approval or from the teacher's current expiry.</p>
+      <div class="field"><label>Basic Plan Price</label><input id="basicPriceInput" maxlength="30"></div>
+      <div class="field"><label>Premium Plan Price</label><input id="premiumPriceInput" maxlength="30"></div>
+      <div class="field"><label>Lifetime Pass Price</label><input id="lifetimePriceInput" maxlength="30"></div>
+      <p style="font-size:0.8rem; color:var(--gray-4); margin-top:-4px">Basic = 1 term (80 days) and 1 class. Premium = 1 school year (250 days) and up to 3 classes. Lifetime = no expiry and unlimited classes. Days are counted from approval, or from the teacher's current expiry when renewing the same plan. A free trial includes 1 class.</p>
       <button class="btn secondary small" id="saveLicenseSettingsBtn">Save</button>
     </div>
 
@@ -533,8 +534,9 @@ function loadSettings() {
   call('clientGetSystemSettings_', [sessionToken], function (settings) {
     document.getElementById('trialDurationInput').value = settings.trialDurationDays;
     document.getElementById('licenseInstructionsInput').value = settings.licenseInstructions || '';
-    document.getElementById('monthlyPriceInput').value = settings.monthlyPrice || '';
-    document.getElementById('yearlyPriceInput').value = settings.yearlyPrice || '';
+    document.getElementById('basicPriceInput').value = settings.basicPrice || '';
+    document.getElementById('premiumPriceInput').value = settings.premiumPrice || '';
+    document.getElementById('lifetimePriceInput').value = settings.lifetimePrice || '';
   }, function (err) {
     document.getElementById('settingsMsg').innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>';
   });
@@ -551,7 +553,8 @@ document.getElementById('saveSettingsBtn').onclick = function () {
 document.getElementById('saveLicenseSettingsBtn').onclick = function () {
   var msgEl = document.getElementById('licenseSettingsMsg');
   call('clientUpdateLicenseSettings_', [sessionToken, document.getElementById('licenseInstructionsInput').value,
-    document.getElementById('monthlyPriceInput').value.trim(), document.getElementById('yearlyPriceInput').value.trim()], function () {
+    document.getElementById('basicPriceInput').value.trim(), document.getElementById('premiumPriceInput').value.trim(),
+    document.getElementById('lifetimePriceInput').value.trim()], function () {
     msgEl.innerHTML = '<div class="msg success">Saved.</div>';
   }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; }, { button: document.getElementById('saveLicenseSettingsBtn') });
 };
@@ -721,7 +724,7 @@ function renderLicenseRequests_() {
   list.innerHTML = items.map(function (r) {
     return '<div class="lr-item"><div>' +
       '<strong>' + escapeHtml(r.teacherName) + '</strong> <span class="mono" style="color:var(--gray-4)">' + escapeHtml(r.teacherEmail) + '</span>' +
-      '<div class="lr-meta">Plan: <strong>' + escapeHtml(r.planName) + '</strong>' + (r.planPrice ? ' · ' + escapeHtml(r.planPrice) : '') + '<br>GCash reference: <strong>' + escapeHtml(r.paymentReference) + '</strong><br>' +
+      '<div class="lr-meta">Plan: <strong>' + escapeHtml(r.planName) + '</strong>' + (r.classLabel ? ' · ' + escapeHtml(r.classLabel) : '') + (r.planPrice ? ' · ' + escapeHtml(r.planPrice) : '') + '<br>GCash reference: <strong>' + escapeHtml(r.paymentReference) + '</strong><br>' +
       (r.message ? 'Note: ' + escapeHtml(r.message) + '<br>' : '') +
       'Requested ' + escapeHtml(String(r.requestedAt).slice(0, 10)) + ' · Current: <span class="status-pill ' + escapeHtml(r.currentLicenseStatus) + '">' + escapeHtml(r.currentLicenseStatus) + '</span>' +
       (r.currentExpirationDate ? ' until ' + escapeHtml(String(r.currentExpirationDate).slice(0, 10)) : '') + '</div></div>' +
@@ -740,9 +743,21 @@ document.getElementById('licenseRequestsList').addEventListener('click', functio
   if (!r) return;
 
   if (approveBtn) {
-    // The server suggests the expiry: the plan's length counted from today, or from the current expiry
-    // (running license OR trial) so early payment never swallows days the teacher already has.
-    promptModal('Approve ' + escapeHtml(r.planName.toLowerCase()) + ' license for ' + escapeHtml(r.teacherName), [
+    if (r.isLifetime) {
+      // A Lifetime license never expires, so there is no date to choose.
+      promptModal('Approve Lifetime license for ' + escapeHtml(r.teacherName), [
+        { key: 'note', label: 'Note to teacher (optional) - this license never expires' },
+      ], function (values) {
+        call('clientApproveLicenseRequest_', [sessionToken, r.requestId, '', values.note], function () {
+          showToast('Lifetime license approved. The teacher has been emailed.', 'success');
+          loadDashboard();
+        }, function (err) { showToast(err, 'error'); }, { button: btn });
+      });
+      return;
+    }
+    // The server suggests the expiry: the plan's length counted from today, or from the current expiry when renewing
+    // the same plan (an upgrade starts from today), so early payment never swallows days the teacher already has.
+    promptModal('Approve ' + escapeHtml(r.planName) + ' license for ' + escapeHtml(r.teacherName), [
       { key: 'date', label: 'License expires (YYYY-MM-DD)', value: String(r.suggestedExpiration || '').slice(0, 10) },
       { key: 'note', label: 'Note to teacher (optional)' },
     ], function (values) {
