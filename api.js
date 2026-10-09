@@ -62,7 +62,7 @@ var API_TIMEOUTS_MS_ = {
   clientPreviewEcrUpload_: 180000, clientConfirmEcrUpload_: 180000, clientSaveManualGrades_: 90000,
   clientGetDashboardStats_: 90000, clientListTeachersForAdmin_: 90000, clientBulkApplyAdminAction_: 120000,
   clientWipeAllDataForTesting_: 120000,
-  clientListClassSubjects_: 60000, clientGetWorkspaceBundle_: 60000, clientSaveSchoolProfile_: 60000, clientImportStudents_: 90000, clientDeleteWorkspace_: 90000,
+  clientListClassSubjects_: 60000, clientGetWorkspaceBundle_: 60000, clientGetOfflinePack_: 120000, clientSyncOfflineGrades_: 180000, clientSaveSchoolProfile_: 60000, clientImportStudents_: 90000, clientDeleteWorkspace_: 90000,
 };
 
 
@@ -72,7 +72,7 @@ var API_READ_TTL_MS_ = {
   clientGetDashboardStats_: 30000, clientListTeachersForAdmin_: 30000, clientGetTeacherDetailForAdmin_: 15000,
   clientListAuditLogs_: 0, clientGetSystemSettings_: 60000,
   clientGetLicenseRequestInfo_: 15000, clientListLicenseRequests_: 0, clientGetMyProfile_: 60000,
-  clientGetClassReportCards_: 0, clientGetSchoolProfile_: 0, clientGetSchoolLogo_: 0, // reads that are always fresh: no cache wipe, dedupe + retry apply
+  clientGetClassReportCards_: 0, clientGetOfflinePack_: 0, clientGetSchoolProfile_: 0, clientGetSchoolLogo_: 0, // reads that are always fresh: no cache wipe, dedupe + retry apply
   clientGetWorkspaceBundle_: 0, // always fresh, but counts as a read: no cache wipe, dedupe + retry apply
 };
 
@@ -267,10 +267,16 @@ function safeInvoke_(fn, arg, arg2, isSuccessHandler) {
 
 function deliver_(waiter, res) {
   waiter.release();
+  waiter.done = true;
   if (res.ok) {
-    if (waiter.onSuccess) safeInvoke_(waiter.onSuccess, res.data, undefined, true);
+    // 2nd argument: { stale: true } = the copy saved on this device (shown while fresh data loads, or with no connection);
+    // { refreshed: true } = the fresh data that follows a stale copy already shown. Plain calls get undefined, as before.
+    var meta = res.meta || (waiter.staleDelivered ? { refreshed: true } : undefined);
+    if (waiter.onSuccess) safeInvoke_(waiter.onSuccess, res.data, meta, true);
     return;
   }
+  // the saved copy is already on screen, and the refresh couldn't reach the server: leave it be rather than raise an error
+  if (waiter.staleDelivered && (res.kind === 'network' || res.kind === 'timeout' || res.kind === 'offline')) return;
   if (res.kind === 'app' && /session expired/i.test(res.error) && typeof window.onApiSessionExpired === 'function') {
     var handled = false;
     try { handled = window.onApiSessionExpired(res.error) === true; } catch (e) { console.error(e); }
@@ -287,9 +293,25 @@ function call(fnName, args, onSuccess, onError, options) {
   var isRead = Object.prototype.hasOwnProperty.call(API_READ_TTL_MS_, fnName);
   var key = fnName + '|' + JSON.stringify(args);
   var waiter = { onSuccess: onSuccess, onError: onError, silent: !!options.silent, release: function () {} };
+  var hooks = window.apiHooks_ || null; // set by offline.js on the teacher page
 
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-    Promise.resolve().then(function () { deliver_(waiter, { ok: false, kind: 'offline', error: 'You appear to be offline. Check your internet connection and try again.' }); });
+    var offlineMsg = 'You appear to be offline. Check your internet connection and try again.';
+    var offlineErr = { ok: false, kind: 'offline', error: isRead ? offlineMsg : 'You are offline. This needs an internet connection.' };
+    var answered = null;
+    if (hooks && !options.silent) {
+      if (isRead && hooks.persistable(fnName)) {
+        // with no connection, a read is answered from the copy saved on this device
+        answered = hooks.getStale(fnName, args).then(function (hit) {
+          return hit ? { ok: true, data: hit.data, meta: { stale: true, offline: true, savedAt: hit.savedAt } }
+                     : { ok: false, kind: 'offline', error: 'This isn\'t available offline yet. Open it once while you are online.' };
+        });
+      } else if (!isRead && hooks.queueable(fnName)) {
+        invalidateApiCache();
+        answered = hooks.tryQueue(fnName, args).then(function (q) { return q || offlineErr; });
+      }
+    }
+    (answered || Promise.resolve(offlineErr)).then(function (r) { deliver_(waiter, r); });
     return;
   }
 
@@ -317,6 +339,14 @@ function call(fnName, args, onSuccess, onError, options) {
 
   // 4. new request
   waiter.release = acquireButton_(resolveTriggerButton_(options));
+  if (isRead && hooks && !options.silent && !options.fresh && hooks.swr(fnName)) {
+    // show the copy saved on this device straight away; the fresh data replaces it when it arrives
+    hooks.getStale(fnName, args).then(function (hit) {
+      if (!hit || waiter.done) return;
+      waiter.staleDelivered = true;
+      if (waiter.onSuccess) safeInvoke_(waiter.onSuccess, hit.data, { stale: true, savedAt: hit.savedAt }, true);
+    });
+  }
   if (!isRead && !API_NON_MUTATING_[fnName]) invalidateApiCache(); // anything cached before this write is now suspect
 
   var entry = { generation: api_.generation, waiters: [waiter] };
@@ -333,7 +363,35 @@ function call(fnName, args, onSuccess, onError, options) {
     } else if (isRead && res.ok && entry.generation === api_.generation && API_READ_TTL_MS_[fnName] > 0) {
       api_.cache[key] = { data: res.data, expires: Date.now() + API_READ_TTL_MS_[fnName] };
     }
-    entry.waiters.forEach(function (w) { deliver_(w, res); });
+
+    var deliverAll = function (r) { entry.waiters.forEach(function (w) { deliver_(w, r); }); };
+    if (!hooks) { deliverAll(res); return; }
+
+    var unreachable = !res.ok && (res.kind === 'network' || res.kind === 'timeout');
+    hooks.noteNetwork(!unreachable && res.kind !== 'offline');
+
+    if (res.ok && isRead) {
+      hooks.onReadSuccess(fnName, args, res.data);
+      if (hooks.needsOverlay(fnName)) {
+        hooks.overlayPending(fnName, args, res.data).then(function (patched) { deliverAll({ ok: true, data: patched }); });
+        return;
+      }
+    }
+    if (unreachable && isRead && !options.silent && hooks.persistable(fnName)) {
+      // the server can't be reached: fall back to the copy saved on this device
+      hooks.getStale(fnName, args).then(function (hit) {
+        var fromCopy = hit ? { ok: true, data: hit.data, meta: { stale: true, offline: true, savedAt: hit.savedAt } } : res;
+        // a waiter that already got the saved copy (stale-while-refresh) has nothing more to be told
+        entry.waiters.forEach(function (w) { deliver_(w, w.staleDelivered ? res : fromCopy); });
+      });
+      return;
+    }
+    if (unreachable && !isRead && hooks.queueable(fnName)) {
+      // a grade save that couldn't reach the server is kept on the device and sent later
+      hooks.tryQueue(fnName, args).then(function (q) { deliverAll(q || res); });
+      return;
+    }
+    deliverAll(res);
   });
 }
 

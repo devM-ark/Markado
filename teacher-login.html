@@ -265,7 +265,7 @@
 
   <div id="confirmCodeOverlay" class="modal-overlay" style="display:none">
     <div class="card">
-      <h2 style="margin-top:0">Confirm your Email</h2>
+      <h2 style="margin-top:0">Confirm your email</h2>
       <p style="color:var(--text-muted); font-size:0.9rem; margin-top:-8px">Enter the 4-digit code we emailed you. It expires in 5 minutes.</p>
       <div id="confirmCodeMsg"></div>
       <form id="confirmCodeForm">
@@ -280,7 +280,7 @@
         </div>
         <button class="btn" type="submit" id="confirmCodeBtn">Confirm</button>
       </form>
-      <div class="toggle-auth"><button type="button" id="resendCodeBtn">Resend Code</button></div>
+      <div class="toggle-auth"><button type="button" id="resendCodeBtn">Resend code</button></div>
       <div class="toggle-auth"><button type="button" id="cancelCodeBtn">Cancel</button></div>
     </div>
   </div>
@@ -297,6 +297,7 @@
     }
 
     var isRegisterMode = false;
+    var pendingTeacherEmail = '';
     var pendingTeacherRegToken = null;
 
     // Same digit-box behavior as student.html's PIN entry: one digit per box, auto-advance,
@@ -355,7 +356,11 @@
 
       call('clientConfirmTeacherCode_', [pendingTeacherRegToken, code], function () {
         closeConfirmCodeModal_();
+        // Confirmed: land on the Log In form (not back on registration), with their email filled in and the cursor on the password.
+        setAuthMode_(false);
+        document.getElementById('authEmail').value = pendingTeacherEmail;
         document.getElementById('authMsg').innerHTML = '<div class="msg success">Your account is confirmed. You can now log in.</div>';
+        document.getElementById('authPassword').focus();
       }, function (err) {
         clearConfirmCodeBoxes_();
         document.querySelector('#confirmCodeOverlay .pin-boxes input').focus();
@@ -373,15 +378,18 @@
       }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; }, { button: document.getElementById('resendCodeBtn') });
     };
 
-    document.getElementById('toggleAuthBtn').onclick = function () {
-      isRegisterMode = !isRegisterMode;
+    // One place that switches the form between "Create your Account" and "Log In".
+    function setAuthMode_(register) {
+      isRegisterMode = !!register;
       document.getElementById('registerFields').style.display = isRegisterMode ? 'block' : 'none';
       document.getElementById('authTitle').textContent = isRegisterMode ? 'Create your Account' : 'Log In';
       document.getElementById('authSubmit').textContent = isRegisterMode ? 'Create Account' : 'Log In';
       document.getElementById('toggleAuthText').textContent = isRegisterMode ? 'Already have an Account?' : 'New Here?';
       document.getElementById('toggleAuthBtn').textContent = isRegisterMode ? 'Log In.' : 'Create an Account.';
       document.getElementById('authMsg').innerHTML = '';
-    };
+    }
+
+    document.getElementById('toggleAuthBtn').onclick = function () { setAuthMode_(!isRegisterMode); };
 
     // Enter key submits the form (native <form> submit behavior) —
     // intercepted here so it goes through the same handler as the button.
@@ -400,6 +408,7 @@
         var fullName = document.getElementById('regFullName').value.trim();
         if (!fullName || !email || !password) return;
         call('clientRegister_', [fullName, email, password], function (data) {
+          pendingTeacherEmail = email; // kept (not the password) so the Log In form can be filled in after the code is confirmed
           // Clear credentials from the form now that they've been used —
           // nothing sensitive should linger in visible input fields.
           document.getElementById('regFullName').value = '';
@@ -409,8 +418,8 @@
             pendingTeacherRegToken = data.pendingToken;
             openConfirmCodeModal_();
           } else {
-            isRegisterMode = false;
-            document.getElementById('toggleAuthBtn').click(); // this clears authMsg as a side effect -- message is set after, below
+            setAuthMode_(false); // this clears authMsg as a side effect -- the message is set after, below
+            document.getElementById('authEmail').value = email;
             msgEl.innerHTML = '<div class="msg success">' + escapeHtml((data && data.message) || 'Registered.') + '</div>';
           }
         }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; }, { button: document.getElementById('authSubmit') });

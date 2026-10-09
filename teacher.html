@@ -2,11 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>MARKADO: Online Grades Viewer - Teacher</title>
 
 <script src="config.js"></script>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#4D6A92">
 <script src="api.js"></script>
+<script src="offline.js"></script>
 <script src="sf9-frames.js"></script>
 <script src="sf9.js"></script>
 <style id="sf9Css"></style>
@@ -180,14 +183,33 @@
 	margin-bottom: 16px;
   }
 
+  /* Settings: cards side by side on desktop */
+  .settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: stretch; max-width: 940px; }
+  .settings-grid .panel { margin: 0; max-width: none; }
+  .settings-grid .panel-wide { grid-column: 1 / -1; }
+  @media (max-width: 768px) { .settings-grid { grid-template-columns: 1fr; } }
+
+  /* Offline / sync indicator in the header */
+  .sync-chip { margin-left: auto; margin-right: 6px; border: 0; border-radius: 999px; padding: 5px 12px; font: inherit; font-size: 0.78rem; font-weight: 600; cursor: pointer; background: #E8ECF1; color: #2B3440; white-space: nowrap; }
+  .sync-chip[hidden] { display: none; }
+  .sync-chip.offline { background: #2B3440; color: #fff; }
+  .sync-chip.waiting { background: #F6E3B4; color: #5A4300; }
+  .sync-chip.issue { background: #F3C9C0; color: #7A1F10; }
+  .sync-chip + .profile { margin-left: 0; }
+  .issue-list { padding-left: 18px; margin: 8px 0 14px; }
+  .issue-list li { margin-bottom: 8px; font-size: 0.9rem; }
+  .issue-list .why { color: var(--danger); }
+
   /* Plan picker in the license request */
-  .plan-card { display: flex; align-items: flex-start; gap: 10px; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer; background: var(--white); }
-  .plan-card input { width: auto; margin: 4px 0 0; }
-  .plan-card:has(input:checked) { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
+  .plan-card { position: relative; display: block; text-align: center; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; background: var(--white); transition: background 0.15s, border-color 0.15s; }
+  .plan-card input { position: absolute; opacity: 0; pointer-events: none; } /* still a real radio (keyboard, screen readers) -- just not drawn */
+  .plan-card:hover:not(.disabled) { border-color: var(--primary); }
+  .plan-card:has(input:checked) { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 17%, var(--white)); box-shadow: 0 0 0 1px var(--primary); }
+  .plan-card:has(input:focus-visible) { outline: 2px solid var(--primary); outline-offset: 2px; }
   .plan-card.disabled { opacity: 0.55; cursor: not-allowed; }
-  .plan-card .pc-body { display: flex; flex-direction: column; gap: 2px; flex: 1; }
-  .plan-card .pc-top { display: flex; justify-content: space-between; gap: 10px; }
-  .plan-card .pc-name { font-weight: 700; }
+  .plan-card .pc-body { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .plan-card .pc-top { display: flex; justify-content: center; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .plan-card .pc-name { font-weight: 700; font-size: 1.02rem; }
   .plan-card .pc-price { font-weight: 600; }
   .plan-card .pc-meta { font-size: 0.85rem; color: var(--text-muted); }
   .plan-card .pc-reason { color: var(--danger); }
@@ -217,6 +239,11 @@
   .classdays-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px; }
   .classdays-grid .field { margin: 0; }
   .classdays-grid input { text-align: center; padding: 8px 6px; }
+  @media (min-width: 769px) {
+    .classdays-grid { grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 8px; }
+    .classdays-grid input { padding: 8px 2px; }
+    .classdays-grid label { text-align: center; }
+  }
   .classdays-total { margin-top: 12px; font-size: 0.9rem; color: var(--text-muted); }
   .logo-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
   .logo-preview { width: 96px; height: 96px; border: 1px dashed var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--white); color: var(--text-muted); font-size: 0.75rem; text-align: center; padding: 6px; }
@@ -1049,7 +1076,8 @@
     header { position: static; height: 68px; }
     .header-logo { height: 34px; }
     .app-shell { flex-direction: column; align-items: stretch; min-height: 0; }
-    .sidebar { position: static; height: auto; overflow: visible; width: 100%; flex-direction: row; align-items: stretch; padding: 0; }
+    /* the menu sits at the bottom of the screen, within thumb's reach, and stays there while the page scrolls */
+    .sidebar { position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 30; height: auto; overflow: visible; width: 100%; flex-direction: row; align-items: stretch; padding: 0 0 env(safe-area-inset-bottom); box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2); }
     .sidebar-brand { display: none; }
     /* five nav items + Log Out share the width equally so nothing (esp. Log Out) is scrolled out of sight */
     .sidebar nav { display: flex; flex: 5 1 0; min-width: 0; }
@@ -1057,7 +1085,8 @@
     .nav-item { flex: 1 1 0; min-width: 0; width: auto; flex-direction: column; gap: 4px; padding: 10px 2px; font-size: 0.66rem; text-align: center; justify-content: center; }
     .nav-item.nav-sub, body[data-nav="subjects"] .nav-item.nav-sub { display: none; } /* Import ECR moves into the Subjects screen */
     .only-mobile { display: inline-flex; }
-    main { min-height: 0; padding: 16px 14px 60px; }
+    main { min-height: 0; padding: 16px 14px calc(84px + env(safe-area-inset-bottom)); } /* room so the bottom menu never covers the last of the page */
+    .api-status { bottom: calc(76px + env(safe-area-inset-bottom)) !important; }
     .panel { padding: 16px; }
     table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
     th, td { padding: 8px 10px; }
@@ -1084,6 +1113,7 @@
 <body data-nav="classes">
 <header>
   <img src="assets/logo-banner.svg" alt="Markado" class="header-logo">
+  <button class="sync-chip" id="syncChip" type="button" hidden></button>
   <button class="profile" id="profileBtn" type="button" title="Account and license">
     <img class="ico profile-icon" data-icon="user" data-fallback="&#128100;" alt="">
     <span class="profile-text">
@@ -1145,7 +1175,7 @@
           <div class="row">
             <div class="field"><label for="printClass">Class</label><select id="printClass"></select></div>
             <div class="field"><label for="printKind">Report</label>
-              <select id="printKind"><option value="card">Report Card (SF9)</option><option value="slip">Grade Slip</option></select></div>
+              <select id="printKind"><option value="card">Report Card (SF9)</option><option value="slip">Grade Slip (2 per page)</option></select></div>
           </div>
           <p class="home-hint" style="margin:0">Includes every grade you have entered, published or not. To save a PDF, choose <b>Save as PDF</b> as the destination in the print window. Report cards print landscape and grade slips portrait.</p>
         </div>
@@ -1253,16 +1283,24 @@
 
     <section id="screen-settings" class="screen">
       <h2>Settings</h2>
-      <div class="panel" style="max-width:420px">
+      <div class="settings-grid">
+      <div class="panel">
         <h3 style="margin-top:0">Personalization</h3>
         <div class="theme-toggle-group" role="group" aria-label="Theme">
           <button type="button" class="theme-opt" id="lightModeBtn" data-theme-choice="light">Light Mode</button>
           <button type="button" class="theme-opt" id="darkModeBtn" data-theme-choice="dark">Dark Mode</button>
         </div>
       </div>
-      <div class="panel" style="max-width:420px">
+      <div class="panel">
         <h3 style="margin-top:0">Subscription</h3>
         <div id="accountLicenseInfo"></div>
+      </div>
+      <div class="panel panel-wide">
+        <h3 style="margin-top:0">Offline use</h3>
+        <p class="home-hint" style="margin-top:0">Your classes, learners, grades and report cards are kept on this device, so you can keep working without internet. You can enter grades and print offline; grades are sent automatically once you reconnect. Publishing, importing an E-CR and editing classes, learners or Home details need internet.</p>
+        <p id="offlineInfo" style="font-size:0.9rem"></p>
+        <button class="btn secondary" id="offlineDownloadBtn" type="button">Download for offline use</button>
+      </div>
       </div>
     </section>
 
@@ -1467,12 +1505,21 @@ function endSession_() {
   localStorage.removeItem('ogv_teacher_session');
   sessionStorage.removeItem(ONBOARD_FLAG);
   invalidateApiCache();
-  window.location.href = 'teacher-login.html';
+  var go = function () { window.location.href = 'teacher-login.html'; };
+  // The saved copy of the teacher's data leaves the device; grades still waiting to be sent stay, and go out at the next login.
+  Offline.clearForLogout().then(go, go);
   return true;
 }
 window.onApiSessionExpired = endSession_; // any call that finds the session gone sends the user to log in
 
-document.getElementById('logoutBtn').onclick = endSession_;
+document.getElementById('logoutBtn').onclick = function () {
+  var st = Offline.status();
+  var warn = [];
+  if (st.pending > 0) warn.push('You have ' + st.pending + ' grade change' + (st.pending === 1 ? '' : 's') + ' not sent yet. They stay on this device and are sent the next time you log in.');
+  if (!st.online) warn.push('You are offline, so you will not be able to log back in until you have internet.');
+  if (warn.length === 0) { endSession_(); return; }
+  confirmModal('Log out?', warn.join(' '), 'Log out', endSession_);
+};
 
 // Onboarding is idempotent and only matters the first time a session opens the dashboard, so it is
 // skipped on later page loads of the same session. If the data call then reports a missing
@@ -1490,32 +1537,48 @@ function startApp_() {
   });
 }
 
+/** Puts a workspace bundle (fresh, or the copy saved on this device) into the app's state and header. */
+function applyBundle_(bundle) {
+  state.profile = bundle.profile || null;
+  renderProfile_(state.profile);
+  if (state.profile) renderLicenseBanner_(state.profile.license);
+
+  state.workspaces = bundle.workspaces || [];
+  state.workspacesLoaded = true;
+  ensureActiveClass_();
+  Offline.setWorkspaces(state.workspaces.map(function (w) { return w.workspaceId; }));
+
+  if (bundle.activeWorkspaceId) {
+    state.cache.subjects[bundle.activeWorkspaceId] = bundle.classSubjects;
+    state.cache.roster[bundle.activeWorkspaceId] = bundle.roster;
+  }
+
+  // undefined = the deployed backend predates the Home tab: leave everything unlocked rather than lock people out.
+  state.schoolProfile = bundle.schoolProfile || null;
+  syncLogo_();
+  applyHomeLock_();
+}
+
+/** Repaints whichever tab is on screen from the data in state -- unless a grade is mid-edit. */
+function repaintActiveScreen_() {
+  if (document.getElementById('screen-classes').classList.contains('active')) renderClassesTable_();
+  if (document.getElementById('screen-subjects').classList.contains('active')) renderSubjectGrid(true);
+  if (document.getElementById('screen-students').classList.contains('active') && !isGradeEntryDirty_()) renderRoster(true);
+}
+
 function bootstrapData_(mayNeedOnboarding) {
   setLoading(document.querySelector('#workspaceTable tbody'), 'Loading your classes…');
   // One round trip for profile+license, workspaces, and the active class's subjects/roster --
   // this is what lets Subjects and Students open instantly on first click instead of each
   // firing its own fetch (see renderSubjectGrid/renderRoster's cache-hit checks below).
-  call('clientGetWorkspaceBundle_', [state.sessionToken, state.currentWorkspaceId], function (bundle) {
-    state.profile = bundle.profile || null;
-    renderProfile_(state.profile);
-    if (state.profile) renderLicenseBanner_(state.profile.license);
-
-    state.workspaces = bundle.workspaces || [];
-    state.workspacesLoaded = true;
-    ensureActiveClass_();
-
-    if (bundle.activeWorkspaceId) {
-      state.cache.subjects[bundle.activeWorkspaceId] = bundle.classSubjects;
-      state.cache.roster[bundle.activeWorkspaceId] = bundle.roster;
-    }
-
-    // undefined = the deployed backend predates the Home tab: leave everything unlocked rather than lock people out.
-    state.schoolProfile = bundle.schoolProfile || null;
-    syncLogo_();
-    applyHomeLock_();
+  call('clientGetWorkspaceBundle_', [state.sessionToken, state.currentWorkspaceId], function (bundle, meta) {
+    applyBundle_(bundle);
+    // meta.refreshed: the fresh data arriving after the saved copy was already shown -- just bring the screen up to date
+    if (meta && meta.refreshed) { repaintActiveScreen_(); Offline.autoRefresh(); return; }
 
     if (isHomeLocked_()) { document.querySelector('.nav-item[data-screen="home"]').click(); } else { loadClassesScreen(); }
     startBackgroundRefresh_();
+    if (!meta || !meta.stale) Offline.autoRefresh(); // fresh from the server: top up the offline copy of each class if it is getting old
   }, function (err) {
     // Bundle not available on the deployed backend (e.g. Apps Script not yet redeployed): use the separate calls.
     if (/unknown or unavailable function/i.test(String(err))) { bootstrapLegacy_(mayNeedOnboarding); return; }
@@ -1571,6 +1634,7 @@ function startBackgroundRefresh_() {
     call('clientGetWorkspaceBundle_', [state.sessionToken, state.currentWorkspaceId], function (bundle) {
       if (bundle.profile) { state.profile = bundle.profile; renderProfile_(bundle.profile); renderLicenseBanner_(bundle.profile.license); }
       state.workspaces = bundle.workspaces || state.workspaces;
+      Offline.setWorkspaces(state.workspaces.map(function (w) { return w.workspaceId; }));
       if (bundle.schoolProfile) { state.schoolProfile = bundle.schoolProfile; applyHomeLock_(); } // never re-renders Home: the teacher may be typing there
       if (bundle.activeWorkspaceId) {
         state.cache.subjects[bundle.activeWorkspaceId] = bundle.classSubjects;
@@ -1643,9 +1707,7 @@ function planTagInfo_(license) {
   if (license.status === 'ACTIVE') {
     if (license.planId === 'lifetime') return { text: '\u221E Lifetime', cls: 'yearly' };
     if (license.planId === 'premium') return { text: '\u2605 Premium', cls: 'yearly' };
-    if (license.planId === 'yearly') return { text: '\u2605 Yearly', cls: 'yearly' };
     if (license.planId === 'basic') return { text: 'Basic', cls: 'monthly' };
-    if (license.planId === 'monthly') return { text: 'Monthly', cls: 'monthly' };
     return { text: 'Active', cls: 'monthly' };
   }
   if (license.status === 'EXPIRED') return { text: 'Expired', cls: 'expired' };
@@ -2614,8 +2676,11 @@ document.getElementById('saveGradesBtn').onclick = function () {
   if (entries.length === 0) { msgEl.innerHTML = '<div class="msg error">Nothing to save - type a grade first.</div>'; return; }
   var isMapeh = state.currentSubject && state.currentSubject.components.length > 0;
   call('clientSaveManualGrades_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm, entries], function (data) {
-    msgEl.innerHTML = '<div class="msg success">Saved ' + data.saved + ' grade(s). ' +
-      (isMapeh ? 'The MAPEH grade is worked out from both components. ' : '') + 'They stay unpublished (Draft) until you publish them.</div>';
+    msgEl.innerHTML = data.queued
+      ? '<div class="msg warn">Saved on this device - you are offline. ' + data.saved + ' grade(s) will be sent automatically when you reconnect. ' +
+        (isMapeh ? 'The MAPEH grade is worked out from both components. ' : '') + 'They stay unpublished (Draft) until you publish them.</div>'
+      : '<div class="msg success">Saved ' + data.saved + ' grade(s). ' +
+        (isMapeh ? 'The MAPEH grade is worked out from both components. ' : '') + 'They stay unpublished (Draft) until you publish them.</div>';
     // Patch the sheet from what the save just returned instead of re-fetching the whole grade sheet --
     // that round trip was what made entering one student, then the next, feel like it "loaded" every time.
     touchedInputs.forEach(function (input) { input.setAttribute('data-original', input.value.trim()); });
@@ -3185,6 +3250,99 @@ function setThemeButtonsActive_() {
   document.getElementById('lightModeBtn').classList.toggle('active', !isDark);
 }
 
+// ---------- Offline: a saved copy of the data, and grade saves that wait for a connection ----------
+
+function renderSyncChip_(st) {
+  var chip = document.getElementById('syncChip');
+  if (!chip) return;
+  var text = '', cls = '';
+  if (st.issues > 0) { text = '\u26A0 ' + st.issues + ' not saved'; cls = 'issue'; }
+  else if (st.syncing) { text = 'Syncing\u2026'; cls = 'waiting'; }
+  else if (!st.online) { text = 'Offline' + (st.pending ? ' \u2022 ' + st.pending + ' waiting' : ''); cls = 'offline'; }
+  else if (st.pending > 0) { text = st.pending + ' waiting \u2022 Sync now'; cls = 'waiting'; }
+  chip.hidden = !text;
+  chip.textContent = text;
+  chip.className = 'sync-chip ' + cls;
+  renderOfflinePanel_();
+}
+
+function openSyncIssuesModal_() {
+  Offline.listIssues().then(function (issues) {
+    if (issues.length === 0) return;
+    openModal_('<h3 style="margin-top:0">Grades that could not be saved</h3>' +
+      '<p>These were typed while you were offline, but the server did not accept them. Open the subject and enter them again.</p>' +
+      '<ul class="issue-list">' + issues.map(function (i) {
+        return '<li><b>' + escapeHtml(i.label) + '</b><br><span class="why">' + escapeHtml(i.error) + '</span></li>';
+      }).join('') + '</ul>' +
+      '<div class="actions"><button class="btn" id="siDone" type="button">Done</button></div>');
+    document.getElementById('siDone').onclick = function () { Offline.dismissAllIssues(); closeModal_(); };
+  });
+}
+
+document.getElementById('syncChip').onclick = function () {
+  var st = Offline.status();
+  if (st.issues > 0) { openSyncIssuesModal_(); return; }
+  if (!st.online) {
+    showToast(st.pending
+      ? 'You are offline. ' + st.pending + ' grade change(s) are saved on this device and will be sent when you reconnect.'
+      : 'You are offline. You can keep entering grades and printing; changes are sent when you reconnect.', 'success');
+    return;
+  }
+  Offline.sync();
+};
+
+/** After waiting grades reach the server: say so, and bring whatever is on screen up to date. */
+function onOfflineSynced_(info) {
+  invalidateApiCache();
+  invalidateSubjectsCache_();
+  if (info.failed > 0) showToast(info.failed + ' offline change(s) could not be saved. Tap the red notice at the top to see why.', 'error');
+  else if (info.applied > 0) showToast('Back online \u2014 ' + info.applied + ' offline change' + (info.applied === 1 ? '' : 's') + ' saved.', 'success');
+  var grades = document.getElementById('gradesArea');
+  if (grades && grades.offsetParent !== null && !isGradeEntryDirty_() && state.currentClassSubjectId) loadReview(true);
+  repaintActiveScreen_();
+}
+
+function fmtAgo_(ms) {
+  var mins = Math.round((Date.now() - ms) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + ' minute' + (mins === 1 ? '' : 's') + ' ago';
+  var hrs = Math.round(mins / 60);
+  if (hrs < 24) return hrs + ' hour' + (hrs === 1 ? '' : 's') + ' ago';
+  return new Date(ms).toLocaleDateString();
+}
+
+function renderOfflinePanel_() {
+  var info = document.getElementById('offlineInfo');
+  if (!info) return;
+  var st = Offline.status();
+  var ids = state.workspaces.map(function (w) { return w.workspaceId; });
+  var oldest = ids.length ? Math.min.apply(null, ids.map(Offline.lastDownload)) : 0;
+  var line = ids.length === 0 ? 'You have no classes yet.' : (oldest ? 'Classes last downloaded ' + fmtAgo_(oldest) + '.' : 'Your classes have not been downloaded yet.');
+  if (st.pending > 0) line += ' ' + st.pending + ' grade change' + (st.pending === 1 ? ' is' : 's are') + ' waiting to be sent.';
+  info.textContent = line;
+}
+
+document.getElementById('offlineDownloadBtn').onclick = function () {
+  var btn = this;
+  var ids = state.workspaces.map(function (w) { return w.workspaceId; });
+  if (ids.length === 0) { showToast('Create a class first.', 'error'); return; }
+  if (!Offline.status().online) { showToast('Connect to the internet to download your classes.', 'error'); return; }
+  btn.disabled = true;
+  Offline.downloadAll(ids, function (done, total) { btn.textContent = 'Downloading ' + done + ' of ' + total + '\u2026'; }).then(function (r) {
+    btn.disabled = false;
+    btn.textContent = 'Download for offline use';
+    renderOfflinePanel_();
+    if (r.ok === r.total) showToast('Ready for offline use.', 'success');
+    else showToast('Downloaded ' + r.ok + ' of ' + r.total + ' classes. Try again for the rest.', 'error');
+  });
+};
+
+Offline.init({ getToken: function () { return state.sessionToken; }, onChange: renderSyncChip_, onSynced: onOfflineSynced_ });
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () { /* the app still works online without it */ }); });
+}
+
 // ---------- Print Reports: Report Card (SF9) and Grade Slip ----------
 
 document.getElementById('sf9Css').textContent = Sf9.css;
@@ -3215,11 +3373,11 @@ function loadPrintScreen_() {
   if (empty) return;
 
   var sel = document.getElementById('printClass');
-  var wanted = printState_.workspaceId || state.currentWorkspaceId || state.workspaces[0].id;
-  if (!state.workspaces.some(function (w) { return w.id === wanted; })) wanted = state.workspaces[0].id;
+  var wanted = printState_.workspaceId || state.currentWorkspaceId || state.workspaces[0].workspaceId;
+  if (!state.workspaces.some(function (w) { return w.workspaceId === wanted; })) wanted = state.workspaces[0].workspaceId;
   sel.innerHTML = state.workspaces.map(function (w) {
     var label = classLabel_(w) + (w.schoolYearLabel ? ' (' + w.schoolYearLabel + ')' : '');
-    return '<option value="' + escapeHtml(w.id) + '"' + (w.id === wanted ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
+    return '<option value="' + escapeHtml(w.workspaceId) + '"' + (w.workspaceId === wanted ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
   }).join('');
   fetchPrintData_(wanted);
 }
@@ -3229,11 +3387,15 @@ function fetchPrintData_(workspaceId) {
   printState_.data = null;
   document.getElementById('printLearners').innerHTML = '<span class="home-hint" style="margin:0">Loading learners…</span>';
   document.getElementById('printPreview').innerHTML = '';
-  call('clientGetClassReportCards_', [state.sessionToken, workspaceId], function (data) {
+  call('clientGetClassReportCards_', [state.sessionToken, workspaceId], function (data, meta) {
     if (printState_.workspaceId !== workspaceId) return; // the teacher already switched to another class
+    var previous = printState_.selected;
     printState_.data = data;
     printState_.selected = {};
-    data.learners.forEach(function (l) { printState_.selected[l.enrollmentId] = true; });
+    // fresh data arriving after the saved copy was shown must not undo what the teacher already ticked
+    data.learners.forEach(function (l) {
+      printState_.selected[l.enrollmentId] = meta && meta.refreshed && Object.prototype.hasOwnProperty.call(previous, l.enrollmentId) ? previous[l.enrollmentId] : true;
+    });
     renderPrintLearners_();
     renderPrintPreview_();
   }, function (err) {
