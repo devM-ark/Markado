@@ -25,6 +25,7 @@
 	--border: #D7E1EA;
 	--text-muted: #5C6773;
 	--danger: #A3402F;
+	--ok: #2E7D4F;
     --sidebar-bg: #16233A;
 	--sidebar-text: #C9D6E6;
 	--sidebar-active: #4D6A92;
@@ -37,6 +38,7 @@
 	--text-muted: #9AA5B1;
 	--black: #F2F4F6;
     --complement: #2A3F55;
+	--ok: #5CC08A;
 	--sidebar-bg: #0D141F;
   }
   
@@ -187,6 +189,11 @@
   .settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: stretch; max-width: 940px; }
   .settings-grid .panel { margin: 0; max-width: none; }
   .settings-grid .panel-wide { grid-column: 1 / -1; }
+  .status-lines { margin: 0 0 14px; }
+  .status-lines div { font-size: 0.92rem; font-weight: 600; margin-bottom: 4px; }
+  .status-lines .ok { color: var(--ok); }
+  .status-lines .bad { color: var(--danger); }
+  .status-lines .warn { color: #B26A00; }
   @media (max-width: 768px) { .settings-grid { grid-template-columns: 1fr; } }
 
   /* Offline / sync indicator in the header */
@@ -199,6 +206,15 @@
   .issue-list { padding-left: 18px; margin: 8px 0 14px; }
   .issue-list li { margin-bottom: 8px; font-size: 0.9rem; }
   .issue-list .why { color: var(--danger); }
+
+  /* Request a license: wide enough for the three plans to sit side by side, so the dialog doesn't need to scroll */
+  .modal.lr-modal { max-width: 680px; padding: 22px 24px; }
+  .lr-modal h3 { margin-bottom: 8px; }
+  .lr-modal .msg { margin: 0 0 8px; }
+  #lrPlans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  #lrPlans .plan-card { margin-bottom: 0; padding: 10px 8px; }
+  #lrPlans .pc-top { flex-direction: column; gap: 0; }
+  @media (max-width: 560px) { #lrPlans { grid-template-columns: 1fr; } #lrPlans .pc-top { flex-direction: row; } }
 
   /* Plan picker in the license request */
   .plan-card { position: relative; display: block; text-align: center; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; background: var(--white); transition: background 0.15s, border-color 0.15s; }
@@ -217,11 +233,16 @@
   /* Print Reports */
   .print-list-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
   .print-list-head h3 { margin: 0; }
-  .print-learners { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 4px 16px; max-height: 280px; overflow-y: auto; }
-  .print-learners label { display: flex; align-items: center; gap: 8px; padding: 4px 2px; font-size: 0.9rem; cursor: pointer; }
-  .print-learners label.female span { color: #8a4b6b; }
-  .print-learners label.male span { color: #2f5f8a; }
-  .print-learners input { width: auto; margin: 0; }
+  /* learners: boys in the first two columns, girls in the last two */
+  .print-groups { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 28px; max-height: 340px; overflow-y: auto; }
+  .print-group h4 { margin: 0 0 6px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); }
+  .print-cols { column-count: 2; column-gap: 18px; }
+  .print-groups label { display: flex; align-items: center; gap: 8px; padding: 4px 2px; font-size: 0.9rem; cursor: pointer; break-inside: avoid; }
+  .print-groups input { width: auto; margin: 0; accent-color: var(--ok); }
+  @media (max-width: 768px) { .print-groups { grid-template-columns: 1fr; } .print-cols { column-count: 1; } }
+  .print-pager { display: flex; align-items: center; gap: 6px; max-width: 100%; }
+  .print-pager select { max-width: 230px; }
+  .print-pager .btn { padding: 6px 12px; font-size: 1.1rem; line-height: 1; }
   .print-preview-wrap { overflow: hidden; border: 1px solid var(--border); background: #fff; position: relative; }
   .print-preview-inner { position: absolute; left: 0; top: 0; }
   #sf9PrintRoot { position: absolute; left: -100000px; top: 0; }
@@ -234,6 +255,7 @@
   }
 
   /* Home tab */
+  .home-save-row { display: flex; justify-content: flex-end; margin: 4px 0 8px; }
   .home-section-title { margin: 0 0 4px; }
   .home-hint { color: var(--text-muted); font-size: 0.85rem; margin: 0 0 16px; }
   .classdays-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px; }
@@ -1155,18 +1177,17 @@
     <section id="screen-home" class="screen">
       <div class="page-head">
         <h2>Home</h2>
-        <div class="page-actions">
-          <button class="btn" id="saveHomeBtn" type="button"><span>Save</span></button>
-        </div>
       </div>
       <div id="homeContent"></div>
+      <div class="home-save-row"><button class="btn" id="saveHomeBtn" type="button"><span>Save</span></button></div>
     </section>
 
     <section id="screen-print" class="screen">
       <div class="page-head">
         <h2>Print Reports</h2>
         <div class="page-actions">
-          <button class="btn" id="printBtn" type="button"><span>Print / Save as PDF</span></button>
+          <button class="btn secondary" id="printBtn" type="button"><span>Print</span></button>
+          <button class="btn" id="pdfBtn" type="button"><span>Download PDF</span></button>
         </div>
       </div>
       <div id="printEmpty" class="panel" style="display:none"><p style="margin:0">Create a class first, then come back here to print its reports.</p></div>
@@ -1175,21 +1196,25 @@
           <div class="row">
             <div class="field"><label for="printClass">Class</label><select id="printClass"></select></div>
             <div class="field"><label for="printKind">Report</label>
-              <select id="printKind"><option value="card">Report Card (SF9)</option><option value="slip">Grade Slip (2 per page)</option></select></div>
+              <select id="printKind"><option value="card">Report Card</option><option value="slip">Grade Slip</option></select></div>
           </div>
-          <p class="home-hint" style="margin:0">Includes every grade you have entered, published or not. To save a PDF, choose <b>Save as PDF</b> as the destination in the print window. Report cards print landscape and grade slips portrait.</p>
+          <p class="home-hint" style="margin:0">Includes every grade you have entered, published or not. <b>Print</b> opens your print window; <b>Download PDF</b> saves a ready-to-print PDF file.</p>
         </div>
         <div class="panel">
           <div class="print-list-head">
             <h3 class="home-section-title" id="printCount">Learners</h3>
-            <button class="btn secondary" type="button" id="printToggleAll">Select none</button>
+            <button class="btn secondary" type="button" id="printToggleAll">Select None</button>
           </div>
-          <div id="printLearners" class="print-learners"></div>
+          <div id="printLearners" class="print-groups"></div>
         </div>
         <div class="panel">
           <div class="print-list-head">
             <h3 class="home-section-title">Preview</h3>
-            <select id="printPreviewSel" style="max-width:260px"></select>
+            <div class="print-pager">
+              <button class="btn secondary" type="button" id="printPrev" aria-label="Previous page">&lsaquo;</button>
+              <select id="printPreviewSel"></select>
+              <button class="btn secondary" type="button" id="printNext" aria-label="Next page">&rsaquo;</button>
+            </div>
           </div>
           <div id="printPreviewWrap" class="print-preview-wrap"><div id="printPreview" class="sf9 print-preview-inner"></div></div>
         </div>
@@ -1224,7 +1249,7 @@
       <div id="studentsNoClassMsg" class="empty-state" style="display:none"><div class="display">No Class Selected</div><p>Add or Select a class first, under "Classes."</p></div>
       <div id="studentsContent">
         <div class="class-selector"><label for="studentsClassSelect">Class:</label><select id="studentsClassSelect"></select></div>
-        <p class="instruction">Students log in with their LRN and surname. Every student needs a 12-digit LRN. Names are written as Surname, Given Name.</p>
+        <p class="instruction">Students log in with their LRN and Surname. Every student needs a 12-digit LRN.</p>
         <div id="rosterArea"></div>
       </div>
     </section>
@@ -1237,12 +1262,12 @@
           <button class="btn" id="addSubjectBtn" type="button"><img class="ico" data-icon="plus" data-fallback="+" alt=""><span>Add Subject</span></button>
         </div>
       </div>
-      <div id="subjectsNoClassMsg" class="empty-state" style="display:none"><div class="display">No Class Selected</div><p>Add or Select a class first, under "Classes."</p></div>
+      <div id="subjectsNoClassMsg" class="empty-state" style="display:none"><div class="display">No Class Selected</div><p>Add or Select a Class first, under "Classes."</p></div>
       <div id="subjectsContent">
-        <p class="instruction" id="subjectsInstruction">Click the subject you want to encode or import grades. You can also Publish and Unpublish the grades here.</p>
+        <p class="instruction" id="subjectsInstruction">Click the subject you want to encode or import grades.</p>
         <div class="class-selector"><label for="subjectsClassSelect">Class:</label><select id="subjectsClassSelect"></select></div>
         <div id="subjectGrid"></div>
-        <div id="subjectsEmptyMsg" class="empty-state" style="display:none"><div class="display">No Subjects Yet</div><p>This grade level doesn't have a fixed subject list. Add each subject with "Add Subject," or import its E-CR - importing adds the subject for you.</p></div>
+        <div id="subjectsEmptyMsg" class="empty-state" style="display:none"><div class="display">No Subjects Yet</div><p>This Grade Level doesn't have a fixed subject list. Add each subject with "Add Subject," or import its E-CR.</p></div>
       </div>
     </section>
 
@@ -1258,11 +1283,11 @@
 
       <div class="panel">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px">
-          <h3 style="margin:0">Term <span id="reviewTermLabel">1</span> grades</h3>
+          <h3 style="margin:0">Term <span id="reviewTermLabel">1</span> Grades</h3>
           <div class="page-actions">
-            <button class="btn secondary" id="unpublishBtn">Unpublish all</button>
-            <button class="btn secondary" id="saveGradesBtn">Save grades</button>
-            <button class="btn" id="publishBtn">Publish all</button>
+            <button class="btn secondary" id="unpublishBtn">Unpublish All</button>
+            <button class="btn secondary" id="saveGradesBtn">Save Grades</button>
+            <button class="btn" id="publishBtn">Publish All</button>
           </div>
         </div>
         <p id="gradeHint" style="color:var(--text-muted); font-size:0.85rem; margin:8px 0 0"></p>
@@ -1284,6 +1309,12 @@
     <section id="screen-settings" class="screen">
       <h2>Settings</h2>
       <div class="settings-grid">
+      <div class="panel panel-wide">
+        <h3 style="margin-top:0">Offline Use</h3>
+        <p class="home-hint" style="margin-top:0">Your classes, learners, grades and report cards are kept on this device, you can keep working without internet. You can enter grades and print offline; grades will sync automatically once you reconnect. Publishing, importing an E-CR and editing classes, learners or Home details need internet.</p>
+        <div id="offlineInfo" class="status-lines"></div>
+        <button class="btn secondary" id="offlineDownloadBtn" type="button">Download Data for Offline Use</button>
+      </div>
       <div class="panel">
         <h3 style="margin-top:0">Personalization</h3>
         <div class="theme-toggle-group" role="group" aria-label="Theme">
@@ -1294,12 +1325,6 @@
       <div class="panel">
         <h3 style="margin-top:0">Subscription</h3>
         <div id="accountLicenseInfo"></div>
-      </div>
-      <div class="panel panel-wide">
-        <h3 style="margin-top:0">Offline use</h3>
-        <p class="home-hint" style="margin-top:0">Your classes, learners, grades and report cards are kept on this device, so you can keep working without internet. You can enter grades and print offline; grades are sent automatically once you reconnect. Publishing, importing an E-CR and editing classes, learners or Home details need internet.</p>
-        <p id="offlineInfo" style="font-size:0.9rem"></p>
-        <button class="btn secondary" id="offlineDownloadBtn" type="button">Download for offline use</button>
       </div>
       </div>
     </section>
@@ -1314,10 +1339,10 @@
       <h3 id="ecrTitle">Import an E-CR</h3>
       <button class="icon-btn" id="ecrCloseBtn" type="button" aria-label="Close">&#10005;</button>
     </div>
-    <p style="margin-top:0">Upload the standard DepEd E-CR (.xlsx). The class, subject and learners are set up from the file, and you choose which terms to import.</p>
-    <p class="muted" style="font-size:0.85rem">Only names, class details, term grades and descriptions are saved - never raw scores. The MAPEH E-CR is read in one go: both components are imported and the MAPEH grade is worked out from them.</p>
+    <p style="margin-top:0">Upload the standard DepEd E-CR.</p>
+    <p class="muted" style="font-size:0.85rem">Only student names, class details, and term Grades are being saved from E-CR.</p>
     <input type="file" id="ecrFileInput" accept=".xlsx">
-    <button class="btn" id="ecrUploadBtn" style="margin-top:12px">Check file</button>
+    <button class="btn" id="ecrUploadBtn" style="margin-top:12px">Check File</button>
     <div id="ecrImportArea" style="margin-top:16px"></div>
   </div>
 </div>
@@ -1823,8 +1848,8 @@ function renderLicenseRequestModal_(info, onDone) {
     html += (info.lastDecision && info.lastDecision.status === 'DECLINED'
         ? '<div class="msg error">Your last request was declined: ' + escapeHtml(info.lastDecision.adminNote) + '</div>' : '') +
       '<div class="msg" style="white-space:pre-wrap; background:var(--complement)">' + escapeHtml(info.instructions || 'Ask your administrator how to pay for a license.') + '</div>' +
-      '<p style="font-size:0.88rem">Pay with GCash first, then choose the plan you paid for and enter the reference number from your receipt so the payment can be verified.</p>' +
-      '<div class="field"><label>Plan</label><div id="lrPlans">' +
+      '<p style="font-size:0.88rem; margin:8px 0 10px">Pay with GCash first, then choose the plan you paid for and enter the reference number from your receipt.</p>' +
+      '<div class="field" style="margin-bottom:10px"><label>Plan</label><div id="lrPlans">' +
         (info.plans || []).map(function (p) {
           var ok = p.available !== false;
           return '<label class="plan-card' + (ok ? '' : ' disabled') + '"><input type="radio" name="lrPlan" value="' + escapeHtml(p.id) + '"' + (ok ? '' : ' disabled') + '>' +
@@ -1832,11 +1857,13 @@ function renderLicenseRequestModal_(info, onDone) {
             '<span class="pc-meta">' + escapeHtml([p.durationLabel, p.classLabel].filter(Boolean).join(' \u2022 ')) + '</span>' +
             (ok ? '' : '<span class="pc-meta pc-reason">' + escapeHtml(p.reason || '') + '</span>') + '</span></label>';
         }).join('') + '</div></div>' +
-      '<div class="field"><label>GCash reference number</label><input id="lrRef" maxlength="40" autocomplete="off"></div>' +
-      '<div class="field"><label>Note (optional)</label><input id="lrNote" maxlength="300" autocomplete="off"></div>' +
+      '<div class="row">' +
+        '<div class="field" style="margin-bottom:10px"><label>GCash reference number</label><input id="lrRef" maxlength="40" autocomplete="off"></div>' +
+        '<div class="field" style="margin-bottom:10px"><label>Note (optional)</label><input id="lrNote" maxlength="300" autocomplete="off"></div>' +
+      '</div>' +
       '<div id="lrMsg"></div><div class="actions"><button class="btn secondary" id="lrClose">Cancel</button><button class="btn" id="lrSubmit">Send request</button></div>';
   }
-  document.getElementById('modalRoot').innerHTML = '<div class="modal-overlay"><div class="modal">' + html + '</div></div>';
+  document.getElementById('modalRoot').innerHTML = '<div class="modal-overlay"><div class="modal lr-modal">' + html + '</div></div>';
 
   document.getElementById('lrClose').onclick = closeModal_;
   var msgEl = document.getElementById('lrMsg');
@@ -3311,15 +3338,27 @@ function fmtAgo_(ms) {
   return new Date(ms).toLocaleDateString();
 }
 
+function fmtDateTime_(ms) {
+  return new Date(ms).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+
 function renderOfflinePanel_() {
   var info = document.getElementById('offlineInfo');
   if (!info) return;
   var st = Offline.status();
   var ids = state.workspaces.map(function (w) { return w.workspaceId; });
-  var oldest = ids.length ? Math.min.apply(null, ids.map(Offline.lastDownload)) : 0;
-  var line = ids.length === 0 ? 'You have no classes yet.' : (oldest ? 'Classes last downloaded ' + fmtAgo_(oldest) + '.' : 'Your classes have not been downloaded yet.');
-  if (st.pending > 0) line += ' ' + st.pending + ' grade change' + (st.pending === 1 ? ' is' : 's are') + ' waiting to be sent.';
-  info.textContent = line;
+  var times = ids.map(Offline.lastDownload).filter(function (t) { return t > 0; });
+  var line = function (cls, text) { return '<div class="' + cls + '">' + escapeHtml(text) + '</div>'; };
+
+  var html;
+  if (times.length === 0) html = line('bad', 'No data are downloaded for offline use.');
+  else if (times.length < ids.length) html = line('bad', 'Some classes are not downloaded for offline use.');
+  else html = line('ok', 'Data last downloaded on ' + fmtDateTime_(Math.min.apply(null, times)) + '.');
+
+  if (st.issues > 0) html += line('bad', st.issues + ' offline change' + (st.issues === 1 ? ' was' : 's were') + ' not saved. Tap the red notice at the top.');
+  else if (st.pending > 0) html += line('warn', st.pending + ' grade change' + (st.pending === 1 ? ' is' : 's are') + ' waiting to be synced.');
+  else html += line('ok', 'Data are synced.');
+  info.innerHTML = html;
 }
 
 document.getElementById('offlineDownloadBtn').onclick = function () {
@@ -3365,11 +3404,21 @@ function printSelectedLearners_() {
   return printState_.data.learners.filter(function (l) { return printState_.selected[l.enrollmentId]; });
 }
 
+/** The pages as they will come out: one report card per page, or two grade slips per page. */
+function printPages_() {
+  var chosen = printSelectedLearners_();
+  var per = printKind_() === 'slip' ? 2 : 1;
+  var pages = [];
+  for (var i = 0; i < chosen.length; i += per) pages.push(chosen.slice(i, i + per));
+  return pages;
+}
+
 function loadPrintScreen_() {
   var empty = state.workspaces.length === 0;
   document.getElementById('printEmpty').style.display = empty ? '' : 'none';
   document.getElementById('printBody').style.display = empty ? 'none' : '';
   document.getElementById('printBtn').style.display = empty ? 'none' : '';
+  document.getElementById('pdfBtn').style.display = empty ? 'none' : '';
   if (empty) return;
 
   var sel = document.getElementById('printClass');
@@ -3397,22 +3446,26 @@ function fetchPrintData_(workspaceId) {
       printState_.selected[l.enrollmentId] = meta && meta.refreshed && Object.prototype.hasOwnProperty.call(previous, l.enrollmentId) ? previous[l.enrollmentId] : true;
     });
     renderPrintLearners_();
-    renderPrintPreview_();
   }, function (err) {
     document.getElementById('printLearners').innerHTML = '<span class="msg error" style="display:block">' + escapeHtml(err) + '</span>';
   });
 }
 
+/** Boys in the first two columns, girls in the last two. */
 function renderPrintLearners_() {
   var learners = printState_.data.learners;
   var box = document.getElementById('printLearners');
   if (learners.length === 0) {
     box.innerHTML = '<span class="home-hint" style="margin:0">This class has no learners yet.</span>';
   } else {
-    box.innerHTML = learners.map(function (l) {
-      return '<label class="' + (l.sex === 'F' ? 'female' : 'male') + '"><input type="checkbox" data-eid="' + escapeHtml(l.enrollmentId) + '"' +
-        (printState_.selected[l.enrollmentId] ? ' checked' : '') + '><span>' + escapeHtml(l.studentName || '(no name)') + '</span></label>';
-    }).join('');
+    var boys = learners.filter(function (l) { return l.sex !== 'F'; });
+    var girls = learners.filter(function (l) { return l.sex === 'F'; });
+    var group = function (title, list) {
+      return '<div class="print-group"><h4>' + title + ' (' + list.length + ')</h4><div class="print-cols">' + list.map(function (l) {
+        return '<label><input type="checkbox" data-eid="' + escapeHtml(l.enrollmentId) + '"' + (printState_.selected[l.enrollmentId] ? ' checked' : '') + '><span>' + escapeHtml(l.studentName || '(no name)') + '</span></label>';
+      }).join('') + '</div></div>';
+    };
+    box.innerHTML = group('Male', boys) + group('Female', girls);
     box.querySelectorAll('input').forEach(function (cb) {
       cb.onchange = function () { printState_.selected[cb.getAttribute('data-eid')] = cb.checked; refreshPrintSelection_(); };
     });
@@ -3425,10 +3478,17 @@ function refreshPrintSelection_() {
   var total = printState_.data ? printState_.data.learners.length : 0;
   document.getElementById('printCount').textContent = 'Learners (' + chosen.length + ' of ' + total + ' selected)';
   document.getElementById('printToggleAll').textContent = chosen.length === total && total > 0 ? 'Select none' : 'Select all';
+  rebuildPagePicker_();
+}
+
+/** The preview steps through the actual pages: "Page 3 of 20 - Cruz, Ana & Dela Cruz, Juan" for grade slips. */
+function rebuildPagePicker_() {
+  var pages = printPages_();
   var sel = document.getElementById('printPreviewSel');
-  var previous = sel.value;
-  sel.innerHTML = chosen.map(function (l) {
-    return '<option value="' + escapeHtml(l.enrollmentId) + '"' + (l.enrollmentId === previous ? ' selected' : '') + '>' + escapeHtml(l.studentName) + '</option>';
+  var keep = Math.min(Math.max(0, parseInt(sel.value, 10) || 0), Math.max(0, pages.length - 1));
+  sel.innerHTML = pages.map(function (learners, i) {
+    return '<option value="' + i + '"' + (i === keep ? ' selected' : '') + '>Page ' + (i + 1) + ' of ' + pages.length + ' \u2022 ' +
+      escapeHtml(learners.map(function (l) { return l.studentName; }).join(' & ')) + '</option>';
   }).join('');
   renderPrintPreview_();
 }
@@ -3436,23 +3496,34 @@ function refreshPrintSelection_() {
 function renderPrintPreview_() {
   var wrap = document.getElementById('printPreviewWrap');
   var inner = document.getElementById('printPreview');
-  var chosen = printSelectedLearners_();
-  var id = document.getElementById('printPreviewSel').value;
-  var learner = chosen.filter(function (l) { return l.enrollmentId === id; })[0] || chosen[0];
-  if (!learner) { inner.innerHTML = ''; wrap.style.height = '60px'; return; }
+  var pages = printPages_();
+  var idx = Math.min(Math.max(0, parseInt(document.getElementById('printPreviewSel').value, 10) || 0), Math.max(0, pages.length - 1));
+  document.getElementById('printPrev').disabled = idx <= 0;
+  document.getElementById('printNext').disabled = idx >= pages.length - 1;
+  if (pages.length === 0) { inner.innerHTML = ''; wrap.style.height = '60px'; return; }
   var kind = printKind_();
   var full = Sf9.BOX[kind];
   // The preview is built at its on-screen size (not scaled down afterwards), so the page is only ever scaled once.
   var bw = Math.max(200, wrap.clientWidth), bh = Math.round(bw * full.h / full.w);
   inner.style.width = bw + 'px';
-  inner.innerHTML = Sf9.pagesHtml(kind, [learner], printState_.data, printSchool_(), { w: bw, h: bh });
+  inner.innerHTML = Sf9.pagesHtml(kind, pages[idx], printState_.data, printSchool_(), { w: bw, h: bh });
   Sf9.fit(inner, true);
   wrap.style.height = bh + 'px';
 }
 
+function stepPreview_(delta) {
+  var sel = document.getElementById('printPreviewSel');
+  var next = (parseInt(sel.value, 10) || 0) + delta;
+  if (next < 0 || next >= sel.options.length) return;
+  sel.value = String(next);
+  renderPrintPreview_();
+}
+
 document.getElementById('printClass').onchange = function () { fetchPrintData_(this.value); };
-document.getElementById('printKind').onchange = renderPrintPreview_;
+document.getElementById('printKind').onchange = rebuildPagePicker_;
 document.getElementById('printPreviewSel').onchange = renderPrintPreview_;
+document.getElementById('printPrev').onclick = function () { stepPreview_(-1); };
+document.getElementById('printNext').onclick = function () { stepPreview_(1); };
 document.getElementById('printToggleAll').onclick = function () {
   var all = printState_.data ? printState_.data.learners : [];
   var turnOn = printSelectedLearners_().length !== all.length;
@@ -3480,6 +3551,37 @@ document.getElementById('printBtn').onclick = function () {
   });
 };
 window.addEventListener('afterprint', function () { document.body.classList.remove('sf9-printing'); });
+
+function downloadBlob_(blob, filename) {
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 4000);
+}
+
+/** Download PDF: the file is made right here from the same pages, so it never depends on the print window's settings. */
+document.getElementById('pdfBtn').onclick = function () {
+  var learners = printSelectedLearners_();
+  if (learners.length === 0) { showToast('Choose at least one learner first.', 'error'); return; }
+  var btn = this, label = btn.querySelector('span'), kind = printKind_(), d = printState_.data;
+  btn.disabled = true;
+  label.textContent = 'Preparing\u2026';
+  Sf9.makePdf(kind, learners, d, printSchool_(), function (done, total) {
+    label.textContent = 'Preparing page ' + Math.min(done + 1, total) + ' of ' + total + '\u2026';
+  }).then(function (blob) {
+    var name = (kind === 'card' ? 'SF9 Report Cards' : 'Grade Slips') + ' - Grade ' + d.gradeLevel + ' ' + d.section + (d.schoolYearLabel ? ' - ' + d.schoolYearLabel : '') + '.pdf';
+    downloadBlob_(blob, name.replace(/[\\\/:*?"<>|]/g, '-'));
+    showToast('PDF downloaded.', 'success');
+  }).catch(function (e) {
+    console.error(e);
+    showToast('This browser could not make the PDF. Use Print instead and choose Save as PDF.', 'error');
+  }).then(function () {
+    btn.disabled = false;
+    label.textContent = 'Download PDF';
+  });
+};
 
 // ---------- Home tab: school details, locked tabs, logo ----------
 
@@ -3690,6 +3792,7 @@ document.getElementById('saveHomeBtn').onclick = function () {
 
 function loadSettingsScreen() {
   setThemeButtonsActive_();
+  renderOfflinePanel_();
   var status = null, info = null, remaining = 2;
   var settle = function () {
     remaining--;

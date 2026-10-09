@@ -277,6 +277,39 @@ var Sf9 = (function () {
    * Sizes everything once it is in the DOM (it needs real measurements): pads the learning-area table with blank rows
    * so the two panels end together, then scales each card / slip down if it would overflow its page.
    */
+  /** Whether text could run through this cell without crossing a line: only a line at its bottom (this row's underline) or a vertical one gets in the way -- a top border is the row above's underline. */
+  function borderless_(el) {
+    var c = getComputedStyle(el);
+    return ['Right', 'Bottom', 'Left'].every(function (side) {
+      return c['border' + side + 'Style'] === 'none' || parseFloat(c['border' + side + 'Width']) === 0;
+    });
+  }
+
+  /**
+   * The template's cell widths were drawn for one particular font. On a computer with a different (wider) font the same
+   * words no longer fit: text runs past the page border, or over the line it should sit beside. So any single-line text
+   * that is wider than the room it has is made just small enough to fit. The room is its own cell, plus the empty,
+   * line-less cells after it that Excel would let it spill into.
+   */
+  function fitText_(root) {
+    var range = document.createRange();
+    Array.prototype.forEach.call(root.querySelectorAll('table.sf9t td'), function (td) {
+      if (!td.textContent.trim()) return;
+      var cs = getComputedStyle(td);
+      if (cs.whiteSpace === 'pre-wrap' || cs.whiteSpace === 'normal') return; // wrapping cells grow downward instead
+      var padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+      var room = td.clientWidth - padX;
+      if (cs.textAlign === 'left' || cs.textAlign === 'start') {
+        for (var sib = td.nextElementSibling; sib && !sib.textContent.trim() && borderless_(sib); sib = sib.nextElementSibling) room += sib.offsetWidth;
+      }
+      range.selectNodeContents(td);
+      var need = range.getBoundingClientRect().width;
+      if (need > room + 0.5) {
+        td.style.fontSize = (parseFloat(cs.fontSize) * Math.max(0.55, (room / need) * 0.99)) + 'px';
+      }
+    });
+  }
+
   function fit(container, onScreen) {
     // Printing scales with CSS `zoom`, not transform: a transform leaves the card's layout box at full size, and the
     // browser then splits that oversized box across pages, cutting the card off. Zoom shrinks the layout box itself.
@@ -290,6 +323,7 @@ var Sf9 = (function () {
     var cards = container.querySelectorAll('.sf9-card');
     Array.prototype.forEach.call(cards, function (card) {
       clearScale(card);
+      fitText_(card); // measured at full size, before the card is scaled down
       var key = card.getAttribute('data-frame');
       var lt = card.querySelector('.sf9-left table'), rt = card.querySelector('.sf9-right table');
       lt.style.height = ''; rt.style.height = '';
@@ -321,9 +355,108 @@ var Sf9 = (function () {
   }
 
 
+  // ---------- PDF download ----------
+  //
+  // The browser's print dialog has its own ideas (paper, orientation, scaling, margins) and a PDF saved through it can come
+  // out differently on every computer. This makes the PDF directly instead: each page is drawn exactly as the app lays it
+  // out, as an image, and the images are put into a PDF file. Pages are Letter (landscape for report cards, portrait for
+  // grade slips), at 200 dpi, so they print sharply. The text in the PDF is part of the picture, not selectable.
+
+  var PAPER = { card: { w: 1056, h: 816 }, slip: { w: 816, h: 1056 } }; // Letter, in CSS px (96 per inch)
+  var PDF_DPI = 200;
+
+  function pageToJpeg_(pageEl, kind) {
+    var paper = PAPER[kind], box = BOX[kind];
+    var scale = PDF_DPI / 96;
+    var xml = new XMLSerializer().serializeToString(pageEl);
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + paper.w + '" height="' + paper.h + '">' +
+      '<rect width="100%" height="100%" fill="#ffffff"/>' +
+      '<foreignObject x="' + ((paper.w - box.w) / 2) + '" y="' + ((paper.h - box.h) / 2) + '" width="' + box.w + '" height="' + box.h + '">' +
+      '<div xmlns="http://www.w3.org/1999/xhtml" class="sf9"><style><![CDATA[' + LAYOUT_CSS + ']]></style>' + xml + '</div></foreignObject></svg>';
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var canvas = document.createElement('canvas');
+          canvas.width = Math.round(paper.w * scale); canvas.height = Math.round(paper.h * scale);
+          var ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(function (blob) {
+            var w = canvas.width, h = canvas.height;
+            canvas.width = 0; // release the memory straight away: a class is dozens of these
+            if (!blob) { reject(new Error('This browser could not make the page image.')); return; }
+            blob.arrayBuffer().then(function (buf) { resolve({ bytes: new Uint8Array(buf), w: w, h: h }); }, reject);
+          }, 'image/jpeg', 0.9);
+        } catch (e) { reject(e); }
+      };
+      img.onerror = function () { reject(new Error('This browser could not draw the page.')); };
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    });
+  }
+
+  /** A PDF with one full-page JPEG per page. pageW / pageH are in PDF points (1/72 inch). */
+  function buildPdf_(jpegs, pageW, pageH) {
+    var enc = new TextEncoder();
+    var chunks = [], offsets = [], length = 0;
+    function put(part) { var b = typeof part === 'string' ? enc.encode(part) : part; chunks.push(b); length += b.length; }
+    function obj(id, body, stream) {
+      offsets[id] = length;
+      put(id + ' 0 obj\n' + body);
+      if (stream) { put('\nstream\n'); put(stream); put('\nendstream'); }
+      put('\nendobj\n');
+    }
+    var n = jpegs.length;
+    put('%PDF-1.4\n');
+    obj(1, '<< /Type /Catalog /Pages 2 0 R >>');
+    var kids = [];
+    for (var i = 0; i < n; i++) kids.push((3 + i * 3) + ' 0 R');
+    obj(2, '<< /Type /Pages /Kids [' + kids.join(' ') + '] /Count ' + n + ' >>');
+    jpegs.forEach(function (j, i) {
+      var pageId = 3 + i * 3, contentId = pageId + 1, imageId = pageId + 2;
+      var content = 'q ' + pageW + ' 0 0 ' + pageH + ' 0 0 cm /Im0 Do Q';
+      obj(pageId, '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + pageW + ' ' + pageH + '] /Resources << /XObject << /Im0 ' + imageId + ' 0 R >> >> /Contents ' + contentId + ' 0 R >>');
+      obj(contentId, '<< /Length ' + content.length + ' >>', content);
+      obj(imageId, '<< /Type /XObject /Subtype /Image /Width ' + j.w + ' /Height ' + j.h + ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' + j.bytes.length + ' >>', j.bytes);
+    });
+    var size = 3 + n * 3;
+    var xrefAt = length;
+    var xref = 'xref\n0 ' + size + '\n0000000000 65535 f \n';
+    for (var id = 1; id < size; id++) xref += ('0000000000' + offsets[id]).slice(-10) + ' 00000 n \n';
+    put(xref + 'trailer\n<< /Size ' + size + ' /Root 1 0 R >>\nstartxref\n' + xrefAt + '\n%%EOF\n');
+    return new Blob(chunks, { type: 'application/pdf' });
+  }
+
+  /** The finished PDF, as a Blob. onProgress(done, total) is called as each page is made. */
+  function makePdf(kind, learners, cls, school, onProgress) {
+    var host = document.createElement('div');
+    host.className = 'sf9';
+    host.style.cssText = 'position:absolute;left:-100000px;top:0';
+    host.innerHTML = pagesHtml(kind, learners, cls, school);
+    document.body.appendChild(host);
+    var cleanup = function () { if (host.parentNode) host.parentNode.removeChild(host); };
+    try { fit(host); } catch (e) { cleanup(); return Promise.reject(e); }
+    var pages = Array.prototype.slice.call(host.querySelectorAll(kind === 'card' ? '.sf9-page' : '.slip-page'));
+    var jpegs = [];
+    if (onProgress) onProgress(0, pages.length);
+    return pages.reduce(function (chain, page, i) {
+      return chain.then(function () {
+        return pageToJpeg_(page, kind).then(function (jpeg) { jpegs.push(jpeg); if (onProgress) onProgress(i + 1, pages.length); });
+      });
+    }, Promise.resolve()).then(function () {
+      cleanup();
+      return buildPdf_(jpegs, PAPER[kind].w * 0.75, PAPER[kind].h * 0.75);
+    }, function (e) { cleanup(); throw e; });
+  }
+
+
   // ---------- CSS ----------
 
   var LAYOUT_CSS =
+    // The app turns every <table> into a scrolling box on narrow windows (phones, high browser zoom) and pads every cell.
+    // None of that may reach a report: a report is a fixed page, whatever the window or the print dialog looks like.
+    '.sf9 table,.slip table{display:table !important;overflow:visible !important;max-width:none !important;margin:0;white-space:normal;-webkit-overflow-scrolling:auto}' +
+    '.sf9 table.sf9t{width:auto}' +
     '.sf9-page,.slip-page{position:relative;overflow:hidden;background:#fff;color:#000;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
     '.sf9-pos{position:absolute;left:0;top:0}' +
     '.sf9-card{display:flex;align-items:flex-start;background:#fff}' +
@@ -374,5 +507,5 @@ var Sf9 = (function () {
     '.slip .grades-table tr:not(.component-row) td.subj{padding-left:1cm}' +
     '.slip .grades-table .component-row .comp-name{padding-left:calc(22px + 1cm)}';
 
-  return { BOX: BOX, css: LAYOUT_CSS, pagesHtml: pagesHtml, fit: fit, cardHtml: cardHtml, slipHtml: slipHtml, isSHS: isSHS };
+  return { BOX: BOX, css: LAYOUT_CSS, pagesHtml: pagesHtml, fit: fit, makePdf: makePdf, cardHtml: cardHtml, slipHtml: slipHtml, isSHS: isSHS };
 })();
