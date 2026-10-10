@@ -211,7 +211,7 @@ var Sf9 = (function () {
     return main + comps;
   }
 
-  function slipHtml(learner, cls) {
+  function slipHtml(learner, cls, school) {
     var e = {
       schoolName: cls.schoolName, schoolYearLabel: cls.schoolYearLabel, gradeLevel: cls.gradeLevel, section: cls.section,
       track: cls.track, cluster: cls.cluster, adviserName: cls.adviserName,
@@ -243,7 +243,8 @@ var Sf9 = (function () {
     rows += '<tr class="general-average-row"><td colspan="4" class="ga-label">General Average</td>' + finalCell(learner.generalAverage) +
       '<td class="desc">' + esc(learner.generalDescriptor || '') + '</td><td class="' + remarkClass(learner.generalRemark) + '">' + esc(learner.generalRemark || '') + '</td></tr>';
 
-    return '<div class="slip">' + header +
+    var logo = school && school.logo ? '<img class="slip-logo" alt="" src="' + school.logo + '">' : '';
+    return '<div class="slip">' + logo + header +
       '<table class="grades-table report-table"><colgroup><col><col class="term-col"><col class="term-col"><col class="term-col"><col class="final-col"><col class="desc-col"><col class="remark-col"></colgroup>' +
       '<thead><tr><th rowspan="2">Learning Areas</th><th colspan="3">Term</th><th rowspan="2">Final Grade</th><th rowspan="2">Description</th><th rowspan="2">Remarks</th></tr>' +
       '<tr><th>1</th><th>2</th><th>3</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
@@ -262,7 +263,7 @@ var Sf9 = (function () {
       });
     } else {
       for (var i = 0; i < learners.length; i += 2) {
-        var cell = function (l) { return '<div class="slip-cell" style="height:' + Math.floor(b.h / 2) + 'px">' + (l ? '<div class="sf9-pos">' + slipHtml(l, cls) + '</div>' : '') + '</div>'; };
+        var cell = function (l) { return '<div class="slip-cell" style="height:' + Math.floor(b.h / 2) + 'px">' + (l ? '<div class="sf9-pos">' + slipHtml(l, cls, school) + '</div>' : '') + '</div>'; };
         pages.push('<div class="slip-page" style="width:' + b.w + 'px;height:' + b.h + 'px">' + cell(learners[i]) + cell(learners[i + 1]) + '</div>');
       }
     }
@@ -320,6 +321,18 @@ var Sf9 = (function () {
       else { el.style.transform = ''; el.style.zoom = s; }
     };
     var clearScale = function (el) { el.style.zoom = ''; el.style.transform = ''; };
+    // Zoom rounds text and row heights a little differently from the full-size measurement, so the real result can come out a
+    // touch bigger than predicted. Measure what was actually drawn and shrink until it truly fits its box.
+    var settle = function (el, scale, maxW, maxH) {
+      for (var i = 0; i < 4; i++) {
+        var r = el.getBoundingClientRect();
+        var over = Math.max(r.width / maxW, r.height / maxH);
+        if (over <= 1.002) break;
+        scale = (scale / over) * 0.998;
+        scaleIt(el, scale);
+      }
+      return el.getBoundingClientRect();
+    };
     var cards = container.querySelectorAll('.sf9-card');
     Array.prototype.forEach.call(cards, function (card) {
       clearScale(card);
@@ -339,18 +352,21 @@ var Sf9 = (function () {
       var w = card.offsetWidth, ch = card.offsetHeight;
       var s = Math.min(boxW / w, boxH / ch);
       scaleIt(card, s);
-      pos.style.left = (4 + Math.max(0, (boxW - w * s) / 2)) + 'px';
-      pos.style.top = (4 + Math.max(0, (boxH - ch * s) / 2)) + 'px';
+      var drawn = settle(card, s, boxW, boxH);
+      pos.style.left = (4 + Math.max(0, (boxW - drawn.width) / 2)) + 'px';
+      pos.style.top = (4 + Math.max(0, (boxH - drawn.height) / 2)) + 'px';
     });
     var slips = container.querySelectorAll('.slip-cell .slip');
     Array.prototype.forEach.call(slips, function (slip) {
       clearScale(slip);
       var pos = slip.parentNode, cell = pos.parentNode;
       var w = slip.offsetWidth, h = slip.offsetHeight;
-      var s = Math.min(1, (cell.clientWidth - 16) / w, (cell.clientHeight - 16) / h);
+      var maxW = cell.clientWidth - 16, maxH = cell.clientHeight - 2 * SLIP_CUT_MARGIN;
+      var s = Math.min(1, maxW / w, maxH / h);
       scaleIt(slip, s);
-      pos.style.left = Math.max(0, (cell.clientWidth - w * s) / 2) + 'px';
-      pos.style.top = '8px';
+      var drawn = settle(slip, s, maxW, maxH);
+      pos.style.left = Math.max(0, (cell.clientWidth - drawn.width) / 2) + 'px';
+      pos.style.top = SLIP_CUT_MARGIN + 'px';
     });
   }
 
@@ -364,6 +380,7 @@ var Sf9 = (function () {
 
   var PAPER = { card: { w: 1056, h: 816 }, slip: { w: 816, h: 1056 } }; // Letter, in CSS px (96 per inch)
   var PDF_DPI = 200;
+  var SLIP_CUT_MARGIN = 30; // px of clear space between a slip and the dashed cutting line, above and below it
 
   function pageToJpeg_(pageEl, kind) {
     var paper = PAPER[kind], box = BOX[kind];
@@ -471,7 +488,8 @@ var Sf9 = (function () {
     '.slip-page{display:flex;flex-direction:column}' +
     '.slip-cell{position:relative;box-sizing:border-box;flex:none;overflow:hidden;border-bottom:1px dashed #999}' +
     '.slip-cell:last-child{border-bottom:none}' +
-    '.slip{width:720px;font-family:Arial,Helvetica,sans-serif;color:#0B0B0B;background:#fff}' +
+    '.slip{position:relative;width:720px;font-family:Arial,Helvetica,sans-serif;color:#0B0B0B;background:#fff}' +
+    '.slip .slip-logo{position:absolute;left:0;top:0;width:72px;height:72px;object-fit:contain}' +
     '.slip .grades-table{width:100%;border-collapse:collapse;font-size:0.92rem}' +
     '.slip .grades-table th{text-align:center;font-size:0.78rem;font-weight:600;color:#375534;padding:4px 4px;border:1px solid #AEC3B0}' +
     '.slip .grades-table th:first-child,.slip .grades-table td:first-child{text-align:left}' +

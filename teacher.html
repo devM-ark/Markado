@@ -207,27 +207,42 @@
   .issue-list li { margin-bottom: 8px; font-size: 0.9rem; }
   .issue-list .why { color: var(--danger); }
 
+  /* My Account: details (colons lined up) beside Change Password, so the dialog needs no scrolling */
+  .modal.acct-modal { max-width: 780px; }
+  .acct-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; }
+  .acct-col + .acct-col { border-left: 1px solid var(--border); padding-left: 32px; }
+  .acct-dl { display: grid; grid-template-columns: max-content 14px minmax(0, 1fr); column-gap: 4px; row-gap: 12px; margin: 14px 0 22px; align-items: baseline; }
+  .acct-dl .k { color: var(--text-muted); }
+  .acct-dl .c { color: var(--text-muted); text-align: center; }
+  .acct-dl .v { font-weight: 600; overflow-wrap: anywhere; }
+  @media (max-width: 720px) {
+    .acct-cols { grid-template-columns: 1fr; }
+    .acct-col + .acct-col { border-left: 0; padding-left: 0; border-top: 1px solid var(--border); padding-top: 18px; margin-top: 10px; }
+  }
+
   /* Request a license: wide enough for the three plans to sit side by side, so the dialog doesn't need to scroll */
   .modal.lr-modal { max-width: 680px; padding: 22px 24px; }
   .lr-modal h3 { margin-bottom: 8px; }
   .lr-modal .msg { margin: 0 0 8px; }
   #lrPlans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-  #lrPlans .plan-card { margin-bottom: 0; padding: 10px 8px; }
-  #lrPlans .pc-top { flex-direction: column; gap: 0; }
-  @media (max-width: 560px) { #lrPlans { grid-template-columns: 1fr; } #lrPlans .pc-top { flex-direction: row; } }
+  #lrPlans .plan-card { margin-bottom: 0; }
+  @media (max-width: 560px) { #lrPlans { grid-template-columns: 1fr; } }
 
   /* Plan picker in the license request */
-  .plan-card { position: relative; display: block; text-align: center; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; background: var(--white); transition: background 0.15s, border-color 0.15s; }
-  .plan-card input { position: absolute; opacity: 0; pointer-events: none; } /* still a real radio (keyboard, screen readers) -- just not drawn */
+  .plan-card { position: relative; display: block; text-align: center; border: 1px solid var(--border); border-radius: 10px; padding: 14px 10px; margin-bottom: 8px; cursor: pointer; background: var(--white); transition: background 0.15s, border-color 0.15s; }
+  /* the real radio stays (keyboard, screen readers) but is drawn as nothing: the app's global input{width:100%} must not stretch it past the card */
+  label.plan-card input[type="radio"] { position: absolute; left: 50%; top: 50%; width: 1px !important; height: 1px !important; min-width: 0; margin: 0; padding: 0; border: 0; opacity: 0; pointer-events: none; }
   .plan-card:hover:not(.disabled) { border-color: var(--primary); }
   .plan-card:has(input:checked) { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 17%, var(--white)); box-shadow: 0 0 0 1px var(--primary); }
   .plan-card:has(input:focus-visible) { outline: 2px solid var(--primary); outline-offset: 2px; }
   .plan-card.disabled { opacity: 0.55; cursor: not-allowed; }
+  /* a flex wrapper inside the label: the app's own `.field label` styling can't un-stack the lines */
   .plan-card .pc-body { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-  .plan-card .pc-top { display: flex; justify-content: center; align-items: baseline; gap: 10px; flex-wrap: wrap; }
-  .plan-card .pc-name { font-weight: 700; font-size: 1.02rem; }
-  .plan-card .pc-price { font-weight: 600; }
+  .plan-card .pc-body > span { display: block; text-align: center; }
+  .plan-card .pc-name { font-weight: 700; font-size: 1.05rem; color: var(--text); }
+  .plan-card .pc-price { font-weight: 700; font-size: 1.35rem; line-height: 1.2; color: var(--primary); margin-bottom: 4px; }
   .plan-card .pc-meta { font-size: 0.85rem; color: var(--text-muted); }
+  .plan-card .pc-classes { font-weight: 600; color: var(--text); }
   .plan-card .pc-reason { color: var(--danger); }
 
   /* Print Reports */
@@ -1460,7 +1475,7 @@ function confirmModal(title, bodyHtml, confirmLabel, onConfirm, danger) {
 /** Puts HTML in a dialog and returns the dialog element. Focuses [data-autofocus], else the first field. */
 function openModal_(innerHtml, opts) {
   var root = document.getElementById('modalRoot');
-  root.innerHTML = '<div class="modal-overlay"><div class="modal' + (opts && opts.wide ? ' wide' : '') + '" role="dialog" aria-modal="true">' + innerHtml + '</div></div>';
+  root.innerHTML = '<div class="modal-overlay"><div class="modal' + (opts && opts.wide ? ' wide' : '') + (opts && opts.cls ? ' ' + opts.cls : '') + '" role="dialog" aria-modal="true">' + innerHtml + '</div></div>';
   var modal = root.querySelector('.modal');
   var first = modal.querySelector('[data-autofocus]') || modal.querySelector('input, select, button');
   if (first) first.focus();
@@ -1543,7 +1558,7 @@ document.getElementById('logoutBtn').onclick = function () {
   if (st.pending > 0) warn.push('You have ' + st.pending + ' grade change' + (st.pending === 1 ? '' : 's') + ' not sent yet. They stay on this device and are sent the next time you log in.');
   if (!st.online) warn.push('You are offline, so you will not be able to log back in until you have internet.');
   if (warn.length === 0) { endSession_(); return; }
-  confirmModal('Log out?', warn.join(' '), 'Log out', endSession_);
+  confirmModal('Log Out?', warn.join(' '), 'Log Out', endSession_);
 };
 
 // Onboarding is idempotent and only matters the first time a session opens the dashboard, so it is
@@ -1755,22 +1770,34 @@ function renderProfile_(profile) {
 function openProfileModal_() {
   var profile = state.profile;
   var license = profile ? profile.license : null;
+  var expiry = license && license.noExpiry && license.status === 'ACTIVE' ? 'Never expires' : (license && license.expirationDate ? fmtLongDate_(license.expirationDate) : '-');
+  var used = state.workspaces.length + (license && license.classLimit !== null && license.classLimit !== undefined ? ' of ' + license.classLimit : '') + ' used \u2022 ' + classAllowanceText_(license);
+  var row = function (label, value) {
+    return '<span class="k">' + label + '</span><span class="c">:</span><span class="v">' + escapeHtml(value) + '</span>';
+  };
   var html =
-    '<h3 style="margin-top:0">My Account</h3>' +
-    '<div class="field-static"><label>Name</label><div>' + escapeHtml(profile ? profile.fullName : '-') + '</div></div>' +
-    '<div class="field-static"><label>Subscription Type</label><div>' + escapeHtml(license ? licenseLabel_(license) : '-') + '</div></div>' +
-    '<div class="field-static"><label>Expiry Date</label><div>' + escapeHtml(license && license.noExpiry && license.status === 'ACTIVE' ? 'Never expires' : (license && license.expirationDate ? fmtLongDate_(license.expirationDate) : '-')) + '</div></div>' +
-    '<div class="field-static"><label>Classes</label><div>' + escapeHtml(state.workspaces.length + (license && license.classLimit !== null && license.classLimit !== undefined ? ' of ' + license.classLimit : '') + ' used \u2022 ' + classAllowanceText_(license)) + '</div></div>' +
-    '<div class="actions" style="justify-content:flex-start; margin:4px 0 24px"><button class="btn upgrade" id="pmUpgradeBtn" type="button">Upgrade Subscription</button></div>' +
-    '<hr style="border:none; border-top:1px solid var(--border); margin:0 0 20px">' +
-    '<h3 style="margin-top:0">Change Password</h3>' +
-    '<div id="pmPasswordMsg"></div>' +
-    '<div class="field"><label for="pmOldPassword">Old Password</label><input id="pmOldPassword" type="password" autocomplete="current-password"></div>' +
-    '<div class="field"><label for="pmNewPassword">New Password</label><input id="pmNewPassword" type="password" autocomplete="new-password"></div>' +
-    '<div class="field"><label for="pmConfirmPassword">Confirm New Password</label><input id="pmConfirmPassword" type="password" autocomplete="new-password"></div>' +
-    '<div class="actions"><button class="btn secondary" id="pmCancelBtn" type="button">Cancel</button>' +
-    '<button class="btn" id="pmUpdatePasswordBtn" type="button">Update Password</button></div>';
-  openModal_(html);
+    '<div class="acct-cols">' +
+      '<div class="acct-col">' +
+        '<h3 style="margin-top:0">My Account</h3>' +
+        '<div class="acct-dl">' +
+          row('Name', profile ? profile.fullName : '-') +
+          row('Subscription Type', license ? licenseLabel_(license) : '-') +
+          row('Expiry Date', expiry) +
+          row('Classes', used) +
+        '</div>' +
+        '<button class="btn upgrade" id="pmUpgradeBtn" type="button">Upgrade Subscription</button>' +
+      '</div>' +
+      '<div class="acct-col">' +
+        '<h3 style="margin-top:0">Change Password</h3>' +
+        '<div id="pmPasswordMsg"></div>' +
+        '<div class="field"><label for="pmOldPassword">Old Password</label><input id="pmOldPassword" type="password" autocomplete="current-password"></div>' +
+        '<div class="field"><label for="pmNewPassword">New Password</label><input id="pmNewPassword" type="password" autocomplete="new-password"></div>' +
+        '<div class="field"><label for="pmConfirmPassword">Confirm New Password</label><input id="pmConfirmPassword" type="password" autocomplete="new-password"></div>' +
+        '<div class="actions"><button class="btn secondary" id="pmCancelBtn" type="button">Cancel</button>' +
+        '<button class="btn" id="pmUpdatePasswordBtn" type="button">Update Password</button></div>' +
+      '</div>' +
+    '</div>';
+  openModal_(html, { cls: 'acct-modal' });
   document.getElementById('pmCancelBtn').onclick = closeModal_;
   document.getElementById('pmUpgradeBtn').onclick = function () { closeModal_(); openLicenseRequestModal(refreshLicenseViews_); };
   var updateBtn = document.getElementById('pmUpdatePasswordBtn');
@@ -1824,23 +1851,29 @@ function closeModal_() { document.getElementById('modalRoot').innerHTML = ''; }
 
 function refreshLicenseViews_() { loadSettingsScreen(); }
 
+/** A plain number the admin typed ("499") is shown as money ("\u20B1499"); anything else ("Free", "P499 only") is shown as written. */
+function fmtPrice_(price) {
+  var t = String(price).trim();
+  return /^\d[\d,]*(\.\d+)?$/.test(t) ? '\u20B1' + t.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : t;
+}
+
 function openLicenseRequestModal(onDone) {
   document.getElementById('modalRoot').innerHTML =
-    '<div class="modal-overlay"><div class="modal"><h3 style="margin-top:0">Request a license</h3><p>Loading…</p></div></div>';
+    '<div class="modal-overlay"><div class="modal"><h3 style="margin-top:0">Request a License</h3><p>Loading…</p></div></div>';
   call('clientGetLicenseRequestInfo_', [state.sessionToken], function (info) {
     renderLicenseRequestModal_(info, onDone);
   }, function (err) { closeModal_(); showToast(err, 'error'); });
 }
 
 function renderLicenseRequestModal_(info, onDone) {
-  var html = '<h3 style="margin-top:0">Request a license</h3>';
+  var html = '<h3 style="margin-top:0">Request a License</h3>';
   if (info.pending) {
     var p = info.pending;
     html += '<div class="msg warn">Your request is waiting for approval.</div>' +
       '<p style="font-size:0.9rem; margin:0 0 6px">' + (p.planName ? 'Plan: <b>' + escapeHtml(p.planName) + '</b><br>' : '') + 'Sent: ' + escapeHtml(fmtDate_(p.requestedAt)) +
       '<br>GCash reference: <b>' + escapeHtml(p.paymentReference) + '</b>' + (p.message ? '<br>Note: ' + escapeHtml(p.message) : '') + '</p>' +
       '<p style="font-size:0.85rem">You will get an email once it has been reviewed.</p>' +
-      '<div id="lrMsg"></div><div class="actions"><button class="btn secondary" id="lrClose">Close</button><button class="btn secondary" id="lrCancelReq">Cancel request</button></div>';
+      '<div id="lrMsg"></div><div class="actions"><button class="btn secondary" id="lrClose">Close</button><button class="btn secondary" id="lrCancelReq">Cancel Request</button></div>';
   } else if (!info.canRequest) {
     html += '<p>' + escapeHtml(info.reason || 'You cannot request a license right now.') + '</p>' +
       '<div class="actions"><button class="btn secondary" id="lrClose">Close</button></div>';
@@ -1853,15 +1886,17 @@ function renderLicenseRequestModal_(info, onDone) {
         (info.plans || []).map(function (p) {
           var ok = p.available !== false;
           return '<label class="plan-card' + (ok ? '' : ' disabled') + '"><input type="radio" name="lrPlan" value="' + escapeHtml(p.id) + '"' + (ok ? '' : ' disabled') + '>' +
-            '<span class="pc-body"><span class="pc-top"><span class="pc-name">' + escapeHtml(p.name) + '</span>' + (p.price ? '<span class="pc-price">' + escapeHtml(p.price) + '</span>' : '') + '</span>' +
-            '<span class="pc-meta">' + escapeHtml([p.durationLabel, p.classLabel].filter(Boolean).join(' \u2022 ')) + '</span>' +
+            '<span class="pc-body"><span class="pc-name">' + escapeHtml(p.name) + '</span>' +
+            (p.price ? '<span class="pc-price">' + escapeHtml(fmtPrice_(p.price)) + '</span>' : '') +
+            (p.durationLabel ? '<span class="pc-meta">' + escapeHtml(p.durationLabel) + '</span>' : '') +
+            (p.classLabel ? '<span class="pc-meta pc-classes">' + escapeHtml(p.classLabel) + '</span>' : '') +
             (ok ? '' : '<span class="pc-meta pc-reason">' + escapeHtml(p.reason || '') + '</span>') + '</span></label>';
         }).join('') + '</div></div>' +
       '<div class="row">' +
-        '<div class="field" style="margin-bottom:10px"><label>GCash reference number</label><input id="lrRef" maxlength="40" autocomplete="off"></div>' +
-        '<div class="field" style="margin-bottom:10px"><label>Note (optional)</label><input id="lrNote" maxlength="300" autocomplete="off"></div>' +
+        '<div class="field" style="margin-bottom:10px"><label>GCash Reference Number</label><input id="lrRef" maxlength="40" autocomplete="off"></div>' +
+        '<div class="field" style="margin-bottom:10px"><label>Note (Optional)</label><input id="lrNote" maxlength="300" autocomplete="off"></div>' +
       '</div>' +
-      '<div id="lrMsg"></div><div class="actions"><button class="btn secondary" id="lrClose">Cancel</button><button class="btn" id="lrSubmit">Send request</button></div>';
+      '<div id="lrMsg"></div><div class="actions"><button class="btn secondary" id="lrClose">Cancel</button><button class="btn" id="lrSubmit">Send Request</button></div>';
   }
   document.getElementById('modalRoot').innerHTML = '<div class="modal-overlay"><div class="modal lr-modal">' + html + '</div></div>';
 
@@ -1921,7 +1956,7 @@ function renderClassesTable_() {
       '<td>' + (ws.adviserName ? escapeHtml(ws.adviserName) : '<span class="muted">-</span>') + '</td>' +
       '<td>' + (ws.adviserDesignation ? escapeHtml(ws.adviserDesignation) : '<span class="muted">-</span>') + '</td>' +
       '<td><div class="row-actions">' +
-        (active ? '' : '<button class="btn secondary small" data-set-active="' + id + '">Set active</button>') +
+        (active ? '' : '<button class="btn secondary small" data-set-active="' + id + '">Set Active</button>') +
         '<button class="icon-btn" data-edit-class="' + id + '" title="Edit class" aria-label="Edit ' + label + '">' + iconHtml_('edit', 'Edit') + '</button>' +
         '<button class="icon-btn danger" data-delete-class="' + id + '" title="Delete class" aria-label="Delete ' + label + '">' + iconHtml_('delete', 'Delete') + '</button>' +
       '</div></td></tr>';
@@ -1968,10 +2003,10 @@ function openClassLimitModal_(lic) {
   var who = lic.status === 'TRIAL' || lic.planName === 'Trial' ? 'Your free trial' : 'Your ' + (lic.planName || 'current') + ' plan';
   var hint = lic.planId === 'premium' ? 'Upgrade to Lifetime for unlimited classes.' : (lic.planId === 'basic'
     ? 'Upgrade to Premium (up to 3 classes) or Lifetime to add more.' : 'Upgrade your subscription to add more classes.');
-  openModal_('<h3 style="margin-top:0">Class limit reached</h3>' +
+  openModal_('<h3 style="margin-top:0">Class Limit Reached</h3>' +
     '<p>' + escapeHtml(who + ' includes ' + classAllowanceText_(lic).toLowerCase() + ', and you already have ' + state.workspaces.length + '.') + '</p>' +
     '<p style="font-size:0.9rem">' + escapeHtml(hint) + '</p>' +
-    '<div class="actions"><button class="btn secondary" id="clCloseBtn" type="button">Not now</button><button class="btn upgrade" id="clUpgradeBtn" type="button">Upgrade Subscription</button></div>');
+    '<div class="actions"><button class="btn secondary" id="clCloseBtn" type="button">Not Now</button><button class="btn upgrade" id="clUpgradeBtn" type="button">Upgrade Subscription</button></div>');
   document.getElementById('clCloseBtn').onclick = closeModal_;
   document.getElementById('clUpgradeBtn').onclick = function () { closeModal_(); openLicenseRequestModal(refreshLicenseViews_); };
 }
@@ -2005,8 +2040,8 @@ function openClassModal_(ws) {
     submitLabel: editing ? 'Save changes' : 'Add Class',
     fieldsHtml:
       '<div class="row">' +
-        '<div class="field"><label for="cfYear">School year</label><select id="cfYear">' + schoolYearOptionsHtml_(v.schoolYearLabel) + '</select></div>' +
-        '<div class="field"><label for="cfGrade">Grade level</label><select id="cfGrade"' + (editing ? '' : ' data-autofocus') + '>' + gradeOptionsHtml_(v.gradeLevel) + '</select></div>' +
+        '<div class="field"><label for="cfYear">School Year</label><select id="cfYear">' + schoolYearOptionsHtml_(v.schoolYearLabel) + '</select></div>' +
+        '<div class="field"><label for="cfGrade">Grade Level</label><select id="cfGrade"' + (editing ? '' : ' data-autofocus') + '>' + gradeOptionsHtml_(v.gradeLevel) + '</select></div>' +
         '<div class="field"><label for="cfSection">Section</label><input id="cfSection" maxlength="60" placeholder="Rizal" value="' + escapeHtml(v.section) + '"></div>' +
       '</div>' +
       '<div class="row" id="cfShsRow" style="display:none">' +
@@ -2016,7 +2051,7 @@ function openClassModal_(ws) {
         '<div class="field"><label for="cfCluster">Cluster</label><input id="cfCluster" maxlength="60" placeholder="STEM" value="' + escapeHtml(v.cluster || '') + '"></div>' +
       '</div>' +
       '<div class="row">' +
-        '<div class="field"><label for="cfAdviser">Adviser name</label><input id="cfAdviser" maxlength="80" placeholder="Raymark R. Remo" value="' + escapeHtml(v.adviserName) + '"></div>' +
+        '<div class="field"><label for="cfAdviser">Adviser Name</label><input id="cfAdviser" maxlength="80" placeholder="Raymark R. Remo" value="' + escapeHtml(v.adviserName) + '"></div>' +
         '<div class="field"><label for="cfDesignation">Designation</label><input id="cfDesignation" list="designationList" maxlength="60" placeholder="Teacher III" value="' + escapeHtml(v.adviserDesignation) + '">' +
           '<datalist id="designationList">' + DESIGNATIONS_.map(function (d) { return '<option value="' + d + '">'; }).join('') + '</datalist></div>' +
       '</div>',
@@ -2364,12 +2399,12 @@ document.getElementById('addSubjectBtn').onclick = function () {
   if (ws && isSHSGrade_(ws.gradeLevel)) { openShsQuickAddModal_(); return; }
   var hasDefaults = !ws || isDefaultSubjectGrade_(ws.gradeLevel);
   formModal_({
-    title: 'Add subject',
+    title: 'Add Subject',
     intro: hasDefaults
       ? 'For a subject that is not in the list, such as Religion. The regular subjects are already there.'
       : 'This grade level has no fixed subject list - add each one it needs.',
     submitLabel: 'Add Subject',
-    fieldsHtml: '<div class="field"><label for="asName">Subject name</label><input id="asName" maxlength="80" placeholder="Religion" data-autofocus></div>',
+    fieldsHtml: '<div class="field"><label for="asName">Subject Name</label><input id="asName" maxlength="80" placeholder="Religion" data-autofocus></div>',
     onSubmit: function (setError, submitBtn) {
       var name = valueOf_('asName');
       if (!name) { setError('Enter the subject name.'); return; }
@@ -2412,24 +2447,24 @@ function openShsQuickAddModal_() {
   var coreChips = level === 12 ? '' : SHS_QUICK_ADD_SUBJECTS_.map(function (name, i) {
     return '<button type="button" class="btn secondary small" style="margin:0 6px 8px 0" data-shs-add="' + i + '">' + escapeHtml(name) + '</button>';
   }).join('');
-  var html = '<h3 style="margin-top:0">Add subject</h3>' +
+  var html = '<h3 style="margin-top:0">Add Subject</h3>' +
     '<p style="color:#5C6773; font-size:0.9rem; margin-top:0">Search the official Senior High subject list and the units and terms fill in for you. The General Average is weighted by units.</p>' +
     (coreChips ? '<div style="margin-bottom:8px"><div style="font-size:0.8rem;color:#5C6773;margin-bottom:4px">Core subjects (tap to add)</div>' + coreChips + '</div>' : '') +
-    '<div class="field"><label for="shsSearch">Search subject</label><input id="shsSearch" maxlength="80" placeholder="e.g. biology, welding, work immersion" autocomplete="off" data-autofocus></div>' +
+    '<div class="field"><label for="shsSearch">Search Subject</label><input id="shsSearch" maxlength="80" placeholder="e.g. biology, welding, work immersion" autocomplete="off" data-autofocus></div>' +
     '<div id="shsResults" style="margin:-4px 0 10px"></div>' +
-    '<div class="field"><label for="shsCustomName">Subject name</label><input id="shsCustomName" maxlength="80" placeholder="Pick from the list above, or type your own"></div>' +
+    '<div class="field"><label for="shsCustomName">Subject Name</label><input id="shsCustomName" maxlength="80" placeholder="Pick from the list above, or type your own"></div>' +
     '<div id="shsPickedNote" style="font-size:0.82rem;color:#5C6773;margin:-4px 0 10px"></div>' +
     '<div class="field">' +
-      '<label>Subject type</label>' +
+      '<label>Subject Type</label>' +
       '<div class="radio-row" role="radiogroup" aria-label="Subject type">' +
         '<label class="radio-pill"><input type="radio" name="shsCategory" value="CORE"> Core</label>' +
         '<label class="radio-pill"><input type="radio" name="shsCategory" value="ELECTIVE" checked> Elective</label>' +
         '<label class="radio-pill"><input type="radio" name="shsCategory" value="SPECIAL"> Special</label>' +
       '</div>' +
     '</div>' +
-    '<div class="field"><label for="shsUnits">Units per term</label><input id="shsUnits" type="number" min="0.5" max="40" step="0.5" placeholder="e.g. 3"></div>' +
+    '<div class="field"><label for="shsUnits">Units per Term</label><input id="shsUnits" type="number" min="0.5" max="40" step="0.5" placeholder="e.g. 3"></div>' +
     '<div class="field">' +
-      '<label id="shsTermsLabel">Terms this subject runs</label>' +
+      '<label id="shsTermsLabel">Terms This Subject Runs</label>' +
       '<div class="radio-row">' +
         '<label class="radio-pill"><input type="checkbox" name="shsTerm" value="1" checked> Term 1</label>' +
         '<label class="radio-pill"><input type="checkbox" name="shsTerm" value="2" checked> Term 2</label>' +
@@ -2447,8 +2482,8 @@ function openShsQuickAddModal_() {
   var setTermsLabel = function () {
     var need = picked ? picked.terms : 0;
     document.getElementById('shsTermsLabel').textContent = need > 0 && need < 3
-      ? 'Choose the ' + need + ' term' + (need === 1 ? '' : 's') + ' this subject runs'
-      : 'Terms this subject runs';
+      ? 'Choose the ' + need + ' Term' + (need === 1 ? '' : 's') + ' This Subject Runs'
+      : 'Terms This Subject Runs';
   };
 
   var resetForm = function () {
@@ -2637,7 +2672,7 @@ function gradeGroupRowsHtml_(rows, sex, components, columns) {
 function paintGradeSheet_(data) {
   var area = document.getElementById('gradesArea');
   if (data.rows.length === 0) {
-    area.innerHTML = '<div class="empty-state"><div class="display">No learners in this class yet</div><p>Add them under "Students", or import an E-CR.</p></div>';
+    area.innerHTML = '<div class="empty-state"><div class="display">No Learners in This Class Yet</div><p>Add them under "Students", or import an E-CR.</p></div>';
     return;
   }
   if (!document.getElementById('reviewTableBodyMale')) {
@@ -2807,7 +2842,7 @@ function termChoiceHtml_(t) {
 function renderImportPreview(preview) {
   var area = document.getElementById('ecrImportArea');
   if (preview.blockingIssues && preview.blockingIssues.length > 0) {
-    area.innerHTML = '<div class="issue-block blocking"><h4>This file can\'t be imported yet</h4>' +
+    area.innerHTML = '<div class="issue-block blocking"><h4>This File Can\'t Be Imported Yet</h4>' +
       preview.blockingIssues.map(function (i) { return '<div class="issue-row"><span>' + escapeHtml(i) + '</span></div>'; }).join('') + '</div>';
     return;
   }
@@ -2824,10 +2859,10 @@ function renderImportPreview(preview) {
     '<li>Learners: <b>' + preview.learnerCount + '</b> in the file · ' + preview.matchedCount + ' already in the class · <b>' + preview.newCount + '</b> will be added</li></ul>';
 
   if (preview.classExists && preview.newCount > 0) {
-    var options = '<option value="">Add as new</option>' + preview.existingRoster.map(function (r) {
+    var options = '<option value="">Add as New</option>' + preview.existingRoster.map(function (r) {
       return '<option value="' + escapeHtml(r.enrollmentId) + '">Same as: ' + escapeHtml(r.fullName) + '</option>';
     }).join('');
-    html += '<div class="issue-block info"><h4>' + preview.newCount + ' learner(s) are not in this class yet - they will be added as new</h4>' +
+    html += '<div class="issue-block info"><h4>' + preview.newCount + ' Learner(s) Are Not in This Class Yet - They Will Be Added as New</h4>' +
       '<p style="margin:0 0 10px; font-size:0.88rem">If a name is only spelled differently from your list, match it to the existing learner instead.</p>' +
       preview.newLearners.map(function (name) {
         return '<div class="issue-row"><span>' + escapeHtml(name) + '</span><span class="actions-inline"><select data-match-name="' + escapeHtml(name) + '">' + options + '</select></span></div>';
@@ -2844,7 +2879,7 @@ function renderImportPreview(preview) {
   if (importable.length === 0 && !needsSetup) {
     html += '<div class="msg warn">Nothing new to import from this file.</div>';
   } else {
-    html += '<button class="btn" id="ecrConfirmBtn">' + (importable.length > 0 ? 'Import' : 'Set up class only') + '</button> ';
+    html += '<button class="btn" id="ecrConfirmBtn">' + (importable.length > 0 ? 'Import' : 'Set Up Class Only') + '</button> ';
   }
   html += '<button class="btn secondary" id="ecrCancelBtn">Cancel</button>';
   area.innerHTML = html;
@@ -2868,7 +2903,7 @@ function renderImportPreview(preview) {
     if (!preview.classSubjectExists) what.push('add the subject');
     if (preview.newCount > 0) what.push('add ' + preview.newCount + ' learner(s)');
     if (terms.length > 0) what.push('import the grades for ' + terms.map(function (t) { return 'Term ' + t; }).join(', '));
-    confirmModal('Import this E-CR?', escapeHtml('This will ' + (what.join(', ') || 'make no changes') + '. Grades stay unpublished until you publish them.'), 'Import', function () {
+    confirmModal('Import This E-CR?', escapeHtml('This will ' + (what.join(', ') || 'make no changes') + '. Grades stay unpublished until you publish them.'), 'Import', function () {
       call('clientConfirmEcrUpload_', [state.sessionToken, importState.previewId, terms], renderImportDone,
         function (err) { showToast(err, 'error'); }, { button: confirmBtn });
     });
@@ -2945,7 +2980,7 @@ function rosterColumnHtml_(learners, label, cls) {
 function paintRoster_(roster) {
   var area = document.getElementById('rosterArea');
   if (roster.length === 0) {
-    area.innerHTML = '<div class="empty-state"><div class="display">No students yet</div><p>Click <b>Add Student</b>, or import a .CSV file with LRN, Student Name and Gender.</p></div>';
+    area.innerHTML = '<div class="empty-state"><div class="display">No Students Yet</div><p>Click <b>Add Student</b>, or import a .CSV file with LRN, Student Name and Gender.</p></div>';
     return;
   }
   var male = roster.filter(function (r) { return r.sex === 'M'; }).sort(byName_);
@@ -3007,7 +3042,7 @@ function openStudentModal_(learner) {
     submitLabel: editing ? 'Save changes' : 'Add Student',
     fieldsHtml:
       '<div class="field"><label for="sfLrn">LRN</label><input id="sfLrn" inputmode="numeric" maxlength="12" placeholder="12 digits" autocomplete="off" data-autofocus value="' + escapeHtml(v.lrn) + '"></div>' +
-      '<div class="field"><label for="sfName">Student name</label><input id="sfName" maxlength="120" placeholder="Dela Cruz, Juan" autocomplete="off" value="' + escapeHtml(v.fullName) + '">' +
+      '<div class="field"><label for="sfName">Student Name</label><input id="sfName" maxlength="120" placeholder="Dela Cruz, Juan" autocomplete="off" value="' + escapeHtml(v.fullName) + '">' +
         '<div class="hint">Surname, Given Name - students log in with their surname.</div></div>' +
       '<div class="field"><label for="sfSex">Gender</label><select id="sfSex"><option value="">Choose…</option>' +
         '<option value="M"' + (v.sex === 'M' ? ' selected' : '') + '>Male</option><option value="F"' + (v.sex === 'F' ? ' selected' : '') + '>Female</option></select></div>' +
@@ -3198,7 +3233,7 @@ function openCsvPreviewModal_(fileName, parsed) {
   var ws = workspaceById_(state.currentWorkspaceId);
   var tooMany = parsed.rows.length > CSV_MAX_ROWS_;
   var ready = tooMany || parsed.fatal ? 0 : parsed.rows.length;
-  var body = '<div class="modal-head"><h3>Import students</h3></div>' +
+  var body = '<div class="modal-head"><h3>Import Students</h3></div>' +
     '<p class="modal-intro">' + escapeHtml(fileName) + (ws ? ' → ' + escapeHtml(classLabel_(ws)) : '') + '</p><div id="csvBody">';
   if (parsed.fatal) {
     body += '<div class="msg error">' + escapeHtml(parsed.fatal) + '</div>';
@@ -3210,7 +3245,7 @@ function openCsvPreviewModal_(fileName, parsed) {
       '<p class="hint">Students already in this class without an LRN - for example from an E-CR - are matched by name and get their LRN. Nobody is added twice.</p>';
   }
   body += '</div><div class="actions" id="csvActions"><button class="btn secondary" id="csvCancel" type="button">' + (ready ? 'Cancel' : 'Close') + '</button>' +
-    (ready ? '<button class="btn" id="csvImport" type="button">Import ' + ready + ' student(s)</button>' : '') + '</div>';
+    (ready ? '<button class="btn" id="csvImport" type="button">Import ' + ready + ' Student(s)</button>' : '') + '</div>';
   openModal_(body, { wide: true });
   document.getElementById('csvCancel').onclick = closeModal_;
   var importBtn = document.getElementById('csvImport');
@@ -3257,7 +3292,7 @@ function renderAccountLicense_(status, info) {
   if (info) {
     if (info.pending) {
       html += '<div class="msg warn">License request sent on ' + escapeHtml(fmtDate_(info.pending.requestedAt)) + ' - waiting for approval.</div>' +
-        '<button class="btn upgrade" id="acctRequestBtn">View request</button>';
+        '<button class="btn upgrade" id="acctRequestBtn">View Request</button>';
     } else {
       if (info.lastDecision && info.lastDecision.status === 'DECLINED') {
         html += '<div class="msg error">Your last request was declined: ' + escapeHtml(info.lastDecision.adminNote) + '</div>';
@@ -3283,10 +3318,10 @@ function renderSyncChip_(st) {
   var chip = document.getElementById('syncChip');
   if (!chip) return;
   var text = '', cls = '';
-  if (st.issues > 0) { text = '\u26A0 ' + st.issues + ' not saved'; cls = 'issue'; }
+  if (st.issues > 0) { text = '\u26A0 ' + st.issues + ' Not Saved'; cls = 'issue'; }
   else if (st.syncing) { text = 'Syncing\u2026'; cls = 'waiting'; }
-  else if (!st.online) { text = 'Offline' + (st.pending ? ' \u2022 ' + st.pending + ' waiting' : ''); cls = 'offline'; }
-  else if (st.pending > 0) { text = st.pending + ' waiting \u2022 Sync now'; cls = 'waiting'; }
+  else if (!st.online) { text = 'Offline' + (st.pending ? ' \u2022 ' + st.pending + ' Waiting' : ''); cls = 'offline'; }
+  else if (st.pending > 0) { text = st.pending + ' Waiting \u2022 Sync Now'; cls = 'waiting'; }
   chip.hidden = !text;
   chip.textContent = text;
   chip.className = 'sync-chip ' + cls;
@@ -3296,7 +3331,7 @@ function renderSyncChip_(st) {
 function openSyncIssuesModal_() {
   Offline.listIssues().then(function (issues) {
     if (issues.length === 0) return;
-    openModal_('<h3 style="margin-top:0">Grades that could not be saved</h3>' +
+    openModal_('<h3 style="margin-top:0">Grades That Could Not Be Saved</h3>' +
       '<p>These were typed while you were offline, but the server did not accept them. Open the subject and enter them again.</p>' +
       '<ul class="issue-list">' + issues.map(function (i) {
         return '<li><b>' + escapeHtml(i.label) + '</b><br><span class="why">' + escapeHtml(i.error) + '</span></li>';
@@ -3369,7 +3404,7 @@ document.getElementById('offlineDownloadBtn').onclick = function () {
   btn.disabled = true;
   Offline.downloadAll(ids, function (done, total) { btn.textContent = 'Downloading ' + done + ' of ' + total + '\u2026'; }).then(function (r) {
     btn.disabled = false;
-    btn.textContent = 'Download for offline use';
+    btn.textContent = 'Download Data for Offline Use';
     renderOfflinePanel_();
     if (r.ok === r.total) showToast('Ready for offline use.', 'success');
     else showToast('Downloaded ' + r.ok + ' of ' + r.total + ' classes. Try again for the rest.', 'error');
@@ -3476,8 +3511,8 @@ function renderPrintLearners_() {
 function refreshPrintSelection_() {
   var chosen = printSelectedLearners_();
   var total = printState_.data ? printState_.data.learners.length : 0;
-  document.getElementById('printCount').textContent = 'Learners (' + chosen.length + ' of ' + total + ' selected)';
-  document.getElementById('printToggleAll').textContent = chosen.length === total && total > 0 ? 'Select none' : 'Select all';
+  document.getElementById('printCount').textContent = 'Learners (' + chosen.length + ' of ' + total + ' Selected)';
+  document.getElementById('printToggleAll').textContent = chosen.length === total && total > 0 ? 'Select None' : 'Select All';
   rebuildPagePicker_();
 }
 
@@ -3719,8 +3754,8 @@ function renderHome_() {
     '<div class="panel">' +
       '<h3 class="home-section-title">School</h3><p class="home-hint">These print on every report card.</p>' +
       '<div class="row">' +
-        '<div class="field" style="flex:2 1 260px"><label for="hSchool">School name</label><input id="hSchool" maxlength="120" value="' + escapeHtml(schoolName) + '"></div>' +
-        '<div class="field"><label for="hYear">School year</label><select id="hYear">' + schoolYearOptionsHtml_(year) + '</select></div>' +
+        '<div class="field" style="flex:2 1 260px"><label for="hSchool">School Name</label><input id="hSchool" maxlength="120" value="' + escapeHtml(schoolName) + '"></div>' +
+        '<div class="field"><label for="hYear">School Year</label><select id="hYear">' + schoolYearOptionsHtml_(year) + '</select></div>' +
       '</div>' +
       '<div class="row">' +
         '<div class="field"><label for="hRegion">Region</label><select id="hRegion">' + regionOptions + '</select></div>' +
@@ -3733,14 +3768,14 @@ function renderHome_() {
       '<div class="field" style="max-width:420px"><label for="hPrincipal">Principal / School Head</label><input id="hPrincipal" maxlength="80" placeholder="Juan D. Dela Cruz" value="' + escapeHtml(p.principalName || '') + '"></div>' +
     '</div>' +
     '<div class="panel">' +
-      '<h3 class="home-section-title">Class days per month</h3><p class="home-hint">Number of school days in each month. Optional - you can fill these in as the year goes.</p>' +
+      '<h3 class="home-section-title">Class Days per Month</h3><p class="home-hint">Number of school days in each month. Optional - you can fill these in as the year goes.</p>' +
       '<div class="classdays-grid">' + monthFields + '</div>' +
       '<div class="classdays-total" id="homeClassDaysTotal"></div>' +
     '</div>' +
     '<div class="panel">' +
-      '<h3 class="home-section-title">School logo</h3><p class="home-hint">Optional. Saved on this device and in your account, so it works offline and on other devices.</p>' +
+      '<h3 class="home-section-title">School Logo</h3><p class="home-hint">Optional. Saved on this device and in your account, so it works offline and on other devices.</p>' +
       '<div class="logo-row"><div class="logo-preview" id="homeLogoPreview"></div>' +
-        '<div class="page-actions"><button class="btn secondary" type="button" id="homeLogoPick">Upload logo</button>' +
+        '<div class="page-actions"><button class="btn secondary" type="button" id="homeLogoPick">Upload Logo</button>' +
         '<button class="btn secondary" type="button" id="homeLogoRemove">Remove</button></div>' +
         '<input type="file" id="homeLogoInput" accept="image/png,image/jpeg,image/webp" hidden></div>' +
     '</div>';
