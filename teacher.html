@@ -2042,17 +2042,17 @@ function openClassModal_(ws) {
       '<div class="row">' +
         '<div class="field"><label for="cfYear">School Year</label><select id="cfYear">' + schoolYearOptionsHtml_(v.schoolYearLabel) + '</select></div>' +
         '<div class="field"><label for="cfGrade">Grade Level</label><select id="cfGrade"' + (editing ? '' : ' data-autofocus') + '>' + gradeOptionsHtml_(v.gradeLevel) + '</select></div>' +
-        '<div class="field"><label for="cfSection">Section</label><input id="cfSection" maxlength="60" placeholder="Rizal" value="' + escapeHtml(v.section) + '"></div>' +
+        '<div class="field"><label for="cfSection">Section</label><input id="cfSection" maxlength="60" placeholder="" value="' + escapeHtml(v.section) + '"></div>' +
       '</div>' +
       '<div class="row" id="cfShsRow" style="display:none">' +
         '<div class="field"><label for="cfTrack">Track</label><select id="cfTrack">' +
           '<option value=""></option>' + SHS_TRACKS_.map(function (t) { return '<option value="' + t + '"' + (v.track === t ? ' selected' : '') + '>' + t + '</option>'; }).join('') +
         '</select></div>' +
-        '<div class="field"><label for="cfCluster">Cluster</label><input id="cfCluster" maxlength="60" placeholder="STEM" value="' + escapeHtml(v.cluster || '') + '"></div>' +
+        '<div class="field"><label for="cfCluster">Cluster</label><input id="cfCluster" maxlength="60" placeholder="" value="' + escapeHtml(v.cluster || '') + '"></div>' +
       '</div>' +
       '<div class="row">' +
-        '<div class="field"><label for="cfAdviser">Adviser Name</label><input id="cfAdviser" maxlength="80" placeholder="Raymark R. Remo" value="' + escapeHtml(v.adviserName) + '"></div>' +
-        '<div class="field"><label for="cfDesignation">Designation</label><input id="cfDesignation" list="designationList" maxlength="60" placeholder="Teacher III" value="' + escapeHtml(v.adviserDesignation) + '">' +
+        '<div class="field"><label for="cfAdviser">Adviser Name</label><input id="cfAdviser" maxlength="80" placeholder="" value="' + escapeHtml(v.adviserName) + '"></div>' +
+        '<div class="field"><label for="cfDesignation">Designation</label><input id="cfDesignation" list="designationList" maxlength="60" placeholder="" value="' + escapeHtml(v.adviserDesignation) + '">' +
           '<datalist id="designationList">' + DESIGNATIONS_.map(function (d) { return '<option value="' + d + '">'; }).join('') + '</datalist></div>' +
       '</div>',
     onSubmit: function (setError, submitBtn) {
@@ -2404,7 +2404,7 @@ document.getElementById('addSubjectBtn').onclick = function () {
       ? 'For a subject that is not in the list, such as Religion. The regular subjects are already there.'
       : 'This grade level has no fixed subject list - add each one it needs.',
     submitLabel: 'Add Subject',
-    fieldsHtml: '<div class="field"><label for="asName">Subject Name</label><input id="asName" maxlength="80" placeholder="Religion" data-autofocus></div>',
+    fieldsHtml: '<div class="field"><label for="asName">Subject Name</label><input id="asName" maxlength="80" placeholder="" data-autofocus></div>',
     onSubmit: function (setError, submitBtn) {
       var name = valueOf_('asName');
       if (!name) { setError('Enter the subject name.'); return; }
@@ -2450,9 +2450,9 @@ function openShsQuickAddModal_() {
   var html = '<h3 style="margin-top:0">Add Subject</h3>' +
     '<p style="color:#5C6773; font-size:0.9rem; margin-top:0">Search the official Senior High subject list and the units and terms fill in for you. The General Average is weighted by units.</p>' +
     (coreChips ? '<div style="margin-bottom:8px"><div style="font-size:0.8rem;color:#5C6773;margin-bottom:4px">Core subjects (tap to add)</div>' + coreChips + '</div>' : '') +
-    '<div class="field"><label for="shsSearch">Search Subject</label><input id="shsSearch" maxlength="80" placeholder="e.g. biology, welding, work immersion" autocomplete="off" data-autofocus></div>' +
+    '<div class="field"><label for="shsSearch">Search Subject</label><input id="shsSearch" maxlength="80" placeholder="" autocomplete="off" data-autofocus></div>' +
     '<div id="shsResults" style="margin:-4px 0 10px"></div>' +
-    '<div class="field"><label for="shsCustomName">Subject Name</label><input id="shsCustomName" maxlength="80" placeholder="Pick from the list above, or type your own"></div>' +
+    '<div class="field"><label for="shsCustomName">Subject Name</label><input id="shsCustomName" maxlength="80" placeholder=""></div>' +
     '<div id="shsPickedNote" style="font-size:0.82rem;color:#5C6773;margin:-4px 0 10px"></div>' +
     '<div class="field">' +
       '<label>Subject Type</label>' +
@@ -2462,7 +2462,7 @@ function openShsQuickAddModal_() {
         '<label class="radio-pill"><input type="radio" name="shsCategory" value="SPECIAL"> Special</label>' +
       '</div>' +
     '</div>' +
-    '<div class="field"><label for="shsUnits">Units per Term</label><input id="shsUnits" type="number" min="0.5" max="40" step="0.5" placeholder="e.g. 3"></div>' +
+    '<div class="field"><label for="shsUnits">Units per Term</label><input id="shsUnits" type="number" min="0.5" max="40" step="0.5" placeholder=""></div>' +
     '<div class="field">' +
       '<label id="shsTermsLabel">Terms This Subject Runs</label>' +
       '<div class="radio-row">' +
@@ -3041,7 +3041,7 @@ function openStudentModal_(learner) {
     title: editing ? 'Edit student' : 'Add student',
     submitLabel: editing ? 'Save changes' : 'Add Student',
     fieldsHtml:
-      '<div class="field"><label for="sfLrn">LRN</label><input id="sfLrn" inputmode="numeric" maxlength="12" placeholder="12 digits" autocomplete="off" data-autofocus value="' + escapeHtml(v.lrn) + '"></div>' +
+      '<div class="field"><label for="sfLrn">LRN</label><input id="sfLrn" inputmode="numeric" maxlength="12" placeholder="12 Digits" autocomplete="off" data-autofocus value="' + escapeHtml(v.lrn) + '"></div>' +
       '<div class="field"><label for="sfName">Student Name</label><input id="sfName" maxlength="120" placeholder="Dela Cruz, Juan" autocomplete="off" value="' + escapeHtml(v.fullName) + '">' +
         '<div class="hint">Surname, Given Name - students log in with their surname.</div></div>' +
       '<div class="field"><label for="sfSex">Gender</label><select id="sfSex"><option value="">Choose…</option>' +
@@ -3759,13 +3759,13 @@ function renderHome_() {
       '</div>' +
       '<div class="row">' +
         '<div class="field"><label for="hRegion">Region</label><select id="hRegion">' + regionOptions + '</select></div>' +
-        '<div class="field"><label for="hDivision">Division</label><input id="hDivision" maxlength="80" placeholder="e.g. Cebu City" value="' + escapeHtml(p.division || '') + '"></div>' +
+        '<div class="field"><label for="hDivision">Division</label><input id="hDivision" maxlength="80" placeholder="" value="' + escapeHtml(p.division || '') + '"></div>' +
       '</div>' +
       '<div class="row">' +
         '<div class="field"><label for="hDistrict">District</label><input id="hDistrict" maxlength="80" value="' + escapeHtml(p.district || '') + '"></div>' +
         '<div class="field"><label for="hMunicipality">Municipality</label><input id="hMunicipality" maxlength="80" value="' + escapeHtml(p.municipality || '') + '"></div>' +
       '</div>' +
-      '<div class="field" style="max-width:420px"><label for="hPrincipal">Principal / School Head</label><input id="hPrincipal" maxlength="80" placeholder="Juan D. Dela Cruz" value="' + escapeHtml(p.principalName || '') + '"></div>' +
+      '<div class="field" style="max-width:420px"><label for="hPrincipal">Principal / School Head</label><input id="hPrincipal" maxlength="80" placeholder="" value="' + escapeHtml(p.principalName || '') + '"></div>' +
     '</div>' +
     '<div class="panel">' +
       '<h3 class="home-section-title">Class Days per Month</h3><p class="home-hint">Number of school days in each month. Optional - you can fill these in as the year goes.</p>' +
