@@ -1731,10 +1731,10 @@ function licenseLine_(license) {
   return label;
 }
 
-/** How many classes the plan includes, in words ("1 class", "3 classes", "Unlimited classes"). */
+/** How many classes the plan includes, in words ("1 Class", "3 Classes", "Unlimited Classes"). */
 function classAllowanceText_(license) {
   var n = license ? license.classLimit : null;
-  if (n === null || n === undefined) return 'Unlimited classes';
+  if (n === null || n === undefined) return 'Unlimited Classes';
   return n + (n === 1 ? ' Class' : ' Classes');
 }
 
@@ -1757,7 +1757,7 @@ function planTagInfo_(license) {
 
 function renderProfile_(profile) {
   var line = profile ? licenseLine_(profile.license) : '';
-  document.getElementById('profileName').textContent = profile ? profile.fullName : 'My account';
+  document.getElementById('profileName').textContent = profile ? profile.fullName : 'My Account';
   var tag = planTagInfo_(profile ? profile.license : null);
   var tagEl = document.getElementById('profileLicense');
   tagEl.textContent = tag.text;
@@ -1771,7 +1771,7 @@ function openProfileModal_() {
   var profile = state.profile;
   var license = profile ? profile.license : null;
   var expiry = license && license.noExpiry && license.status === 'ACTIVE' ? 'Never expires' : (license && license.expirationDate ? fmtLongDate_(license.expirationDate) : '-');
-  var used = state.workspaces.length + (license && license.classLimit !== null && license.classLimit !== undefined ? ' of ' + license.classLimit : '') + ' used \u2022 ' + classAllowanceText_(license);
+  var used = state.workspaces.length + (license && license.classLimit !== null && license.classLimit !== undefined ? ' of ' + license.classLimit : '') + ' Used \u2022 ' + classAllowanceText_(license);
   var row = function (label, value) {
     return '<span class="k">' + label + '</span><span class="c">:</span><span class="v">' + escapeHtml(value) + '</span>';
   };
@@ -2000,9 +2000,9 @@ document.getElementById('addClassBtn').onclick = function () {
 };
 
 function openClassLimitModal_(lic) {
-  var who = lic.status === 'TRIAL' || lic.planName === 'Trial' ? 'Your free trial' : 'Your ' + (lic.planName || 'current') + ' plan';
+  var who = lic.status === 'TRIAL' || lic.planName === 'Trial' ? 'Your Free Trial' : 'Your ' + (lic.planName || 'current') + ' plan';
   var hint = lic.planId === 'premium' ? 'Upgrade to Lifetime for unlimited classes.' : (lic.planId === 'basic'
-    ? 'Upgrade to Premium (up to 3 classes) or Lifetime to add more.' : 'Upgrade your subscription to add more classes.');
+    ? 'Upgrade to Premium (up to 3 Classes) or Lifetime to add more.' : 'Upgrade your subscription to add more classes.');
   openModal_('<h3 style="margin-top:0">Class Limit Reached</h3>' +
     '<p>' + escapeHtml(who + ' includes ' + classAllowanceText_(lic).toLowerCase() + ', and you already have ' + state.workspaces.length + '.') + '</p>' +
     '<p style="font-size:0.9rem">' + escapeHtml(hint) + '</p>' +
