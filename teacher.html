@@ -2696,8 +2696,8 @@ function loadReview(keepRows) {
     state.currentSubject = data;
     document.getElementById('subjectTitle').textContent = data.subjectName;
     document.getElementById('gradeHint').textContent = data.components.length > 0
-      ? 'Type each learner\'s grade (60-100) for both components. The MAPEH grade is their average and appears once both have a grade; the description fills in automatically. Published grades are locked - unpublish one to edit it.'
-      : 'Type each learner\'s transmuted grade (60-100); the description fills in automatically. Published grades are locked - unpublish one to edit it.';
+      ? 'Type each learner\'s Transmuted Grade for both components or import E-CR. The MAPEH Final Grade will appear once both components have a grade. Published grades are locked - unpublish to edit it.'
+      : 'Type each learner\'s Transmuted Grade or import E-CR. Published grades are locked - unpublish to edit it.';
     paintGradeSheet_(data);
     var lockedCount = data.rows.filter(function (r) { return r.locked; }).length;
     document.getElementById('lockNote').innerHTML = lockedCount
@@ -3621,11 +3621,11 @@ document.getElementById('pdfBtn').onclick = function () {
 // ---------- Home tab: school details, locked tabs, logo ----------
 
 var HOME_REGIONS_ = [
-  ['I', 'Region I - Ilocos Region'], ['II', 'Region II - Cagayan Valley'], ['III', 'Region III - Central Luzon'],
-  ['IV-A', 'Region IV-A - CALABARZON'], ['MIMAROPA', 'MIMAROPA Region'], ['V', 'Region V - Bicol Region'],
-  ['VI', 'Region VI - Western Visayas'], ['VII', 'Region VII - Central Visayas'], ['VIII', 'Region VIII - Eastern Visayas'],
-  ['IX', 'Region IX - Zamboanga Peninsula'], ['X', 'Region X - Northern Mindanao'], ['XI', 'Region XI - Davao Region'],
-  ['XII', 'Region XII - SOCCSKSARGEN'], ['XIII', 'Region XIII - Caraga'], ['NCR', 'National Capital Region (NCR)'],
+  ['I', 'Region I'], ['II', 'Region II'], ['III', 'Region III'],
+  ['IV-A', 'Region IV-A'], ['IV-B', 'Region IV-B'], ['V', 'Region V'],
+  ['VI', 'Region VI'], ['VII', 'Region VII'], ['VIII', 'Region VIII'],
+  ['IX', 'Region IX'], ['X', 'Region X'], ['XI', 'Region XI'],
+  ['XII', 'Region XII'], ['XIII', 'Region XIII'], ['NCR', 'National Capital Region (NCR)'],
   ['CAR', 'Cordillera Administrative Region (CAR)'], ['BARMM', 'Bangsamoro Autonomous Region (BARMM)'], ['NIR', 'Negros Island Region (NIR)'],
 ];
 var HOME_MONTHS_ = ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr'];
