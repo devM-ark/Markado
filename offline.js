@@ -507,7 +507,7 @@ var Offline = (function () {
     if (!enabled || !owner || !isOnline()) return Promise.resolve(false);
     return callP_('clientGetOfflinePack_', [cfg.getToken(), wsId]).then(function (res) {
       if (!res.ok) return false;
-      return storePack_(res.data).then(function () { return true; }, function () { return false; });
+      return storePack_(res.data).then(function () { emit(); return true; }, function () { return false; }); // emit: lets the Settings panel redraw ("Data last downloaded on ...")
     });
   }
 

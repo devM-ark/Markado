@@ -244,7 +244,7 @@ var Sf9 = (function () {
       '<td class="desc">' + esc(learner.generalDescriptor || '') + '</td><td class="' + remarkClass(learner.generalRemark) + '">' + esc(learner.generalRemark || '') + '</td></tr>';
 
     var logo = school && school.logo ? '<img class="slip-logo" alt="" src="' + school.logo + '">' : '';
-    return '<div class="slip">' + logo + header +
+    return '<div class="slip' + (logo ? ' has-logo' : '') + '">' + logo + header +
       '<table class="grades-table report-table"><colgroup><col><col class="term-col"><col class="term-col"><col class="term-col"><col class="final-col"><col class="desc-col"><col class="remark-col"></colgroup>' +
       '<thead><tr><th rowspan="2">Learning Areas</th><th colspan="3">Term</th><th rowspan="2">Final Grade</th><th rowspan="2">Description</th><th rowspan="2">Remarks</th></tr>' +
       '<tr><th>1</th><th>2</th><th>3</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
@@ -311,6 +311,31 @@ var Sf9 = (function () {
     });
   }
 
+  var SLIP_LOGO_MAX = 72, SLIP_LOGO_MIN = 40;
+
+  /**
+   * The header text is centred on the slip, which leaves an empty strip on its left. The logo goes in the middle of that
+   * strip -- measured, so it stays centred whatever the school name's length (and shrinks if a long name leaves little room).
+   */
+  function placeSlipLogo_(slip) {
+    var logo = slip.querySelector('.slip-logo');
+    var header = slip.querySelector('.report-header');
+    if (!logo || !header) return;
+    var range = document.createRange();
+    var textLeft = Infinity;
+    Array.prototype.forEach.call(header.children, function (line) {
+      range.selectNodeContents(line);
+      var r = range.getBoundingClientRect();
+      if (r.width > 0) textLeft = Math.min(textLeft, r.left);
+    });
+    if (!isFinite(textLeft)) return;
+    var strip = textLeft - slip.getBoundingClientRect().left; // empty width to the left of the header text
+    var size = Math.max(SLIP_LOGO_MIN, Math.min(SLIP_LOGO_MAX, strip - 12));
+    logo.style.width = size + 'px';
+    logo.style.height = size + 'px';
+    logo.style.left = Math.max(0, (strip - size) / 2) + 'px';
+  }
+
   function fit(container, onScreen) {
     // Printing scales with CSS `zoom`, not transform: a transform leaves the card's layout box at full size, and the
     // browser then splits that oversized box across pages, cutting the card off. Zoom shrinks the layout box itself.
@@ -359,6 +384,7 @@ var Sf9 = (function () {
     var slips = container.querySelectorAll('.slip-cell .slip');
     Array.prototype.forEach.call(slips, function (slip) {
       clearScale(slip);
+      placeSlipLogo_(slip); // measured at full size, before the slip is scaled
       var pos = slip.parentNode, cell = pos.parentNode;
       var w = slip.offsetWidth, h = slip.offsetHeight;
       var maxW = cell.clientWidth - 16, maxH = cell.clientHeight - 2 * SLIP_CUT_MARGIN;
@@ -490,6 +516,8 @@ var Sf9 = (function () {
     '.slip-cell:last-child{border-bottom:none}' +
     '.slip{position:relative;width:720px;font-family:Arial,Helvetica,sans-serif;color:#0B0B0B;background:#fff}' +
     '.slip .slip-logo{position:absolute;left:0;top:0;width:72px;height:72px;object-fit:contain}' +
+    // with a logo, a long school name wraps before it reaches the strip the logo sits in, instead of running into it
+    '.slip.has-logo .report-header{padding:0 84px}' +
     '.slip .grades-table{width:100%;border-collapse:collapse;font-size:0.92rem}' +
     '.slip .grades-table th{text-align:center;font-size:0.78rem;font-weight:600;color:#375534;padding:4px 4px;border:1px solid #AEC3B0}' +
     '.slip .grades-table th:first-child,.slip .grades-table td:first-child{text-align:left}' +
