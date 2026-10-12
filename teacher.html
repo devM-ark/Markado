@@ -1735,7 +1735,7 @@ function licenseLine_(license) {
 function classAllowanceText_(license) {
   var n = license ? license.classLimit : null;
   if (n === null || n === undefined) return 'Unlimited classes';
-  return n + (n === 1 ? ' class' : ' classes');
+  return n + (n === 1 ? ' Class' : ' Classes');
 }
 
 /** The header just needs name + plan at a glance -- the full line (with the expiry date) still lives in the
@@ -3280,8 +3280,8 @@ function renderAccountLicense_(status, info) {
   var html;
   var used = state.workspaces.length;
   var classes = '<p style="font-size:0.88rem; opacity:0.85; margin-top:-6px">' + escapeHtml(classAllowanceText_(status)) +
-    (status.classLimit !== null && status.classLimit !== undefined ? ' \u2022 ' + used + ' of ' + status.classLimit + ' used' : '') + '</p>';
-  if (status.status === 'TRIAL') html = '<p>Free trial' + (status.expirationDate ? ' - expires on ' + escapeHtml(fmtLongDate_(status.expirationDate)) : '') + '.</p>' + classes;
+    (status.classLimit !== null && status.classLimit !== undefined ? ' \u2022 ' + used + ' of ' + status.classLimit + ' Used' : '') + '</p>';
+  if (status.status === 'TRIAL') html = '<p>Free Trial' + (status.expirationDate ? ' - expires on ' + escapeHtml(fmtLongDate_(status.expirationDate)) : '') + '.</p>' + classes;
   else if (status.status === 'ACTIVE') {
     html = '<p><b>' + escapeHtml(status.planName ? status.planName + ' plan' : 'Subscription') + '</b> - ' +
       (status.noExpiry ? 'never expires.' : 'active until ' + escapeHtml(fmtLongDate_(status.expirationDate)) + '.') + '</p>' + classes;
