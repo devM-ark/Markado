@@ -608,10 +608,28 @@ document.getElementById('bulkExtendTrialBtn').onclick = function () {
   });
 };
 
+// Keep in step with LICENSE_PLANS in AppsScript/LicenseRequests.gs.
+var ACTIVATE_PLAN_OPTIONS_ = [
+  ['basic', 'Basic - 1 term (80 days), 1 class'],
+  ['premium', 'Premium - 1 school year (250 days), up to 3 classes'],
+  ['lifetime', 'Lifetime - no expiry, unlimited classes'],
+];
+function activateFields_() {
+  return [
+    { key: 'plan', label: 'License', type: 'select', options: ACTIVATE_PLAN_OPTIONS_, value: 'premium' },
+    { key: 'date', label: 'Expiration date (YYYY-MM-DD). Leave blank for the plan\'s usual length from today. Ignored for Lifetime.' },
+  ];
+}
+/** The date is optional here: blank means "the plan's usual length". Returns '' for blank, null (after a message) for a bad date. */
+function optionalDateToIso_(value) {
+  if (!String(value || '').trim()) return '';
+  return dateToIso_(value);
+}
+
 document.getElementById('bulkActivateLicenseBtn').onclick = function () {
-  promptModal('Activate license for ' + getSelectedTeacherIds().length + ' teacher(s)', [{ key: 'date', label: 'Expiration date (YYYY-MM-DD)' }], function (values) {
-    var iso = dateToIso_(values.date); if (!iso) return;
-    call('clientBulkApplyAdminAction_', [sessionToken, getSelectedTeacherIds(), 'activateLicense', { expirationIso: iso }], function (result) {
+  promptModal('Activate license for ' + getSelectedTeacherIds().length + ' teacher(s)', activateFields_(), function (values) {
+    var iso = optionalDateToIso_(values.date); if (iso === null) return;
+    call('clientBulkApplyAdminAction_', [sessionToken, getSelectedTeacherIds(), 'activateLicense', { expirationIso: iso, planId: values.plan }], function (result) {
       showToast(result.succeeded.length + ' succeeded, ' + result.failed.length + ' failed.', result.failed.length > 0 ? 'error' : 'success');
       loadTeacherList();
     }, function (err) { showToast(err, 'error'); });
@@ -655,6 +673,11 @@ function loadActivityLog() {
 function promptModal(title, fields, onSubmit) {
   var root = document.getElementById('modalRoot');
   var fieldsHtml = fields.map(function (f) {
+    if (f.type === 'select') {
+      return '<div class="field"><label>' + escapeHtml(f.label) + '</label><select id="modalField_' + f.key + '">' + f.options.map(function (o) {
+        return '<option value="' + escapeHtml(o[0]) + '"' + (o[0] === f.value ? ' selected' : '') + '>' + escapeHtml(o[1]) + '</option>';
+      }).join('') + '</select></div>';
+    }
     return '<div class="field"><label>' + escapeHtml(f.label) + '</label><input id="modalField_' + f.key + '" type="' + (f.type || 'text') + '" value="' + escapeHtml(f.value || '') + '"></div>';
   }).join('');
   root.innerHTML = '<div class="modal-overlay"><div class="modal"><h3 style="margin-top:0">' + title + '</h3>' + fieldsHtml +
@@ -895,9 +918,9 @@ document.getElementById('extendTrialBtn').onclick = function () {
 };
 
 document.getElementById('activateLicenseBtn').onclick = function () {
-  promptModal('Activate license', [{ key: 'date', label: 'Expiration date (YYYY-MM-DD)' }], function (values) {
-    var iso = dateToIso_(values.date); if (!iso) return;
-    call('clientActivateLicense_', [sessionToken, currentTeacherId, iso], function () { openTeacherDetail(currentTeacherId); }, function (err) { showToast(err, 'error'); }, { button: document.getElementById('activateLicenseBtn') });
+  promptModal('Activate license', activateFields_(), function (values) {
+    var iso = optionalDateToIso_(values.date); if (iso === null) return;
+    call('clientActivateLicense_', [sessionToken, currentTeacherId, iso, values.plan], function () { openTeacherDetail(currentTeacherId); }, function (err) { showToast(err, 'error'); }, { button: document.getElementById('activateLicenseBtn') });
   });
 };
 

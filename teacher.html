@@ -12,7 +12,19 @@
 <script src="offline.js"></script>
 <script src="sf9-frames.js"></script>
 <script src="sf9.js"></script>
-<style id="sf9Css"></style>
+<style id="sf9Css">
+  .archived-notice { display:none; margin:0 0 14px; padding:10px 14px; border:1px solid var(--border); border-left:4px solid var(--text-muted); border-radius:8px; background:var(--surface); font-size:0.9rem; }
+  body.class-archived[data-nav="students"] .archived-notice, body.class-archived[data-nav="subjects"] .archived-notice { display:block; }
+  body.class-archived[data-nav="students"] #addStudentBtn, body.class-archived[data-nav="students"] #importCsvBtn,
+  body.class-archived[data-nav="subjects"] #addSubjectBtn, body.class-archived[data-nav="subjects"] #saveGradesBtn,
+  body.class-archived[data-nav="subjects"] #publishBtn, body.class-archived[data-nav="subjects"] #unpublishBtn { display:none !important; }
+  .promote-list { max-height:38vh; overflow:auto; border:1px solid var(--border); border-radius:8px; margin:6px 0 10px; }
+  .promote-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:7px 10px; border-bottom:1px solid var(--border); }
+  .promote-row:last-child { border-bottom:none; }
+  .promote-row .promote-name { flex:1; min-width:0; font-size:0.9rem; overflow:hidden; text-overflow:ellipsis; }
+  .promote-row select { flex:none; width:auto; min-width:132px; }
+  .promote-row.is-retain, .promote-row.is-transfer { background:rgba(201,162,39,0.10); }
+</style>
 <style id="sf9PageStyle"></style>
 <style>
   :root {
@@ -1161,7 +1173,9 @@
 </header>
 
 <script>
-  if (!localStorage.getItem('ogv_teacher_session')) {
+  // "Remember me" at login keeps the session in localStorage; otherwise it lives in this tab's sessionStorage.
+  function getTeacherSession_() { return localStorage.getItem('ogv_teacher_session') || sessionStorage.getItem('ogv_teacher_session'); }
+  if (!getTeacherSession_()) {
     window.location.href = 'teacher-login.html';
   }
   if (localStorage.getItem('markado_theme') === 'dark') {
@@ -1187,6 +1201,7 @@
   </aside>
 
   <main>
+    <div class="archived-notice" id="archivedNotice"><b>Archived Class.</b> It is read-only. You can view grades and print reports. To change it, restore it on the Classes page.</div>
     <div id="licenseBanner"></div>
 
     <section id="screen-home" class="screen">
@@ -1249,6 +1264,17 @@
           <tbody></tbody>
         </table>
       </div>
+
+      <div id="archivedSection" style="display:none; margin-top:28px">
+        <h3 style="margin:0 0 4px">Archived Classes</h3>
+        <p class="home-hint" style="margin-top:0">Classes from finished school years. They are read-only and do not count toward your class limit. Learners can still see their published grades.</p>
+        <div class="panel flush">
+          <table id="archivedTable">
+            <thead><tr><th>School Year</th><th>Class</th><th>School</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
     <section id="screen-students" class="screen">
@@ -1300,6 +1326,7 @@
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px">
           <h3 style="margin:0">Term <span id="reviewTermLabel">1</span> Grades</h3>
           <div class="page-actions">
+            <button class="btn secondary" id="announceBtn">Announce</button>
             <button class="btn secondary" id="unpublishBtn">Unpublish All</button>
             <button class="btn secondary" id="saveGradesBtn">Save Grades</button>
             <button class="btn" id="publishBtn">Publish All</button>
@@ -1326,9 +1353,16 @@
       <div class="settings-grid">
       <div class="panel panel-wide">
         <h3 style="margin-top:0">Offline Use</h3>
-        <p class="home-hint" style="margin-top:0">Your classes, learners, grades and report cards are kept on this device, you can keep working without internet. You can enter grades and print offline; grades will sync automatically once you reconnect. Publishing, importing an E-CR and editing classes, learners or Home details need internet.</p>
+        <p class="home-hint" style="margin-top:0">Your classes, learners, grades and report cards are kept on this device, you can keep working without internet. You can enter grades and print offline; grades will sync automatically once you reconnect. Publishing, importing an E-CR, promoting classes and editing classes, learners or Home details need internet.</p>
         <div id="offlineInfo" class="status-lines"></div>
         <button class="btn secondary" id="offlineDownloadBtn" type="button">Download Data for Offline Use</button>
+      </div>
+      <div class="panel panel-wide">
+        <h3 style="margin-top:0">Privacy and Your Data</h3>
+        <p class="home-hint" style="margin-top:0">See how Markado handles your data and your learners' data. You can download a copy of everything stored in your account, or delete your account for good.</p>
+        <p style="margin:0 0 12px"><a href="privacy.html" target="_blank" rel="noopener">Privacy Notice</a> &middot; <a href="terms.html" target="_blank" rel="noopener">Terms of Use</a> &middot; <a href="mailto:markado.work@gmail.com">Contact Us</a></p>
+        <button class="btn secondary" id="downloadMyDataBtn" type="button">Download My Data</button>
+        <button class="btn danger" id="deleteAccountBtn" type="button">Delete My Account</button>
       </div>
       <div class="panel">
         <h3 style="margin-top:0">Personalization</h3>
@@ -1368,8 +1402,9 @@
 var ACTIVE_CLASS_KEY = 'markado_active_class';
 
 var state = {
-  sessionToken: localStorage.getItem('ogv_teacher_session'),
-  workspaces: [],
+  sessionToken: getTeacherSession_(),
+  workspaces: [],            // the teacher's ACTIVE classes: these are what the plan's class limit counts
+  archivedWorkspaces: [],    // classes of finished school years (read-only, not counted)
   workspacesLoaded: false,   // set true once clientListWorkspaces_ has answered; cleared by any class create/update/delete
   currentWorkspaceId: localStorage.getItem(ACTIVE_CLASS_KEY),
   currentClassSubjectId: null,
@@ -1441,6 +1476,18 @@ function fmtLongDate_(iso) {
 
 function classLabel_(ws) { return 'Grade ' + ws.gradeLevel + ' - ' + ws.section; }
 
+/** The server sends every class; the app keeps active ones in state.workspaces and archived ones apart. */
+function applyWorkspaceList_(list) {
+  list = list || [];
+  state.workspaces = list.filter(function (w) { return w.status !== 'archived'; });
+  state.archivedWorkspaces = list.filter(function (w) { return w.status === 'archived'; });
+  updateArchivedMode_();
+}
+function allWorkspaces_() { return state.workspaces.concat(state.archivedWorkspaces); }
+function isArchivedWorkspaceId_(id) { return state.archivedWorkspaces.some(function (w) { return w.workspaceId === id; }); }
+/** While an archived class is the one being looked at, editing buttons are hidden (the server refuses changes anyway). */
+function updateArchivedMode_() { document.body.classList.toggle('class-archived', isArchivedWorkspaceId_(state.currentWorkspaceId)); }
+
 function defaultSchoolYear_() {
   var now = new Date();
   var start = now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1; // the school year starts in June
@@ -1450,12 +1497,14 @@ function defaultSchoolYear_() {
 function setActiveClass_(workspaceId) {
   state.currentWorkspaceId = workspaceId || null;
   if (workspaceId) localStorage.setItem(ACTIVE_CLASS_KEY, workspaceId); else localStorage.removeItem(ACTIVE_CLASS_KEY);
+  updateArchivedMode_();
 }
 
 /** Keeps the active class pointing at a class that exists (the first one when it doesn't). */
 function ensureActiveClass_() {
-  var ids = state.workspaces.map(function (w) { return w.workspaceId; });
-  if (ids.indexOf(state.currentWorkspaceId) === -1) setActiveClass_(ids.length > 0 ? ids[0] : null);
+  var ids = allWorkspaces_().map(function (w) { return w.workspaceId; });
+  if (ids.indexOf(state.currentWorkspaceId) === -1) setActiveClass_(state.workspaces.length > 0 ? state.workspaces[0].workspaceId : (ids.length > 0 ? ids[0] : null));
+  updateArchivedMode_();
 }
 
 function confirmModal(title, bodyHtml, confirmLabel, onConfirm, danger) {
@@ -1543,6 +1592,7 @@ function latest_(name) {
 
 function endSession_() {
   localStorage.removeItem('ogv_teacher_session');
+  sessionStorage.removeItem('ogv_teacher_session');
   sessionStorage.removeItem(ONBOARD_FLAG);
   invalidateApiCache();
   var go = function () { window.location.href = 'teacher-login.html'; };
@@ -1583,7 +1633,7 @@ function applyBundle_(bundle) {
   renderProfile_(state.profile);
   if (state.profile) renderLicenseBanner_(state.profile.license);
 
-  state.workspaces = bundle.workspaces || [];
+  applyWorkspaceList_(bundle.workspaces || []);
   state.workspacesLoaded = true;
   ensureActiveClass_();
   Offline.setWorkspaces(state.workspaces.map(function (w) { return w.workspaceId; }));
@@ -1673,7 +1723,7 @@ function startBackgroundRefresh_() {
     if (isGradeEntryDirty_()) return; // unsaved grade keystrokes -- leave everything alone this cycle
     call('clientGetWorkspaceBundle_', [state.sessionToken, state.currentWorkspaceId], function (bundle) {
       if (bundle.profile) { state.profile = bundle.profile; renderProfile_(bundle.profile); renderLicenseBanner_(bundle.profile.license); }
-      state.workspaces = bundle.workspaces || state.workspaces;
+      if (bundle.workspaces) applyWorkspaceList_(bundle.workspaces);
       Offline.setWorkspaces(state.workspaces.map(function (w) { return w.workspaceId; }));
       if (bundle.schoolProfile) { state.schoolProfile = bundle.schoolProfile; applyHomeLock_(); } // never re-renders Home: the teacher may be typing there
       if (bundle.activeWorkspaceId) {
@@ -1700,9 +1750,10 @@ document.addEventListener('visibilitychange', function () {
 function loadWorkspacesIntoState(then, onErr, forceReload) {
   if (state.workspacesLoaded && !forceReload) { ensureActiveClass_(); if (then) then(); return; }
   call('clientListWorkspaces_', [state.sessionToken], function (workspaces) {
-    state.workspaces = workspaces;
+    applyWorkspaceList_(workspaces);
     state.workspacesLoaded = true;
     ensureActiveClass_();
+    Offline.setWorkspaces(state.workspaces.map(function (w) { return w.workspaceId; }));
     if (then) then();
   }, onErr || function (err) { showToast(err, 'error'); });
 }
@@ -1939,10 +1990,27 @@ function loadClassesScreen() {
   });
 }
 
+/** The Archived Classes section: shown only when there is at least one. */
+function renderArchivedTable_() {
+  var section = document.getElementById('archivedSection');
+  section.style.display = state.archivedWorkspaces.length > 0 ? '' : 'none';
+  var rows = state.archivedWorkspaces.slice().sort(function (a, b) { return String(b.schoolYearLabel).localeCompare(String(a.schoolYearLabel)) || String(a.gradeLevel).localeCompare(String(b.gradeLevel), undefined, { numeric: true }); });
+  document.querySelector('#archivedTable tbody').innerHTML = rows.map(function (ws) {
+    var id = escapeHtml(ws.workspaceId), label = escapeHtml(classLabel_(ws));
+    return '<tr><td>' + escapeHtml(ws.schoolYearLabel) + '</td><td><b>' + label + '</b><span class="active-pill" style="background:var(--text-muted)">Archived</span></td>' +
+      '<td>' + escapeHtml(ws.schoolName) + '</td><td><div class="row-actions">' +
+      '<button class="btn secondary small" data-open-archived="' + id + '">Open</button>' +
+      '<button class="btn secondary small" data-restore-class="' + id + '">Restore</button>' +
+      '<button class="icon-btn danger" data-delete-class="' + id + '" title="Delete class" aria-label="Delete ' + label + '">' + iconHtml_('delete', 'Delete') + '</button>' +
+      '</div></td></tr>';
+  }).join('');
+}
+
 function renderClassesTable_() {
+  renderArchivedTable_();
   var tbody = document.querySelector('#workspaceTable tbody');
   if (state.workspaces.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No classes yet. Click <b>Add Class</b> to create your first one.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">' + (state.archivedWorkspaces.length > 0 ? 'No active classes. Click <b>Add Class</b> to start one.' : 'No classes yet. Click <b>Add Class</b> to create your first one.') + '</td></tr>';
     return;
   }
   tbody.innerHTML = state.workspaces.map(function (ws) {
@@ -1956,6 +2024,7 @@ function renderClassesTable_() {
       '<td>' + (ws.adviserName ? escapeHtml(ws.adviserName) : '<span class="muted">-</span>') + '</td>' +
       '<td>' + (ws.adviserDesignation ? escapeHtml(ws.adviserDesignation) : '<span class="muted">-</span>') + '</td>' +
       '<td><div class="row-actions">' +
+        '<button class="btn secondary small" data-promote-class="' + id + '">Promote</button>' +
         (active ? '' : '<button class="btn secondary small" data-set-active="' + id + '">Set Active</button>') +
         '<button class="icon-btn" data-edit-class="' + id + '" title="Edit class" aria-label="Edit ' + label + '">' + iconHtml_('edit', 'Edit') + '</button>' +
         '<button class="icon-btn danger" data-delete-class="' + id + '" title="Delete class" aria-label="Delete ' + label + '">' + iconHtml_('delete', 'Delete') + '</button>' +
@@ -1964,14 +2033,18 @@ function renderClassesTable_() {
 }
 
 function workspaceById_(id) {
-  return state.workspaces.filter(function (w) { return w.workspaceId === id; })[0] || null;
+  return allWorkspaces_().filter(function (w) { return w.workspaceId === id; })[0] || null;
 }
 
 document.querySelector('#workspaceTable tbody').addEventListener('click', function (e) {
   var setBtn = e.target.closest('[data-set-active]');
   var editBtn = e.target.closest('[data-edit-class]');
   var delBtn = e.target.closest('[data-delete-class]');
-  if (setBtn) {
+  var promoteBtn = e.target.closest('[data-promote-class]');
+  if (promoteBtn) {
+    var toPromote = workspaceById_(promoteBtn.getAttribute('data-promote-class'));
+    if (toPromote) openPromoteModal_(toPromote, promoteBtn);
+  } else if (setBtn) {
     setActiveClass_(setBtn.getAttribute('data-set-active'));
     renderClassesTable_();
     showToast('Active class updated.', 'success');
@@ -1984,10 +2057,30 @@ document.querySelector('#workspaceTable tbody').addEventListener('click', functi
   }
 });
 
+document.querySelector('#archivedTable tbody').addEventListener('click', function (e) {
+  var openBtn = e.target.closest('[data-open-archived]');
+  var restoreBtn = e.target.closest('[data-restore-class]');
+  var delBtn = e.target.closest('[data-delete-class]');
+  if (openBtn) {
+    setActiveClass_(openBtn.getAttribute('data-open-archived'));
+    var nav = document.querySelector('.nav-item[data-screen="students"]');
+    if (nav) nav.click();
+  } else if (restoreBtn) {
+    call('clientRestoreClass_', [state.sessionToken, restoreBtn.getAttribute('data-restore-class')], function () {
+      invalidateWorkspaces_(); invalidateApiCache();
+      loadClassesScreen();
+      showToast('Class restored.', 'success');
+    }, function (err) { showToast(err, 'error'); }, { button: restoreBtn });
+  } else if (delBtn) {
+    var doomed = workspaceById_(delBtn.getAttribute('data-delete-class'));
+    if (doomed) confirmDeleteClass_(doomed, delBtn);
+  }
+});
+
 /** Disables the table's row actions and Add Class while a delete is in flight, so a second click (on this row
  *  or another) can't land mid-delete. exceptBtn is left alone -- call()'s own button handling covers it. */
 function setClassesTableBusy_(busy, exceptBtn) {
-  document.querySelectorAll('#workspaceTable [data-set-active], #workspaceTable [data-edit-class], #workspaceTable [data-delete-class]')
+  document.querySelectorAll('#workspaceTable button, #archivedTable button')
     .forEach(function (btn) { if (btn !== exceptBtn) btn.disabled = busy; });
   document.getElementById('addClassBtn').disabled = busy;
 }
@@ -2084,6 +2177,122 @@ function openClassModal_(ws) {
   toggleShsRow();
 }
 
+// ---------- Promote a class at the end of the school year ----------
+// Each learner is Promote (moves to the new class, the default), Retain (repeats the grade level) or Transferred Out
+// (left the school). Retained and transferred-out learners are not added to the new class; they stay in the archived
+// class, with their grades. The class being promoted is archived, and does not count against the plan.
+
+var PROMOTE_CHOICES_ = [['promote', 'Promote'], ['retain', 'Retain'], ['transfer', 'Transferred Out']];
+
+function openPromoteModal_(ws, triggerBtn) {
+  if (!Offline.status().online) { showToast('Promoting a class needs an internet connection.', 'error'); return; }
+  call('clientPreparePromotion_', [state.sessionToken, ws.workspaceId], function (p) { renderPromoteModal_(ws, p); },
+    function (err) { showToast(err, 'error'); }, { button: triggerBtn });
+}
+
+function renderPromoteModal_(ws, p) {
+  var s = p.suggested, graduates = p.graduates;
+  var learners = p.learners.slice().sort(byName_);
+  var choiceHtml = PROMOTE_CHOICES_.map(function (c) {
+    return '<option value="' + c[0] + '">' + (c[0] === 'promote' && graduates ? 'Graduate' : c[1]) + '</option>';
+  }).join('');
+
+  var newClassHtml = graduates
+    ? '<p>Grade 12 learners graduate, so no new class is created. Choose <b>Retain</b> for anyone repeating Grade 12 and <b>Transferred Out</b> for anyone who left.</p>'
+    : '<h4 style="margin:12px 0 6px">New Class</h4>' +
+      '<div class="row">' +
+        '<div class="field"><label for="pfYear">School Year</label><select id="pfYear">' + schoolYearOptionsHtml_(s.schoolYearLabel || defaultSchoolYear_()) + '</select></div>' +
+        '<div class="field"><label for="pfGrade">Grade Level</label><select id="pfGrade">' + gradeOptionsHtml_(s.gradeLevel) + '</select></div>' +
+        '<div class="field"><label for="pfSection">Section</label><input id="pfSection" maxlength="60" value="' + escapeHtml(s.section) + '"></div>' +
+      '</div>' +
+      '<div class="row" id="pfShsRow" style="display:none">' +
+        '<div class="field"><label for="pfTrack">Track</label><select id="pfTrack"><option value=""></option>' +
+          SHS_TRACKS_.map(function (t) { return '<option value="' + t + '"' + (s.track === t ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select></div>' +
+        '<div class="field"><label for="pfCluster">Cluster</label><input id="pfCluster" maxlength="60" value="' + escapeHtml(s.cluster || '') + '"></div>' +
+      '</div>' +
+      '<div class="row">' +
+        '<div class="field"><label for="pfAdviser">Adviser Name</label><input id="pfAdviser" maxlength="80" value="' + escapeHtml(s.adviserName) + '"></div>' +
+        '<div class="field"><label for="pfDesignation">Designation</label><input id="pfDesignation" list="designationList" maxlength="60" value="' + escapeHtml(s.adviserDesignation) + '"></div>' +
+      '</div>';
+
+  var modal = openModal_(
+    '<h3 style="margin-top:0">Promote Class</h3>' +
+    '<p style="margin-top:0">' + escapeHtml(classLabel_(ws)) + ' &middot; ' + escapeHtml(ws.schoolYearLabel) + '</p>' +
+    newClassHtml +
+    '<h4 style="margin:14px 0 2px">Learners (' + learners.length + ')</h4>' +
+    '<p class="home-hint" style="margin:0">Everyone is set to ' + (graduates ? 'Graduate' : 'Promote') + '. Change only those who are repeating the grade or have left.</p>' +
+    '<div class="promote-list">' + (learners.length === 0 ? '<div class="promote-row"><span class="promote-name muted">This class has no learners.</span></div>' : learners.map(function (l) {
+      return '<div class="promote-row"><span class="promote-name">' + escapeHtml(l.fullName) + '</span>' +
+        '<select data-enrollment="' + escapeHtml(l.enrollmentId) + '" aria-label="Outcome for ' + escapeHtml(l.fullName) + '">' + choiceHtml + '</select></div>';
+    }).join('')) + '</div>' +
+    '<div id="pfSummary" style="font-size:0.9rem; margin-bottom:6px"></div>' +
+    '<p class="home-hint" style="margin:0 0 10px">Retained and transferred-out learners are not added to the new class. They stay in the archived class with their grades. ' +
+      escapeHtml(classLabel_(ws)) + ' will be archived (read-only) and will not count toward your class limit.</p>' +
+    '<div id="pfMsg"></div>' +
+    '<div class="actions"><button class="btn secondary" id="pfCancel" type="button">Cancel</button>' +
+    '<button class="btn" id="pfGo" type="button">' + (graduates ? 'Finish Class' : 'Promote Class') + '</button></div>',
+    { wide: true });
+
+  var selects = modal.querySelectorAll('select[data-enrollment]');
+  var updateSummary = function () {
+    var n = { promote: 0, retain: 0, transfer: 0 };
+    selects.forEach(function (sel) {
+      n[sel.value]++;
+      sel.closest('.promote-row').className = 'promote-row' + (sel.value === 'promote' ? '' : ' is-' + sel.value);
+    });
+    modal.querySelector('#pfSummary').innerHTML = '<b>' + n.promote + '</b> ' + (graduates ? 'graduate' : 'promote') + ' &middot; <b>' + n.retain + '</b> retain &middot; <b>' + n.transfer + '</b> transferred out';
+  };
+  selects.forEach(function (sel) { sel.onchange = updateSummary; });
+  updateSummary();
+
+  if (!graduates) {
+    var gradeSelect = modal.querySelector('#pfGrade'), shsRow = modal.querySelector('#pfShsRow');
+    var toggleShs = function () { shsRow.style.display = isSHSGrade_(gradeSelect.value) ? 'flex' : 'none'; };
+    gradeSelect.onchange = toggleShs;
+    toggleShs();
+  }
+
+  var showError = function (message) { modal.querySelector('#pfMsg').innerHTML = '<div class="msg error">' + escapeHtml(message) + '</div>'; };
+  modal.querySelector('#pfCancel').onclick = closeModal_;
+  var go = modal.querySelector('#pfGo');
+  go.onclick = function () {
+    var decisions = {};
+    selects.forEach(function (sel) { if (sel.value !== 'promote') decisions[sel.getAttribute('data-enrollment')] = sel.value; });
+    var params = { decisions: decisions };
+    if (!graduates) {
+      var year = valueOf_('pfYear'), grade = valueOf_('pfGrade'), section = valueOf_('pfSection');
+      if (!year || !grade || !section) { showError('Enter the school year, grade level and section of the new class.'); return; }
+      var shs = isSHSGrade_(grade);
+      params = Object.assign(params, {
+        schoolYearLabel: year, gradeLevel: grade, section: section,
+        schoolName: (state.schoolProfile && state.schoolProfile.schoolName) || s.schoolName,
+        adviserName: valueOf_('pfAdviser'), adviserDesignation: valueOf_('pfDesignation'),
+        track: shs ? valueOf_('pfTrack') : '', cluster: shs ? valueOf_('pfCluster') : '',
+      });
+    }
+    call('clientPromoteClass_', [state.sessionToken, ws.workspaceId, params], function (res) { afterPromotion_(ws, params, res); }, showError, { button: go });
+  };
+}
+
+function afterPromotion_(ws, params, res) {
+  invalidateWorkspaces_(); invalidateApiCache();
+  delete state.cache.roster[ws.workspaceId];
+  delete state.cache.subjects[ws.workspaceId];
+  if (res.newWorkspaceId) setActiveClass_(res.newWorkspaceId);
+  closeModal_();
+  loadClassesScreen();
+
+  var lines = [];
+  if (res.graduated) lines.push(res.promoted + ' learner(s) marked as graduated.');
+  else lines.push('Grade ' + params.gradeLevel + ' - ' + params.section + ' (' + params.schoolYearLabel + ') is ready with ' + res.promoted + ' learner(s).');
+  if (res.retained > 0) lines.push(res.retained + ' retained learner(s) were not moved. Add them to a Grade ' + ws.gradeLevel + ' class for next year.');
+  if (res.transferredOut > 0) lines.push(res.transferredOut + ' transferred-out learner(s) were not moved.');
+  lines.push(classLabel_(ws) + ' is now archived and read-only. Find it under Archived Classes.');
+  var modal = openModal_('<h3 style="margin-top:0">Class Promoted</h3>' + lines.map(function (l) { return '<p>' + escapeHtml(l) + '</p>'; }).join('') +
+    '<div class="actions"><button class="btn" id="pfDone" type="button">Done</button></div>');
+  modal.querySelector('#pfDone').onclick = closeModal_;
+}
+
 function confirmDeleteClass_(ws, btn) {
   confirmModal('Delete ' + escapeHtml(classLabel_(ws)) + '?',
     'This permanently removes the class (' + escapeHtml(ws.schoolYearLabel) + ') with its students, subjects and grades - including grades already published to students. This can\'t be undone.',
@@ -2093,6 +2302,7 @@ function confirmDeleteClass_(ws, btn) {
         setClassesTableBusy_(false, btn);
         if (state.currentWorkspaceId === ws.workspaceId) setActiveClass_(null);
         state.workspaces = state.workspaces.filter(function (w) { return w.workspaceId !== ws.workspaceId; });
+        state.archivedWorkspaces = state.archivedWorkspaces.filter(function (w) { return w.workspaceId !== ws.workspaceId; });
         delete state.cache.roster[ws.workspaceId];
         delete state.cache.subjects[ws.workspaceId];
         ensureActiveClass_();
@@ -2107,9 +2317,9 @@ function confirmDeleteClass_(ws, btn) {
 
 /** The Subjects and Students screens both pick a class; choosing one here makes it the active class. */
 function populateClassSelector(selectEl, onChange) {
-  selectEl.innerHTML = state.workspaces.map(function (ws) {
-    return '<option value="' + escapeHtml(ws.workspaceId) + '">' + escapeHtml(ws.schoolYearLabel) + ' · ' + escapeHtml(classLabel_(ws)) + '</option>';
-  }).join('');
+  var option = function (ws) { return '<option value="' + escapeHtml(ws.workspaceId) + '">' + escapeHtml(ws.schoolYearLabel) + ' · ' + escapeHtml(classLabel_(ws)) + '</option>'; };
+  selectEl.innerHTML = state.workspaces.map(option).join('') +
+    (state.archivedWorkspaces.length > 0 ? '<optgroup label="Archived">' + state.archivedWorkspaces.map(option).join('') + '</optgroup>' : '');
   if (state.currentWorkspaceId) selectEl.value = state.currentWorkspaceId;
   selectEl.onchange = function () {
     setActiveClass_(selectEl.value);
@@ -2777,9 +2987,48 @@ document.getElementById('gradesArea').addEventListener('click', function (e) {
 
 document.getElementById('publishBtn').onclick = function () {
   confirmModal('Publish Term ' + state.currentTerm + ' grades?', 'These grades will become visible to students immediately, and will be locked: they can\'t be edited or overwritten by an import until you unpublish them.', 'Publish', function () {
-    call('clientPublish_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function () { invalidateSubjectsCache_(); loadReview(true); showToast('Published and locked.', 'success'); }, function (err) { showToast(err, 'error'); }, { button: document.getElementById('publishBtn') });
+    call('clientPublish_', [state.sessionToken, state.currentClassSubjectId, state.currentTerm], function () { invalidateSubjectsCache_(); loadReview(true); showToast('Published and locked.', 'success'); openAnnouncement_(true); }, function (err) { showToast(err, 'error'); }, { button: document.getElementById('publishBtn') });
   });
 };
+
+// ---------- Announce: a ready-made message to send to the class group chat once grades are published ----------
+// Learners have no email or phone on file, so the teacher tells them. The message never contains a grade.
+
+function announcementText_() {
+  var ws = (state.workspaces || []).filter(function (w) { return w.workspaceId === state.currentWorkspaceId; })[0] || {};
+  var subject = (state.currentSubject && state.currentSubject.subjectName) || document.getElementById('subjectTitle').textContent || 'this subject';
+  var grade = ws.gradeLevel ? 'Grade ' + String(ws.gradeLevel).replace(/^grade\s*/i, '') : '';
+  var cls = [grade, ws.section].filter(Boolean).join(' - ');
+  var link = new URL('student.html', window.location.href).href;
+  return 'Good day' + (cls ? ', ' + cls : '') + '!\n\n' +
+    'Your Term ' + state.currentTerm + ' grades in ' + subject + ' are now available.\n\n' +
+    'To view them, open: ' + link + '\n' +
+    'Log in with your LRN and surname, then enter your PIN. If it is your first time, you will create a 6-digit PIN.\n\n' +
+    'Please message me if you have any questions.';
+}
+
+function openAnnouncement_(justPublished) {
+  var canShare = typeof navigator.share === 'function';
+  var modal = openModal_(
+    '<h3 style="margin-top:0">' + (justPublished ? 'Grades Published' : 'Announce to Your Class') + '</h3>' +
+    '<p style="margin-top:0">' + (justPublished ? 'Let your learners know. ' : '') + 'Copy this message and send it to your class group chat. You can edit it first. It does not include any grades.</p>' +
+    '<textarea id="announceText" rows="10" style="width:100%; box-sizing:border-box" data-autofocus>' + escapeHtml(announcementText_()) + '</textarea>' +
+    '<div class="actions" style="margin-top:12px">' +
+    '<button class="btn secondary" id="announceClose" type="button">Close</button>' +
+    (canShare ? '<button class="btn secondary" id="announceShare" type="button">Share</button>' : '') +
+    '<button class="btn" id="announceCopy" type="button">Copy Message</button></div>');
+  var area = modal.querySelector('#announceText');
+  modal.querySelector('#announceClose').onclick = closeModal_;
+  modal.querySelector('#announceCopy').onclick = function () {
+    var done = function () { showToast('Copied. Paste it in your class group chat.', 'success'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(area.value).then(done, function () { area.select(); document.execCommand('copy'); done(); });
+    } else { area.select(); document.execCommand('copy'); done(); }
+  };
+  if (canShare) modal.querySelector('#announceShare').onclick = function () { navigator.share({ text: area.value }).catch(function () { /* cancelled */ }); };
+}
+
+document.getElementById('announceBtn').onclick = function () { openAnnouncement_(false); };
 
 document.getElementById('unpublishBtn').onclick = function () {
   confirmModal('Unpublish Term ' + state.currentTerm + ' grades?', 'Students will no longer be able to see these grades, and they become editable again. Nothing is deleted.', 'Unpublish', function () {
@@ -2814,6 +3063,8 @@ document.getElementById('ecrUploadBtn').onclick = function () {
   var area = document.getElementById('ecrImportArea');
   if (!file) { area.innerHTML = '<div class="msg error">Choose a file first.</div>'; return; }
   if (file.size > 10 * 1024 * 1024) { area.innerHTML = '<div class="msg error">That file is larger than 10 MB, which is too big for an E-CR. Please check you chose the right file.</div>'; return; }
+
+  if (!Offline.status().online) { area.innerHTML = '<div class="msg error">Importing an E-CR needs an internet connection. Connect and try again.</div>'; return; }
 
   area.innerHTML = '<div class="summary-line"><span class="api-spinner"></span>Uploading and checking your file…</div>';
   var uploadBtn = document.getElementById('ecrUploadBtn');
@@ -3322,6 +3573,7 @@ function renderSyncChip_(st) {
   else if (st.syncing) { text = 'Syncing\u2026'; cls = 'waiting'; }
   else if (!st.online) { text = 'Offline' + (st.pending ? ' \u2022 ' + st.pending + ' Waiting' : ''); cls = 'offline'; }
   else if (st.pending > 0) { text = st.pending + ' Waiting \u2022 Sync Now'; cls = 'waiting'; }
+  else if (st.downloading) { text = 'Preparing Offline Data\u2026 ' + Math.min(st.dlDone + 1, st.dlTotal) + ' of ' + st.dlTotal; cls = 'waiting'; }
   chip.hidden = !text;
   chip.textContent = text;
   chip.className = 'sync-chip ' + cls;
@@ -3386,9 +3638,12 @@ function renderOfflinePanel_() {
   var line = function (cls, text) { return '<div class="' + cls + '">' + escapeHtml(text) + '</div>'; };
 
   var html;
-  if (times.length === 0) html = line('bad', 'No data are downloaded for offline use.');
+  if (st.downloading) html = line('warn', 'Preparing offline data\u2026 ' + Math.min(st.dlDone + 1, st.dlTotal) + ' of ' + st.dlTotal + '. Please stay online until it finishes.');
+  else if (times.length === 0) html = line('bad', 'No data are downloaded for offline use.');
   else if (times.length < ids.length) html = line('bad', 'Some classes are not downloaded for offline use.');
   else html = line('ok', 'Data last downloaded on ' + fmtDateTime_(Math.min.apply(null, times)) + '.');
+
+  if (!st.downloading && st.dlFailed > 0) html += line('bad', st.dlFailed + ' class' + (st.dlFailed === 1 ? '' : 'es') + ' could not be downloaded. Trying again automatically; or tap the button below.');
 
   if (st.issues > 0) html += line('bad', st.issues + ' offline change' + (st.issues === 1 ? ' was' : 's were') + ' not saved. Tap the red notice at the top.');
   else if (st.pending > 0) html += line('warn', st.pending + ' grade change' + (st.pending === 1 ? ' is' : 's are') + ' waiting to be synced.');
@@ -3409,6 +3664,48 @@ document.getElementById('offlineDownloadBtn').onclick = function () {
     if (r.ok === r.total) showToast('Ready for offline use.', 'success');
     else showToast('Downloaded ' + r.ok + ' of ' + r.total + ' classes. Try again for the rest.', 'error');
   });
+};
+
+// ---------- Privacy: download everything held about this account / delete the account ----------
+
+document.getElementById('downloadMyDataBtn').onclick = function () {
+  var btn = this;
+  call('clientExportMyData_', [state.sessionToken], function (data) {
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'markado-my-data-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+    showToast('Your data was downloaded.', 'success');
+  }, function (err) { showToast(err, 'error'); }, { button: btn });
+};
+
+document.getElementById('deleteAccountBtn').onclick = function () {
+  var waiting = Offline.status().pending;
+  openModal_('<h3 style="margin-top:0">Delete My Account</h3>' +
+    '<p>This permanently deletes your account and everything in it: your classes, learners, subjects, grades and school details. Your learners will no longer be able to see their grades. <b>This cannot be undone.</b> Any remaining subscription time is lost.</p>' +
+    '<p style="font-size:0.9rem">Tip: use <b>Download My Data</b> first if you want a copy.</p>' +
+    (waiting > 0 ? '<div class="msg warn">' + waiting + ' grade change(s) have not been sent yet and will be lost.</div>' : '') +
+    '<div id="delMsg"></div>' +
+    '<div class="field"><label for="delPassword">Your Password</label><input id="delPassword" type="password" autocomplete="current-password"></div>' +
+    '<div class="field"><label for="delConfirm">Type DELETE to confirm</label><input id="delConfirm" type="text" autocomplete="off"></div>' +
+    '<div class="actions"><button class="btn secondary" id="delCancel" type="button">Cancel</button>' +
+    '<button class="btn danger" id="delGo" type="button">Delete My Account</button></div>');
+  document.getElementById('delCancel').onclick = closeModal_;
+  var goBtn = document.getElementById('delGo');
+  goBtn.onclick = function () {
+    var msg = document.getElementById('delMsg');
+    var pw = document.getElementById('delPassword').value;
+    if (!pw) { msg.innerHTML = '<div class="msg error">Enter your password.</div>'; return; }
+    if (document.getElementById('delConfirm').value.trim() !== 'DELETE') { msg.innerHTML = '<div class="msg error">Type DELETE to confirm.</div>'; return; }
+    call('clientDeleteMyAccount_', [state.sessionToken, pw], function () {
+      closeModal_();
+      alert('Your account and data have been deleted.');
+      endSession_();
+    }, function (err) { msg.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; }, { button: goBtn });
+  };
 };
 
 Offline.init({ getToken: function () { return state.sessionToken; }, onChange: renderSyncChip_, onSynced: onOfflineSynced_ });
@@ -3449,7 +3746,8 @@ function printPages_() {
 }
 
 function loadPrintScreen_() {
-  var empty = state.workspaces.length === 0;
+  var everyClass = allWorkspaces_();
+  var empty = everyClass.length === 0;
   document.getElementById('printEmpty').style.display = empty ? '' : 'none';
   document.getElementById('printBody').style.display = empty ? 'none' : '';
   document.getElementById('printBtn').style.display = empty ? 'none' : '';
@@ -3457,10 +3755,10 @@ function loadPrintScreen_() {
   if (empty) return;
 
   var sel = document.getElementById('printClass');
-  var wanted = printState_.workspaceId || state.currentWorkspaceId || state.workspaces[0].workspaceId;
-  if (!state.workspaces.some(function (w) { return w.workspaceId === wanted; })) wanted = state.workspaces[0].workspaceId;
-  sel.innerHTML = state.workspaces.map(function (w) {
-    var label = classLabel_(w) + (w.schoolYearLabel ? ' (' + w.schoolYearLabel + ')' : '');
+  var wanted = printState_.workspaceId || state.currentWorkspaceId || everyClass[0].workspaceId;
+  if (!everyClass.some(function (w) { return w.workspaceId === wanted; })) wanted = everyClass[0].workspaceId;
+  sel.innerHTML = everyClass.map(function (w) {
+    var label = classLabel_(w) + (w.schoolYearLabel ? ' (' + w.schoolYearLabel + ')' : '') + (w.status === 'archived' ? ' - archived' : '');
     return '<option value="' + escapeHtml(w.workspaceId) + '"' + (w.workspaceId === wanted ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
   }).join('');
   fetchPrintData_(wanted);
@@ -3816,6 +4114,7 @@ document.getElementById('saveHomeBtn').onclick = function () {
     homeLogoDraft_ = undefined;
     invalidateWorkspaces_(); // the school name was copied onto every class
     applyHomeLock_();
+    Offline.refreshNow(); // report cards carry the school details, so refresh the offline copy
     if (wasLocked) {
       showToast('Saved. All tabs are now unlocked.', 'success');
       document.querySelector('.nav-item[data-screen="classes"]').click();

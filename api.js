@@ -61,7 +61,7 @@ var API_TIMEOUTS_MS_ = {
   clientOnboard_: 90000, clientPublish_: 90000, clientUnpublish_: 90000,
   clientPreviewEcrUpload_: 180000, clientConfirmEcrUpload_: 180000, clientSaveManualGrades_: 90000,
   clientGetDashboardStats_: 90000, clientListTeachersForAdmin_: 90000, clientBulkApplyAdminAction_: 120000,
-  clientWipeAllDataForTesting_: 120000,
+  clientWipeAllDataForTesting_: 120000, clientExportMyData_: 120000, clientDeleteMyAccount_: 120000, clientPromoteClass_: 120000,
   clientListClassSubjects_: 60000, clientGetWorkspaceBundle_: 60000, clientGetOfflinePack_: 120000, clientSyncOfflineGrades_: 180000, clientSaveSchoolProfile_: 60000, clientImportStudents_: 90000, clientDeleteWorkspace_: 90000,
 };
 

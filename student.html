@@ -128,12 +128,14 @@
   .pin-boxes {
 	display: flex;
 	justify-content: center;
-	gap: 10px;
+	gap: 8px;
   }
 
   .pin-boxes input {
-	width: 48px;
-	height: 56px;
+	flex: 1 1 0;
+	min-width: 0;
+	max-width: 46px;
+	height: 54px;
 	padding: 0;
 	border: 1px solid var(--light);
 	border-radius: 6px;
@@ -431,6 +433,17 @@
 	margin-bottom: 8px;
   }
   
+
+  .header-actions { display:flex; align-items:center; gap:14px; }
+  .notif-btn { position:relative; display:none; width:38px; height:38px; padding:0; align-items:center; justify-content:center; opacity:1 !important; }
+  .notif-btn svg { width:24px; height:24px; fill:none; stroke:var(--white); stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+  .notif-dot { position:absolute; top:5px; right:6px; width:10px; height:10px; border-radius:50%; background:#D9534F; border:2px solid var(--darkest); display:none; }
+  .notif-panel { position:fixed; top:68px; right:12px; left:12px; max-width:340px; margin-left:auto; background:var(--white); color:var(--black); border:1px solid var(--border, #D7E1EA); border-radius:12px; box-shadow:0 8px 28px rgba(0,0,0,0.25); z-index:50; display:none; }
+  .notif-panel h4 { margin:0; padding:12px 14px; font-size:0.95rem; border-bottom:1px solid var(--border, #D7E1EA); }
+  .notif-panel ul { list-style:none; margin:0; padding:6px 0; max-height:50vh; overflow:auto; }
+  .notif-panel li { padding:9px 14px; font-size:0.9rem; }
+  .notif-panel li small { display:block; color:var(--text-muted, #5C6773); font-size:0.78rem; }
+  .notif-panel .notif-empty { padding:16px 14px; color:var(--text-muted, #5C6773); font-size:0.9rem; }
 </style>
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <script src="config.js"></script>
@@ -442,7 +455,14 @@
   <a href="index.html">
   <img src="assets/logo-banner.svg" alt="Markado" class="header-logo">
   </a>
-  <button id="logoutBtn" style="display:none">Log Out</button>
+  <div class="header-actions">
+    <button id="notifBtn" class="notif-btn" type="button" aria-label="Notifications" aria-haspopup="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+      <span class="notif-dot" id="notifDot"></span>
+    </button>
+    <button id="logoutBtn" style="display:none">Log Out</button>
+  </div>
+  <div class="notif-panel" id="notifPanel" role="dialog" aria-label="Notifications"></div>
 </header>
 
 <main>
@@ -465,12 +485,14 @@
   <section id="screen-pin-setup" class="screen">
     <div class="card" style="margin-top:20px">
       <h2 style="margin-top:0">Create a PIN</h2>
-      <p style="color:#555; font-size:0.9rem; margin-top:-8px">Set a 4-digit PIN.</p>
+      <p style="color:#555; font-size:0.9rem; margin-top:-8px">Set a 6-digit PIN.</p>
       <div id="pinSetupMsg"></div>
       <form id="pinSetupForm">
         <div class="field">
           <label>New PIN</label>
           <div class="pin-boxes" data-hidden="pinSetupInput">
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
             <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
             <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
             <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
@@ -481,6 +503,8 @@
         <div class="field">
           <label>Confirm PIN</label>
           <div class="pin-boxes" data-hidden="pinSetupConfirmInput">
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
             <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
             <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
             <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
@@ -498,12 +522,14 @@
   <section id="screen-pin-verify" class="screen">
     <div class="card" style="margin-top:20px">
       <h2 style="margin-top:0">Enter your PIN</h2>
-      <p style="color:#555; font-size:0.9rem; margin-top:-8px">Enter the 4-digit PIN.</p>
+      <p style="color:#555; font-size:0.9rem; margin-top:-8px">Enter your PIN.</p>
       <div id="pinVerifyMsg"></div>
       <form id="pinVerifyForm">
         <div class="field">
           <label>PIN</label>
           <div class="pin-boxes" data-hidden="pinVerifyInput">
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
+            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
             <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
             <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
             <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="off">
@@ -534,6 +560,7 @@
     <div id="gradesContainer"></div>
   </section>
 
+  <p style="text-align:center; font-size:0.8rem; margin:24px 0"><a href="privacy.html" style="color:inherit">Privacy Notice</a> &middot; <a href="terms.html" style="color:inherit">Terms of Use</a></p>
 </main>
 
 <script>
@@ -594,6 +621,8 @@ function backToLogin_() {
   gradesData = [];
   document.getElementById('viewControls').style.display = 'none';
   document.getElementById('logoutBtn').style.display = 'none';
+  document.getElementById('notifBtn').style.display = 'none';
+  document.getElementById('notifPanel').style.display = 'none';
   show('screen-login');
   return true;
 }
@@ -647,7 +676,7 @@ document.getElementById('pinSetupForm').onsubmit = function (e) {
   var confirmPin = document.getElementById('pinSetupConfirmInput').value.trim();
   var msgEl = document.getElementById('pinSetupMsg');
   msgEl.innerHTML = '';
-  if (!/^\d{4}$/.test(pin)) { msgEl.innerHTML = '<div class="msg error">Enter a 4-digit PIN.</div>'; return; }
+  if (!/^\d{6}$/.test(pin)) { msgEl.innerHTML = '<div class="msg error">Enter a 6-digit PIN.</div>'; return; }
   if (pin !== confirmPin) { msgEl.innerHTML = '<div class="msg error">Those two PINs don\'t match.</div>'; return; }
 
   call('clientCompleteStudentPinSetup_', [pendingToken, pin, confirmPin], function (data) {
@@ -665,7 +694,7 @@ document.getElementById('pinVerifyForm').onsubmit = function (e) {
   var pin = document.getElementById('pinVerifyInput').value.trim();
   var msgEl = document.getElementById('pinVerifyMsg');
   msgEl.innerHTML = '';
-  if (!/^\d{4}$/.test(pin)) { msgEl.innerHTML = '<div class="msg error">Enter your 4-digit PIN.</div>'; return; }
+  if (!/^(\d{4}|\d{6})$/.test(pin)) { msgEl.innerHTML = '<div class="msg error">Enter your PIN.</div>'; return; }
 
   call('clientVerifyStudentPin_', [pendingToken, pin], function (data) {
     pendingToken = null;
@@ -848,6 +877,74 @@ document.getElementById('viewAllBtn').onclick = function () { setViewMode_('all'
 document.getElementById('viewTermBtn').onclick = function () { setViewMode_('term'); };
 document.getElementById('termSelect').onchange = function () { selectedTerm = Number(this.value); renderGrades_(); };
 
+// ---------- Notifications: grades published since this learner last opened the bell, on this device ----------
+// The device remembers only the publish time of the newest grade the learner has seen, under a hashed key, so a shared
+// computer does not keep anyone's LRN. The first time on a device nothing is unread, because nothing there is "new" yet.
+
+var notif_ = { key: null, newest: '', unread: [] };
+
+function seenKey_(lrn) {
+  var h = 5381, s = String(lrn || '');
+  for (var i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+  return 'markado_seen_' + h.toString(36);
+}
+
+/** Works out the unread notifications: [{ subject, term, at }], newest first. Does not mark anything as read. */
+function findNewGrades_(enrollments) {
+  var items = [], newest = '';
+  var key = enrollments.length > 0 ? seenKey_(enrollments[0].lrn) : null;
+  var lastSeen = '';
+  try { lastSeen = key ? (localStorage.getItem(key) || '') : ''; } catch (e) { /* storage blocked: no notifications */ }
+  enrollments.forEach(function (e) {
+    e.subjects.forEach(function (s) {
+      s.terms.forEach(function (t) {
+        var at = t.publishedAt || '';
+        if (at > newest) newest = at;
+        if (lastSeen && at > lastSeen) items.push({ subject: s.subjectName, term: Number(t.term), at: at });
+      });
+    });
+  });
+  items.sort(function (a, b) { return a.at < b.at ? 1 : a.at > b.at ? -1 : 0; });
+  if (key && !lastSeen && newest) { try { localStorage.setItem(key, newest); } catch (e) { /* ignore */ } } // first time on this device: start from here
+  return { key: key, newest: newest, unread: items };
+}
+
+function markNotificationsRead_() {
+  try { if (notif_.key && notif_.newest) localStorage.setItem(notif_.key, notif_.newest); } catch (e) { /* ignore */ }
+  document.getElementById('notifDot').style.display = 'none';
+}
+
+function notifPanelHtml_(items) {
+  var body = items.length === 0
+    ? '<div class="notif-empty">You are all caught up. No new grades.</div>'
+    : '<ul>' + items.map(function (i) {
+        var d = i.at ? new Date(i.at) : null;
+        var when = d && !isNaN(d.getTime()) ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
+        return '<li>New grade published: <b>' + escapeHtml(i.subject) + '</b> &middot; Term ' + i.term + (when ? '<small>' + escapeHtml(when) + '</small>' : '') + '</li>';
+      }).join('') + '</ul>';
+  return '<h4>Notifications</h4>' + body;
+}
+
+function setupNotifications_(enrollments) {
+  var found = findNewGrades_(enrollments);
+  notif_ = found;
+  var btn = document.getElementById('notifBtn'), panel = document.getElementById('notifPanel');
+  btn.style.display = 'inline-flex';
+  document.getElementById('notifDot').style.display = found.unread.length > 0 ? 'block' : 'none';
+  panel.style.display = 'none';
+  btn.onclick = function (ev) {
+    ev.stopPropagation();
+    if (panel.style.display === 'block') { panel.style.display = 'none'; return; }
+    panel.innerHTML = notifPanelHtml_(notif_.unread);
+    panel.style.display = 'block';
+    markNotificationsRead_(); // the list stays on screen; the dot goes away
+  };
+}
+document.addEventListener('click', function (ev) {
+  var panel = document.getElementById('notifPanel');
+  if (panel && panel.style.display === 'block' && !panel.contains(ev.target)) panel.style.display = 'none';
+});
+
 function loadGrades() {
   var container = document.getElementById('gradesContainer');
   document.getElementById('viewControls').style.display = 'none';
@@ -862,6 +959,7 @@ function loadGrades() {
       return;
     }
     document.getElementById('viewControls').style.display = 'block';
+    setupNotifications_(enrollments);
     renderGrades_();
   }, function (err) {
 

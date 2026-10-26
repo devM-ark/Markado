@@ -7,7 +7,7 @@
 
 var CACHE = 'markado-shell-v1';
 var SHELL = [
-  'teacher.html', 'teacher-login.html', 'config.js', 'api.js', 'offline.js', 'sf9.js', 'sf9-frames.js',
+  'teacher.html', 'teacher-login.html', 'config.js', 'api.js', 'offline.js', 'privacy.html', 'terms.html', 'sf9.js', 'sf9-frames.js',
   'manifest.webmanifest', 'icon-192.png', 'icon-512.png',
   'assets/icons/home.svg', 'assets/icons/print.svg',
 ];

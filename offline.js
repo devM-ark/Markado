@@ -365,6 +365,7 @@ var Offline = (function () {
     return {
       online: isOnline(), pending: counts.pending, issues: counts.issues, syncing: syncing, lastSyncAt: lastSyncAt,
       enabled: enabled,
+      downloading: dl.running, dlDone: dl.done, dlTotal: dl.total, dlFailed: dl.failed,
     };
   }
   function emit() { try { cfg.onChange(status()); } catch (e) { console.error(e); } }
@@ -480,13 +481,13 @@ var Offline = (function () {
   function writePack_(wsId) { var p = readPacks_(); p[wsId] = Date.now(); try { localStorage.setItem(PACK_KEY, JSON.stringify(p)); } catch (e) { /* ignore */ } }
   function lastDownload(wsId) { return readPacks_()[wsId] || 0; }
 
-  function storePack_(pack) {
+  /** Stores one pack, or one part of it (base = subjects/roster/report cards, or the sheets of a single term). */
+  function storePack_(pack, markDone) {
     var ws = pack.workspaceId;
-    var puts = [
-      putRaw_('clientListClassSubjects_', [null, ws], pack.subjects),
-      putRaw_('clientListRoster_', [null, ws], pack.roster),
-      putRaw_('clientGetClassReportCards_', [null, ws], pack.reportCards),
-    ];
+    var puts = [];
+    if (pack.subjects) puts.push(putRaw_('clientListClassSubjects_', [null, ws], pack.subjects));
+    if (pack.roster) puts.push(putRaw_('clientListRoster_', [null, ws], pack.roster));
+    if (pack.reportCards) puts.push(putRaw_('clientGetClassReportCards_', [null, ws], pack.reportCards));
     // grade sheets: apply anything still waiting to be sent, so a refresh never undoes typing that hasn't synced yet
     var pendingP = listOutbox_().catch(function () { return []; });
     return pendingP.then(function (pending) {
@@ -499,42 +500,108 @@ var Offline = (function () {
       return Promise.all(puts);
     }).then(function () {
       if (pack.serverNow) noteServerTime(pack.serverNow);
-      writePack_(ws);
+      if (markDone !== false) writePack_(ws);
+    });
+  }
+
+  function sleep_(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+  /** One pack request; resolves { ok, data }. part: undefined = whole class, 'base', or a term number. */
+  function fetchPart_(wsId, part) {
+    var args = [cfg.getToken(), wsId];
+    if (part !== undefined) args.push(part);
+    return callP_('clientGetOfflinePack_', args);
+  }
+
+  /** Whole class in one call (2 tries); if that keeps failing -- a big class can exceed one Apps Script call -- fetch it in smaller parts. */
+  function downloadClassOnce_(wsId) {
+    var tryWhole = function (n) {
+      return fetchPart_(wsId).then(function (res) {
+        if (res.ok) return storePack_(res.data).then(function () { return true; }, function () { return false; });
+        if (!isOnline() || n >= 2) return false;
+        return sleep_(2000 * n).then(function () { return tryWhole(n + 1); });
+      });
+    };
+    return tryWhole(1).then(function (ok) {
+      if (ok || !isOnline()) return ok;
+      var parts = ['base', 1, 2, 3];
+      return parts.reduce(function (chain, part) {
+        return chain.then(function (all) {
+          if (!all) return false;
+          var attempt = function (n) {
+            return fetchPart_(wsId, part).then(function (res) {
+              if (res.ok) return storePack_(res.data, false).then(function () { return true; }, function () { return false; });
+              if (!isOnline() || n >= 2) return false;
+              return sleep_(2000).then(function () { return attempt(n + 1); });
+            });
+          };
+          return attempt(1);
+        });
+      }, Promise.resolve(true)).then(function (all) { if (all) writePack_(wsId); return all; });
     });
   }
 
   function downloadClass(wsId) {
     if (!enabled || !owner || !isOnline()) return Promise.resolve(false);
-    return callP_('clientGetOfflinePack_', [cfg.getToken(), wsId]).then(function (res) {
-      if (!res.ok) return false;
-      return storePack_(res.data).then(function () { emit(); return true; }, function () { return false; }); // emit: lets the Settings panel redraw ("Data last downloaded on ...")
-    });
-  }
-
-  /** Downloads each class one after the other. onProgress(done, total). */
-  function downloadAll(workspaceIds, onProgress) {
-    var done = 0, okCount = 0;
-    var total = workspaceIds.length;
-    if (onProgress) onProgress(0, total);
-    return workspaceIds.reduce(function (chain, id) {
-      return chain.then(function () {
-        return downloadClass(id).then(function (ok) { done++; if (ok) okCount++; if (onProgress) onProgress(done, total); });
-      });
-    }, Promise.resolve()).then(function () { return { ok: okCount, total: total }; });
+    return downloadClassOnce_(wsId).then(function (ok) { emit(); return ok; }); // emit: lets the Settings panel redraw ("Data last downloaded on ...")
   }
 
   var knownWorkspaceIds_ = [];
-  function setWorkspaces(ids) { knownWorkspaceIds_ = ids.slice(); }
+  var dl = { running: false, done: 0, total: 0, failed: 0 };
+  var dlPromise = null, dlRetryTimer = null, dlRetryCount = 0;
 
-  /** Quietly keeps every class's offline copy from going stale: only the classes not downloaded in the last few hours. */
+  /** Downloads the given classes one after the other, sharing one progress state; a second request while one runs just joins it. */
+  function runDownloads_(ids, onProgress) {
+    if (dlPromise) return dlPromise.then(function (r) { if (onProgress) onProgress(r.total, r.total); return r; });
+    dl = { running: true, done: 0, total: ids.length, failed: 0 };
+    if (onProgress) onProgress(0, ids.length);
+    emit();
+    var okCount = 0;
+    dlPromise = ids.reduce(function (chain, id) {
+      return chain.then(function () {
+        return downloadClass(id).then(function (ok) {
+          dl.done++; if (ok) okCount++; else dl.failed++;
+          if (onProgress) onProgress(dl.done, dl.total);
+          emit();
+        });
+      });
+    }, Promise.resolve()).then(function () {
+      var result = { ok: okCount, total: ids.length };
+      dl.running = false; dlPromise = null;
+      emit();
+      if (dl.failed > 0) scheduleDownloadRetry_(); else dlRetryCount = 0;
+      return result;
+    });
+    return dlPromise;
+  }
+
+  /** Failed classes are tried again after 30 s, 1 min, 2 min, 4 min, then left for the next trigger (login, reconnect, return to the app). */
+  function scheduleDownloadRetry_() {
+    if (dlRetryTimer || dlRetryCount >= 4) return;
+    var wait = 30000 * Math.pow(2, dlRetryCount);
+    dlRetryCount++;
+    dlRetryTimer = setTimeout(function () { dlRetryTimer = null; refreshAllPacks_(false); }, wait);
+  }
+
+  function downloadAll(workspaceIds, onProgress) { return whenReady_().then(function () { return runDownloads_(workspaceIds, onProgress); }); }
+
+  function setWorkspaces(ids) {
+    knownWorkspaceIds_ = ids.slice();
+    // a class with no offline copy yet (first login, or a class just added) is downloaded straight away
+    if (ids.some(function (id) { return !lastDownload(id); })) refreshAllPacks_(false);
+  }
+
+  /** Keeps every class's offline copy from going stale: classes never downloaded or older than a few hours (all of them when force). */
   function refreshAllPacks_(force) {
-    if (!enabled || !isOnline()) return Promise.resolve();
-    var due = knownWorkspaceIds_.filter(function (id) { return force || Date.now() - lastDownload(id) > PACK_MAX_AGE_MS; });
-    return due.reduce(function (chain, id) {
-      return chain.then(function () { return new Promise(function (r) { setTimeout(r, 1500); }).then(function () { return downloadClass(id); }); });
-    }, Promise.resolve());
+    return whenReady_().then(function () {
+      if (!enabled || !owner || !cfg.getToken() || !isOnline() || dl.running) return;
+      var due = knownWorkspaceIds_.filter(function (id) { return force || !lastDownload(id) || Date.now() - lastDownload(id) > PACK_MAX_AGE_MS; });
+      if (due.length === 0) return;
+      return runDownloads_(due);
+    });
   }
   function autoRefresh() { return refreshAllPacks_(false); }
+  function refreshNow() { dlRetryCount = 0; return refreshAllPacks_(true); }
 
 
   // ---------- Leaving ----------
@@ -543,6 +610,8 @@ var Offline = (function () {
   function clearForLogout() {
     // Stop first: a request still in flight when the session ends must not put the old teacher's data back after the wipe.
     enabled = false;
+    if (dlRetryTimer) { clearTimeout(dlRetryTimer); dlRetryTimer = null; }
+    knownWorkspaceIds_ = [];
     var wipe = openDb().then(function () { return run('cache', 'readwrite', function (s) { return s.clear(); }); }).catch(function () {});
     try { localStorage.removeItem(OWNER_KEY); localStorage.removeItem(PACK_KEY); } catch (e) { /* ignore */ }
     owner = '';
@@ -563,7 +632,17 @@ var Offline = (function () {
       if (owner && counts.pending > 0) scheduleSync_(true);
     }).catch(function () { enabled = false; });
 
-    window.addEventListener('online', function () { netDown = false; emit(); scheduleSync_(true); });
+    // ask the browser not to evict the saved copy when storage runs low
+    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { /* ignore */ }
+
+    window.addEventListener('online', function () { netDown = false; emit(); scheduleSync_(true); dlRetryCount = 0; setTimeout(autoRefresh, 2000); });
+    // coming back to the app after a while: top up anything that has gone stale
+    var hiddenAt = 0;
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { hiddenAt = Date.now(); return; }
+      if (hiddenAt && Date.now() - hiddenAt > 30 * 60000) autoRefresh();
+      hiddenAt = 0;
+    });
     window.addEventListener('offline', function () { emit(); });
     pendingTimer = setInterval(function () { if (counts.pending > 0 && isOnline()) sync(); }, 45000);
   }
@@ -583,7 +662,7 @@ var Offline = (function () {
   return {
     init: init, setOwner: setOwner, setLicense: setLicense, canEdit: canEdit, now: now,
     status: status, sync: sync, listIssues: listIssues, dismissIssue: dismissIssue, dismissAllIssues: dismissAllIssues,
-    downloadClass: downloadClass, downloadAll: downloadAll, setWorkspaces: setWorkspaces, autoRefresh: autoRefresh, lastDownload: lastDownload,
+    downloadClass: downloadClass, downloadAll: downloadAll, setWorkspaces: setWorkspaces, autoRefresh: autoRefresh, refreshNow: refreshNow, lastDownload: lastDownload,
     clearForLogout: clearForLogout, refreshCounts: refreshCounts,
     // exposed for tests
     _patchSheet: patchSheet_, _validate: validateEntries_,

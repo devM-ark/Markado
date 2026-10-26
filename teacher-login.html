@@ -189,6 +189,15 @@
 	display: none;
   }
 
+  #rememberField { margin: 2px 0 14px; font-size: 0.9rem; }
+  #rememberField label { display: flex; gap: 8px; align-items: center; font-weight: normal; cursor: pointer; }
+  #rememberField input { width: auto; flex: none; }
+  #consentField { display: none; margin: 4px 0 14px; font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; }
+  #consentField label { display: flex; gap: 8px; align-items: flex-start; font-weight: normal; cursor: pointer; }
+  #consentField input { margin-top: 3px; flex: none; width: auto; }
+  #consentField a, .legal-links a { color: var(--primary); }
+  .legal-links { text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 14px; }
+
   .modal-overlay {
 	position: fixed;
 	inset: 0;
@@ -254,6 +263,12 @@
       </div>
       <div class="field"><label>Email</label><input id="authEmail" type="email" autocomplete="username"></div>
       <div class="field"><label>Password</label><input id="authPassword" type="password" autocomplete="current-password"></div>
+      <div id="rememberField">
+        <label><input type="checkbox" id="rememberCheck"><span>Remember me on this device</span></label>
+      </div>
+      <div id="consentField">
+        <label><input type="checkbox" id="consentCheck"><span>I have read and agree to the <a href="privacy.html" target="_blank" rel="noopener">Privacy Notice</a> and <a href="terms.html" target="_blank" rel="noopener">Terms of Use</a>. I understand that I am responsible for the learner information I enter.</span></label>
+      </div>
       <button class="btn" type="submit" id="authSubmit">Log In</button>
     </form>
     <div class="toggle-auth">
@@ -261,6 +276,7 @@
       <button id="toggleAuthBtn">Create an Account.</button>
     </div>
     <div class="toggle-auth"><button id="forgotPasswordBtn">Forgot Password?</button></div>
+    <div class="legal-links"><a href="privacy.html" target="_blank" rel="noopener">Privacy Notice</a> &middot; <a href="terms.html" target="_blank" rel="noopener">Terms of Use</a></div>
   </div>
 
   <div id="confirmCodeOverlay" class="modal-overlay" style="display:none">
@@ -291,11 +307,17 @@
       document.documentElement.setAttribute('data-theme', 'dark');
     }
 
+    // "Remember me" keeps the login in this browser (localStorage) for up to 30 days; without it the login lives only in this tab (sessionStorage) and for at most 12 hours.
+    function getTeacherSession_() { return localStorage.getItem('ogv_teacher_session') || sessionStorage.getItem('ogv_teacher_session'); }
+
     // Already logged in? Skip straight to the dashboard.
-    if (localStorage.getItem('ogv_teacher_session')) {
+    if (getTeacherSession_()) {
       window.location.href = 'teacher.html';
     }
 
+    document.getElementById('rememberCheck').checked = localStorage.getItem('markado_remember_pref') === '1';
+
+    var PRIVACY_TERMS_VERSION = '2026-10-13'; // keep in step with PRIVACY_TERMS_VERSION in PrivacyData.gs
     var isRegisterMode = false;
     var pendingTeacherEmail = '';
     var pendingTeacherRegToken = null;
@@ -382,6 +404,8 @@
     function setAuthMode_(register) {
       isRegisterMode = !!register;
       document.getElementById('registerFields').style.display = isRegisterMode ? 'block' : 'none';
+      document.getElementById('consentField').style.display = isRegisterMode ? 'block' : 'none';
+      document.getElementById('rememberField').style.display = isRegisterMode ? 'none' : 'block';
       document.getElementById('authTitle').textContent = isRegisterMode ? 'Create your Account' : 'Log In';
       document.getElementById('authSubmit').textContent = isRegisterMode ? 'Create Account' : 'Log In';
       document.getElementById('toggleAuthText').textContent = isRegisterMode ? 'Already have an Account?' : 'New Here?';
@@ -407,7 +431,11 @@
       if (isRegisterMode) {
         var fullName = document.getElementById('regFullName').value.trim();
         if (!fullName || !email || !password) return;
-        call('clientRegister_', [fullName, email, password], function (data) {
+        if (!document.getElementById('consentCheck').checked) {
+          msgEl.innerHTML = '<div class="msg error">Please tick the box to agree to the Privacy Notice and Terms of Use.</div>';
+          return;
+        }
+        call('clientRegister_', [fullName, email, password, PRIVACY_TERMS_VERSION], function (data) {
           pendingTeacherEmail = email; // kept (not the password) so the Log In form can be filled in after the code is confirmed
           // Clear credentials from the form now that they've been used —
           // nothing sensitive should linger in visible input fields.
@@ -425,8 +453,12 @@
         }, function (err) { msgEl.innerHTML = '<div class="msg error">' + escapeHtml(err) + '</div>'; }, { button: document.getElementById('authSubmit') });
       } else {
         if (!email || !password) return;
-        call('clientLogin_', [email, password], function (data) {
-          localStorage.setItem('ogv_teacher_session', data.sessionToken);
+        var remember = document.getElementById('rememberCheck').checked;
+        call('clientLogin_', [email, password, remember], function (data) {
+          localStorage.removeItem('ogv_teacher_session');
+          sessionStorage.removeItem('ogv_teacher_session');
+          (remember ? localStorage : sessionStorage).setItem('ogv_teacher_session', data.sessionToken);
+          try { localStorage.setItem('markado_remember_pref', remember ? '1' : '0'); } catch (e) { /* only a tick-box preference */ }
           // Clear credentials before navigating away — they should not sit
           // in the form if the user later hits "back" in their browser.
           document.getElementById('authEmail').value = '';
