@@ -13,17 +13,16 @@
 <script src="sf9-frames.js"></script>
 <script src="sf9.js"></script>
 <style id="sf9Css">
-  .archived-notice { display:none; margin:0 0 14px; padding:10px 14px; border:1px solid var(--border); border-left:4px solid var(--text-muted); border-radius:8px; background:var(--surface); font-size:0.9rem; }
-  body.class-archived[data-nav="students"] .archived-notice, body.class-archived[data-nav="subjects"] .archived-notice { display:block; }
-  body.class-archived[data-nav="students"] #addStudentBtn, body.class-archived[data-nav="students"] #importCsvBtn,
-  body.class-archived[data-nav="subjects"] #addSubjectBtn, body.class-archived[data-nav="subjects"] #saveGradesBtn,
-  body.class-archived[data-nav="subjects"] #publishBtn, body.class-archived[data-nav="subjects"] #unpublishBtn { display:none !important; }
-  .promote-list { max-height:38vh; overflow:auto; border:1px solid var(--border); border-radius:8px; margin:6px 0 10px; }
-  .promote-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:7px 10px; border-bottom:1px solid var(--border); }
-  .promote-row:last-child { border-bottom:none; }
-  .promote-row .promote-name { flex:1; min-width:0; font-size:0.9rem; overflow:hidden; text-overflow:ellipsis; }
-  .promote-row select { flex:none; width:auto; min-width:132px; }
-  .promote-row.is-retain, .promote-row.is-transfer { background:rgba(201,162,39,0.10); }
+  body.class-archived #addStudentBtn, body.class-archived #importCsvBtn, body.class-archived #addSubjectBtn,
+  body.class-archived #saveGradesBtn, body.class-archived #publishBtn, body.class-archived #unpublishBtn { display:none !important; }
+  .promote-list { max-height:40vh; overflow:auto; border:1px solid var(--border); border-radius:8px; margin:6px 0 10px; }
+  .promote-table { width:100%; min-width:560px; border-collapse:collapse; table-layout:fixed; font-size:0.85rem; }
+  .promote-table th { position:sticky; top:0; z-index:1; background:var(--surface); text-align:left; padding:6px 8px; border-bottom:1px solid var(--border); font-size:0.8rem; }
+  .promote-table td { padding:4px 6px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  .promote-table td.pn { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .promote-table th:nth-child(3), .promote-table td:nth-child(3) { border-left:1px solid var(--border); }
+  .promote-table select { width:100%; min-width:0; font-size:0.8rem; padding:4px 2px; }
+  .promote-table td.is-retain, .promote-table td.is-transfer { background:rgba(201,162,39,0.14); }
 </style>
 <style id="sf9PageStyle"></style>
 <style>
@@ -1201,7 +1200,6 @@
   </aside>
 
   <main>
-    <div class="archived-notice" id="archivedNotice"><b>Archived Class.</b> It is read-only. You can view grades and print reports. To change it, restore it on the Classes page.</div>
     <div id="licenseBanner"></div>
 
     <section id="screen-home" class="screen">
@@ -2182,7 +2180,23 @@ function openClassModal_(ws) {
 // (left the school). Retained and transferred-out learners are not added to the new class; they stay in the archived
 // class, with their grades. The class being promoted is archived, and does not count against the plan.
 
-var PROMOTE_CHOICES_ = [['promote', 'Promote'], ['retain', 'Retain'], ['transfer', 'Transferred Out']];
+/** Male | Status | Female | Status. Everyone starts as Promoted (Graduated for Grade 12). */
+function promoteTableHtml_(learners, graduates) {
+  if (learners.length === 0) return '<div class="promote-list"><p class="muted" style="padding:10px; margin:0">This class has no learners.</p></div>';
+  var males = learners.filter(function (l) { return l.sex !== 'F'; }).sort(byName_);
+  var females = learners.filter(function (l) { return l.sex === 'F'; }).sort(byName_);
+  var options = [['promote', graduates ? 'Graduated' : 'Promoted'], ['retain', 'Retained'], ['transfer', 'Transferred Out']]
+    .map(function (c) { return '<option value="' + c[0] + '">' + c[1] + '</option>'; }).join('');
+  var cells = function (l) {
+    if (!l) return '<td class="pn"></td><td class="ps"></td>';
+    return '<td class="pn" title="' + escapeHtml(l.fullName) + '">' + escapeHtml(l.fullName) + '</td>' +
+      '<td class="ps"><select data-enrollment="' + escapeHtml(l.enrollmentId) + '" aria-label="Status of ' + escapeHtml(l.fullName) + '">' + options + '</select></td>';
+  };
+  var rows = '';
+  for (var i = 0; i < Math.max(males.length, females.length); i++) rows += '<tr>' + cells(males[i]) + cells(females[i]) + '</tr>';
+  return '<div class="promote-list"><table class="promote-table"><colgroup><col style="width:32%"><col style="width:18%"><col style="width:32%"><col style="width:18%"></colgroup>' +
+    '<thead><tr><th>Male</th><th>Status</th><th>Female</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
 
 function openPromoteModal_(ws, triggerBtn) {
   if (!Offline.status().online) { showToast('Promoting a class needs an internet connection.', 'error'); return; }
@@ -2193,9 +2207,6 @@ function openPromoteModal_(ws, triggerBtn) {
 function renderPromoteModal_(ws, p) {
   var s = p.suggested, graduates = p.graduates;
   var learners = p.learners.slice().sort(byName_);
-  var choiceHtml = PROMOTE_CHOICES_.map(function (c) {
-    return '<option value="' + c[0] + '">' + (c[0] === 'promote' && graduates ? 'Graduate' : c[1]) + '</option>';
-  }).join('');
 
   var newClassHtml = graduates
     ? '<p>Grade 12 learners graduate, so no new class is created. Choose <b>Retain</b> for anyone repeating Grade 12 and <b>Transferred Out</b> for anyone who left.</p>'
@@ -2220,11 +2231,8 @@ function renderPromoteModal_(ws, p) {
     '<p style="margin-top:0">' + escapeHtml(classLabel_(ws)) + ' &middot; ' + escapeHtml(ws.schoolYearLabel) + '</p>' +
     newClassHtml +
     '<h4 style="margin:14px 0 2px">Learners (' + learners.length + ')</h4>' +
-    '<p class="home-hint" style="margin:0">Everyone is set to ' + (graduates ? 'Graduate' : 'Promote') + '. Change only those who are repeating the grade or have left.</p>' +
-    '<div class="promote-list">' + (learners.length === 0 ? '<div class="promote-row"><span class="promote-name muted">This class has no learners.</span></div>' : learners.map(function (l) {
-      return '<div class="promote-row"><span class="promote-name">' + escapeHtml(l.fullName) + '</span>' +
-        '<select data-enrollment="' + escapeHtml(l.enrollmentId) + '" aria-label="Outcome for ' + escapeHtml(l.fullName) + '">' + choiceHtml + '</select></div>';
-    }).join('')) + '</div>' +
+    '<p class="home-hint" style="margin:0">Everyone starts as ' + (graduates ? 'Graduated' : 'Promoted') + '. Change only those who are repeating the grade or have left.</p>' +
+    promoteTableHtml_(learners, graduates) +
     '<div id="pfSummary" style="font-size:0.9rem; margin-bottom:6px"></div>' +
     '<p class="home-hint" style="margin:0 0 10px">Retained and transferred-out learners are not added to the new class. They stay in the archived class with their grades. ' +
       escapeHtml(classLabel_(ws)) + ' will be archived (read-only) and will not count toward your class limit.</p>' +
@@ -2238,9 +2246,10 @@ function renderPromoteModal_(ws, p) {
     var n = { promote: 0, retain: 0, transfer: 0 };
     selects.forEach(function (sel) {
       n[sel.value]++;
-      sel.closest('.promote-row').className = 'promote-row' + (sel.value === 'promote' ? '' : ' is-' + sel.value);
+      var cell = sel.closest('td'), nameCell = cell.previousElementSibling;
+      [cell, nameCell].forEach(function (c) { c.classList.remove('is-retain', 'is-transfer'); if (sel.value !== 'promote') c.classList.add('is-' + sel.value); });
     });
-    modal.querySelector('#pfSummary').innerHTML = '<b>' + n.promote + '</b> ' + (graduates ? 'graduate' : 'promote') + ' &middot; <b>' + n.retain + '</b> retain &middot; <b>' + n.transfer + '</b> transferred out';
+    modal.querySelector('#pfSummary').innerHTML = '<b>' + n.promote + '</b> ' + (graduates ? 'graduated' : 'promoted') + ' &middot; <b>' + n.retain + '</b> retained &middot; <b>' + n.transfer + '</b> transferred out';
   };
   selects.forEach(function (sel) { sel.onchange = updateSummary; });
   updateSummary();
